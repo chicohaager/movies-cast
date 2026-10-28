@@ -1,0 +1,57 @@
+/* TV (webOS 4.x, Chrome 53): no CSS grid, no flex gap, no aspect-ratio. Sizes in vw. */
+:root { --bg: #0d0f14; --card: #1a1d26; --text: #eef0f5; --muted: #9aa0ad; --accent: #fb923c; --danger: #f87171; }
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text);
+  font-family: "LG Smart UI", "Segoe UI", Roboto, Arial, sans-serif; font-size: 1.6vw; overflow: hidden; }
+[hidden] { display: none !important; }
+h1 { font-size: 2.6vw; margin: 0; }
+.hint { color: var(--muted); }
+.screen { position: absolute; top: 0; left: 0; right: 0; bottom: 0; padding: 3vw 4vw; }
+.msg { position: fixed; top: 1.5vw; left: 50%; transform: translateX(-50%); z-index: 20; background: #3b1416;
+  color: #fecaca; padding: 1vw 2vw; border-radius: 0.8vw; font-size: 1.5vw; max-width: 80vw; }
+
+#pair { text-align: center; padding-top: 8vw; }
+.big { font-size: 2.2vw; margin: 2vw 0 1vw; }
+.code { font-size: 8vw; letter-spacing: 1.2vw; font-weight: 700; color: var(--accent); margin: 1vw 0 2vw; }
+.steps { display: inline-block; text-align: left; font-size: 1.8vw; line-height: 1.8; }
+
+.bar { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 2vw; }
+/* align-content/-items: without them the fixed height stretches the row to the screen bottom
+   (seen on the TV screenshot 2026-10-28); padding-top leaves room for the focus zoom. */
+/* Seen on the TV screenshot: visible scrollbars, and the focus zoom cut off at the left edge. */
+.lib-scroll { height: 86vh; overflow-y: auto; overflow-x: hidden; padding: 0 1.2vw 4vw; }
+.lib-scroll::-webkit-scrollbar { width: 0; height: 0; }
+h2 { font-size: 1.8vw; font-weight: 500; color: var(--muted); margin: 0.6vw 0 0.4vw; }
+.grid { display: flex; flex-wrap: wrap; align-content: flex-start; align-items: flex-start;
+  margin: 0 -0.8vw; padding: 1.2vw 0 0.5vw; }
+.tile { width: 14.4vw; margin: 0 0.8vw 2vw; border-radius: 0.8vw; background: var(--card); overflow: hidden;
+  outline: none; border: 0.3vw solid transparent; transition: transform .12s; }
+.tile.focus { border-color: var(--accent); transform: scale(1.06); }
+.tile .poster { width: 100%; height: 21.6vw; object-fit: cover; display: block; background: #2a2e3a; }
+.tile .bar2 { height: 0.4vw; background: #2a2e3a; }
+.tile .bar2 i { display: block; height: 100%; background: var(--accent); }
+.tile .cap { padding: 0.6vw 0.8vw 0.9vw; font-size: 1.3vw; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.detail { display: flex; align-items: flex-start; }
+#d-poster { width: 22vw; height: 33vw; object-fit: cover; border-radius: 1vw; background: #2a2e3a; flex: none; }
+.d-text { margin-left: 3vw; flex: 1; }
+.overview { font-size: 1.5vw; line-height: 1.5; max-height: 18vw; overflow: hidden; }
+.buttons { display: flex; margin-top: 2vw; }
+.btn { font: inherit; font-size: 1.7vw; border: 0.3vw solid transparent; border-radius: 0.8vw; padding: 1vw 2vw;
+  margin-right: 1.2vw; background: var(--card); color: var(--text); }
+.btn.focus { border-color: var(--accent); background: var(--accent); color: #111; }
+
+.player { padding: 0; background: #000; }
+#video { width: 100%; height: 100%; background: #000; }
+.osd { position: absolute; left: 0; right: 0; bottom: 0; padding: 2vw 4vw 3vw;
+  background: linear-gradient(transparent, rgba(0,0,0,.85)); transition: opacity .3s; }
+.osd.off { opacity: 0; }
+.osd-top { display: flex; align-items: center; margin-bottom: 1vw; }
+.osd-top strong { margin: 0 1.5vw; font-size: 2vw; }
+#o-sub { margin-left: 1.5vw; }
+video::cue { font-size: 2.4vw; background: rgba(0, 0, 0, .6); color: #fff; }
+.badge { background: rgba(255,255,255,.15); border-radius: 2vw; padding: 0.3vw 1vw; font-size: 1.3vw; }
+.track { height: 0.6vw; background: rgba(255,255,255,.25); border-radius: 0.3vw; overflow: hidden; }
+.track i { display: block; height: 100%; width: 0; background: var(--accent); }
+.times { display: flex; justify-content: space-between; margin-top: 0.8vw; font-size: 1.3vw; }
+.spinner { position: absolute; top: 45%; width: 100%; text-align: center; font-size: 2vw; color: var(--muted); }

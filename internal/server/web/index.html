@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#111318">
+<title>Movies auf dem Fernseher</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <h1>Movies <span>auf dem Fernseher</span></h1>
+  <button id="logout" class="ghost" hidden>Abmelden</button>
+</header>
+
+<div id="error" class="error" role="alert" hidden></div>
+
+<main>
+  <section id="login-view" hidden>
+    <form id="login-form" class="card">
+      <h2>Anmelden</h2>
+      <p class="hint">Mit deinem ZimaOS-Konto.</p>
+      <label>Benutzer <input name="user" autocomplete="username" required></label>
+      <label>Passwort <input name="password" type="password" autocomplete="current-password" required></label>
+      <button type="submit">Anmelden</button>
+    </form>
+  </section>
+
+  <section id="app-view" hidden>
+    <div class="tvbar card">
+      <label for="tv">Fernseher</label>
+      <div class="row">
+        <select id="tv"></select>
+        <button id="refresh" class="ghost" title="Neu suchen">Suchen</button>
+      </div>
+    </div>
+
+    <div id="player" class="card player" hidden>
+      <div class="now">
+        <span id="p-state" class="badge"></span>
+        <strong id="p-title"></strong>
+      </div>
+      <input id="p-seek" type="range" min="0" max="0" value="0" aria-label="Position">
+      <div class="times"><span id="p-pos">0:00:00</span><span id="p-dur">0:00:00</span></div>
+      <div class="controls">
+        <button data-skip="-30" class="ghost">−30 s</button>
+        <button id="p-toggle">Pause</button>
+        <button data-skip="30" class="ghost">+30 s</button>
+        <button id="p-stop" class="danger">Stopp</button>
+      </div>
+      <div id="p-volrow" class="vol" hidden>
+        <label for="p-vol">Lautstärke</label>
+        <input id="p-vol" type="range" min="0" max="100">
+      </div>
+    </div>
+
+    <details class="card pair">
+      <summary>Fernseher-App koppeln</summary>
+      <form id="pair-form" class="row">
+        <input id="pair-code" inputmode="numeric" pattern="[0-9 ]*" maxlength="7" placeholder="Code vom Fernseher" autocomplete="off" aria-label="Code vom Fernseher">
+        <button type="submit">Koppeln</button>
+      </form>
+      <p id="pair-result" class="hint"></p>
+    </details>
+
+    <div id="list" class="grid" aria-live="polite"></div>
+    <p id="empty" class="hint" hidden>Keine Filme in Movies gefunden.</p>
+  </section>
+</main>
+
+<dialog id="detail">
+  <form method="dialog" class="detail">
+    <img id="d-poster" alt="">
+    <div>
+      <h2 id="d-title"></h2>
+      <p id="d-meta" class="hint"></p>
+      <p id="d-overview"></p>
+      <div class="controls">
+        <button id="d-resume" value="resume" hidden>Fortsetzen</button>
+        <button id="d-start" value="start">Von vorn abspielen</button>
+        <button value="cancel" class="ghost">Schließen</button>
+      </div>
+    </div>
+  </form>
+</dialog>
+
+<script src="app.js"></script>
+</body>
+</html>

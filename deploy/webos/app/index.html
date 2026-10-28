@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<!-- Hosted app: the UI lives on movies-cast (one code base, the token stays
+     on the server). This page only checks that the server answers. -->
+<style>
+body { margin: 0; background: #0d0f14; color: #eef0f5; font: 2vw sans-serif; text-align: center; padding-top: 18vw; }
+.hint { color: #9aa0ad; font-size: 1.5vw; }
+</style>
+</head>
+<body>
+<p id="t">Movies wird geöffnet …</p>
+<p id="h" class="hint"></p>
+<script>
+var SERVER = "http://10.0.0.143:8097";
+function probe() {
+  var x = new XMLHttpRequest();
+  x.open("GET", SERVER + "/healthz", true);
+  x.timeout = 5000;
+  x.onload = function () {
+    if (x.status === 200) { location.replace(SERVER + "/tv/"); return; }
+    fail("Antwort " + x.status);
+  };
+  x.onerror = function () { fail("keine Verbindung"); };
+  x.ontimeout = function () { fail("keine Antwort"); };
+  x.send();
+}
+function fail(why) {
+  document.getElementById("t").textContent = "movies-cast auf " + SERVER + " ist nicht erreichbar (" + why + ").";
+  document.getElementById("h").textContent = "Neuer Versuch in 10 Sekunden …";
+  setTimeout(probe, 10000);
+}
+probe();
+</script>
+</body>
+</html>

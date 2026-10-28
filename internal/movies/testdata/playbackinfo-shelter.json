@@ -1,0 +1,82 @@
+{
+ "MediaSources": [
+  {
+   "Type": "Default",
+   "Bitrate": 12686014,
+   "DefaultAudioStreamIndex": 1,
+   "DefaultSubtitleStreamIndex": -1,
+   "Id": "01000000000000000000000000000006",
+   "Name": "Movies",
+   "Protocol": "File",
+   "Container": "mkv",
+   "Size": 10228471838,
+   "RunTimeTicks": 64502350000,
+   "SupportsDirectPlay": false,
+   "SupportsDirectStream": false,
+   "SupportsTranscoding": true,
+   "TranscodingContainer": "ts",
+   "TranscodingSubProtocol": "hls",
+   "MediaStreams": [
+    {
+     "IsTextSubtitleStream": false,
+     "SupportsExternalStream": false,
+     "Codec": "hevc",
+     "Type": "Video",
+     "Index": 0,
+     "IsDefault": true,
+     "IsExternal": false,
+     "Width": 3840,
+     "Height": 1604
+    },
+    {
+     "IsTextSubtitleStream": false,
+     "SupportsExternalStream": false,
+     "Codec": "ac3",
+     "Language": "de",
+     "DisplayTitle": "(5.1 PiKACHU)",
+     "Type": "Audio",
+     "Index": 1,
+     "IsDefault": true,
+     "IsExternal": false,
+     "Channels": 6
+    },
+    {
+     "IsTextSubtitleStream": false,
+     "SupportsExternalStream": false,
+     "Codec": "ac3",
+     "Language": "en",
+     "Type": "Audio",
+     "Index": 2,
+     "IsDefault": false,
+     "IsExternal": false,
+     "Channels": 6
+    },
+    {
+     "DeliveryMethod": "External",
+     "IsTextSubtitleStream": true,
+     "SupportsExternalStream": true,
+     "Codec": "srt",
+     "Language": "en",
+     "DisplayTitle": "English (CC)",
+     "Type": "Subtitle",
+     "Index": 3,
+     "IsDefault": false,
+     "IsExternal": false
+    },
+    {
+     "DeliveryMethod": "External",
+     "IsTextSubtitleStream": true,
+     "SupportsExternalStream": true,
+     "Codec": "srt",
+     "Language": "fr",
+     "DisplayTitle": "Français (Canada) (SDH)",
+     "Type": "Subtitle",
+     "Index": 4,
+     "IsDefault": false,
+     "IsExternal": false
+    }
+   ]
+  }
+ ],
+ "PlaySessionId": "19fa587b193fc3be6e88f005779bb40c"
+}

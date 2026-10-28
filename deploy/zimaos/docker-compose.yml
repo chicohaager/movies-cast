@@ -1,0 +1,66 @@
+name: movies-cast
+services:
+  movies-cast:
+    image: 127.0.0.1:5000/movies-cast:local
+    container_name: movies-cast
+    restart: unless-stopped
+    # Host network: SSDP multicast must reach the TVs, and the TV must reach
+    # this server on the NAS's LAN address. Movies is behind the ZimaOS gateway
+    # on port 80 of the same host.
+    network_mode: host
+    read_only: true
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      - TZ=$TZ
+      - LISTEN=:8097
+      - MOVIES_URL=http://127.0.0.1/movies
+      # SSDP answers do not pass the ZFW firewall on .143 (default-deny INPUT,
+      # the LG answers from a random port); the TV is named here instead.
+      # More TVs: comma-separated description URLs.
+      - RENDERERS=http://10.0.0.252:1795/
+      # Sessions (with Movies tokens, 0600) survive restarts; without it every
+      # update sends the TV back to pairing.
+      - STATE_FILE=/state/sessions.json
+    volumes:
+      - type: bind
+        source: /DATA/AppData/movies-cast/state
+        target: /state
+    x-casaos:
+      volumes:
+        - container: /state
+          description:
+            en_us: Login sessions of phones and the TV app (contains Movies tokens)
+            de_de: Anmeldungen von Handys und der TV-App (enthält Movies-Tokens)
+      envs:
+        - container: RENDERERS
+          description:
+            en_us: Comma-separated DLNA description URLs of the TVs (needed where SSDP replies are firewalled)
+            de_de: Kommagetrennte DLNA-Beschreibungs-URLs der Fernseher (nötig, wenn die Firewall SSDP-Antworten verwirft)
+        - container: MOVIES_URL
+          description:
+            en_us: Movies' Jellyfin-compatible API behind the ZimaOS gateway
+            de_de: Jellyfin-kompatible Schnittstelle von Movies hinter dem ZimaOS-Gateway
+x-casaos:
+  architectures:
+    - amd64
+  main: movies-cast
+  author: Demo
+  developer: Demo
+  category: Media
+  title:
+    en_us: Movies Cast
+    de_de: Movies auf dem Fernseher
+  tagline:
+    en_us: Play IceWhale Movies on your DLNA TV, controlled from the phone
+    de_de: IceWhale-Movies auf dem DLNA-Fernseher abspielen, vom Handy aus
+  description:
+    en_us: Lists the films of IceWhale Movies, finds DLNA TVs on the network and sends the original file to the TV. No transcoding on the NAS; the TV plays the file itself.
+    de_de: Zeigt die Filme aus IceWhale Movies, findet DLNA-Fernseher im Netz und schickt die Originaldatei an den Fernseher. Keine Umrechnung auf dem NAS; der Fernseher spielt die Datei selbst.
+  icon: https://cdn.jsdelivr.net/gh/walkxcode/dashboard-icons/png/jellyfin.png
+  index: /
+  port_map: "8097"
+  scheme: http
+  hostname: ""
