@@ -64,8 +64,22 @@ async function boot() {
     return;
   }
   showView("app");
+  takePairCodeFromLink();
   await Promise.all([loadMovies(), loadTVs(false)]);
   startPolling();
+}
+
+// The QR code on the TV opens "/?pair=123456": fill the code in and open the
+// pairing card. Pairing still takes a tap on "Pair" — a QR code shown by some
+// other TV must not hand it this login unasked.
+function takePairCodeFromLink() {
+  const code = new URLSearchParams(location.search).get("pair") || "";
+  if (!/^[0-9]{6}$/.test(code)) return;
+  const card = document.querySelector("details.pair");
+  card.open = true;
+  $("pair-code").value = code;
+  $("pair-result").textContent = t("pair.fromQR");
+  card.scrollIntoView({ block: "center" });
 }
 
 $("login-form").addEventListener("submit", async (ev) => {
@@ -105,9 +119,125 @@ async function loadTVs(refresh) {
     state.tv = sel.value;
     localSet("tv", state.tv);
   } catch (err) {
+    sel.innerHTML = "";
+    sel.append(new Option(t("tv.none"), ""));
     showError(err.message);
   }
 }
+
+// "Manage TVs": a name per TV, hide it, add one by IP (stored on the server, tvs.json).
+async function loadManage() {
+  const list = $("m-list"), out = $("m-result");
+  try {
+    const d = await api("/api/tvs");
+    list.textContent = "";
+    if (!d.tvs.length) {
+      const p = document.createElement("p");
+      p.className = "hint";
+      p.textContent = t("m.none");
+      list.append(p);
+    }
+    for (const tv of d.tvs) {
+      const row = document.createElement("div");
+      row.className = "mrow";
+      const name = document.createElement("input");
+      name.value = tv.label;
+      name.placeholder = tv.name;
+      name.maxLength = 40;
+      name.setAttribute("aria-label", t("m.name", tv.name));
+      const host = document.createElement("small");
+      host.textContent = tv.host;
+      const hide = document.createElement("label");
+      hide.className = "chk";
+      const cb = document.createElement("input");
+      cb.type = "checkbox";
+      cb.checked = tv.hidden;
+      hide.append(cb, " " + t("m.hide"));
+      const save = document.createElement("button");
+      save.type = "button";
+      save.className = "ghost";
+      save.textContent = t("m.save");
+      save.addEventListener("click", async () => {
+        try {
+          await api("/api/tvs", { id: tv.id, label: name.value, hidden: cb.checked });
+          out.textContent = t("m.saved");
+          loadTVs(false);
+        } catch (err) {
+          showError(err.message);
+        }
+      });
+      row.append(name, host, hide, save);
+      list.append(row);
+    }
+    const ul = $("m-hosts");
+    ul.textContent = "";
+    for (const h of d.hosts) {
+      const li = document.createElement("li");
+      const rm = document.createElement("button");
+      rm.type = "button";
+      rm.className = "ghost";
+      rm.textContent = t("m.remove");
+      rm.addEventListener("click", async () => {
+        try {
+          await api("/api/tvs/hosts", { host: h, remove: true });
+          loadManage();
+        } catch (err) {
+          showError(err.message);
+        }
+      });
+      li.append(h + " ", rm);
+      ul.append(li);
+    }
+  } catch (err) {
+    showError(err.message);
+  }
+}
+$("manage").addEventListener("toggle", () => { if ($("manage").open) loadManage(); });
+$("m-add").addEventListener("submit", async (ev) => {
+  ev.preventDefault();
+  try {
+    await api("/api/tvs/hosts", { host: $("m-host").value.trim() });
+    $("m-host").value = "";
+    $("m-result").textContent = t("m.added");
+    showError("");
+    await loadTVs(true);
+    loadManage();
+  } catch (err) {
+    showError(err.message);
+  }
+});
+
+// "Status": what was measured by hand over ssh before (Movies, search, port).
+async function loadStatus() {
+  const dl = $("s-list");
+  try {
+    const d = await api("/api/system");
+    const s = d.search || {};
+    const at = s.at && new Date(s.at).getFullYear() > 2000 ? new Date(s.at).toLocaleTimeString() : "";
+    const rows = [
+      [t("s.version"), d.version],
+      [t("s.movies"), d.moviesOK ? t("s.ok") : t("s.bad", d.moviesError)],
+      [t("s.search"), at ? t("s.found", at, s.answers, s.renderers) : t("s.never")],
+      [t("s.port"), s.port ? t(s.portHeld ? "s.portHeld" : "s.portFree", s.port) : t("s.portRandom")],
+      [t("s.hidden"), d.hiddenTVs],
+      [t("s.added"), d.addedHosts],
+      [t("s.formats"), d.provenFormats],
+      [t("s.plays"), d.activePlays],
+    ];
+    if (s.error) rows.push([t("s.searchErr"), s.error]);
+    dl.textContent = "";
+    for (const [k, v] of rows) {
+      const dt = document.createElement("dt");
+      dt.textContent = k;
+      const dd = document.createElement("dd");
+      dd.textContent = String(v);
+      dl.append(dt, dd);
+    }
+  } catch (err) {
+    showError(err.message);
+  }
+}
+$("sys").addEventListener("toggle", () => { if ($("sys").open) loadStatus(); });
 
 $("tv").addEventListener("change", (ev) => {
   state.tv = ev.target.value;
@@ -265,6 +395,7 @@ $("pair-form").addEventListener("submit", async (ev) => {
     await api("/api/tv/pair/approve", { code });
     out.textContent = t("pair.ok");
     $("pair-code").value = "";
+    if (location.search.includes("pair=")) history.replaceState(null, "", location.pathname);
     showError("");
   } catch (err) {
     out.textContent = "";

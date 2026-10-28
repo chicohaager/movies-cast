@@ -57,3 +57,5 @@ video::cue { font-size: 2.4vw; background: rgba(0, 0, 0, .6); color: #fff; }
 .track i { display: block; height: 100%; width: 0; background: var(--accent); }
 .times { display: flex; justify-content: space-between; margin-top: 0.8vw; font-size: 1.3vw; }
 .spinner { position: absolute; top: 45%; width: 100%; text-align: center; font-size: 2vw; color: var(--muted); }
+.pair-row { display: flex; align-items: center; justify-content: center; }
+.pair-qr { width: 14vw; height: 14vw; margin-right: 4vw; image-rendering: pixelated; background: #fff; border-radius: .6vw; }

@@ -1,12 +1,17 @@
 package server
 
 import (
+	"bytes"
+	"io"
+
 	"encoding/json"
 	"net/http"
 	"net/http/cookiejar"
 	"strings"
 	"testing"
 	"time"
+
+	"rsc.io/qr"
 )
 
 // tvClient is a second browser (the TV) talking to the same server.
@@ -287,5 +292,35 @@ func TestTVSubtitlesOnRequest(t *testing.T) {
 	_, again := tv.post("/api/tv/play", map[string]any{"movie": unread})
 	if again["subtitlesOnRequest"] != false || len(again["subtitles"].([]any)) != 2 || phone.playbackInfos() != 1 {
 		t.Fatalf("second play: %v, PlaybackInfo %d", again, phone.playbackInfos())
+	}
+}
+
+// The pairing screen's QR code holds the phone link with this pairing's code,
+// on the host the TV reached; only an open pairing's ID draws one.
+func TestPairQRCodeHoldsPhoneLinkWithCode(t *testing.T) {
+	r := newRig(t)
+	r.login()
+	_, start := r.post("/api/tv/pair/start", map[string]any{})
+	id, code := start["id"].(string), start["code"].(string)
+	resp, err := http.Get(r.srv.URL + "/api/tv/pair/qr?id=" + id)
+	if err != nil {
+		t.Fatal(err)
+	}
+	got, _ := io.ReadAll(resp.Body)
+	resp.Body.Close()
+	if resp.StatusCode != http.StatusOK || resp.Header.Get("Content-Type") != "image/png" {
+		t.Fatalf("qr: %d %s", resp.StatusCode, resp.Header.Get("Content-Type"))
+	}
+	want, _ := qr.Encode("http://"+strings.TrimPrefix(r.srv.URL, "http://")+"/?pair="+code, qr.M)
+	want.Scale = 8
+	if !bytes.Equal(got, want.PNG()) {
+		t.Fatal("QR image does not encode the phone link with the code")
+	}
+	if c, _ := r.get("/api/tv/pair/qr?id=unknown"); c != http.StatusNotFound {
+		t.Fatalf("unknown id: %d", c)
+	}
+	r.post("/api/tv/pair/approve", map[string]string{"code": code})
+	if c, _ := r.get("/api/tv/pair/qr?id=" + id); c != http.StatusNotFound {
+		t.Fatalf("approved pairing still draws a code: %d", c)
 	}
 }

@@ -29,7 +29,7 @@ type Finder struct {
 	Wait   time.Duration
 	TTL    time.Duration
 	HTTP   *http.Client
-	search func(context.Context, time.Duration) ([]string, error)
+	search func(context.Context, time.Duration) ([]string, int, error)
 	video  func(context.Context, Renderer) (bool, error)
 	// allow filters locations that came from SSDP; Static is the operator's
 	// own configuration and is not filtered.
@@ -40,6 +40,48 @@ type Finder struct {
 	cached  []Renderer
 	lastLoc map[string]string // host → last description URL SSDP gave for it
 	conn    net.PacketConn    // SSDP socket, open for good when Port is fixed
+	extra   []string          // hosts added in the app (SetExtraHosts)
+	last    SearchStats
+}
+
+// SearchStats describes the last search, for the status page and for a
+// hint that says why the list is empty.
+type SearchStats struct {
+	At        time.Time `json:"at"`
+	Answers   int       `json:"answers"`   // SSDP datagrams received, from any device
+	Renderers int       `json:"renderers"` // video renderers listed
+	Err       string    `json:"error,omitempty"`
+	Port      int       `json:"port"`     // local SSDP port, 0 = random
+	PortHeld  bool      `json:"portHeld"` // the fixed port is bound now
+}
+
+// LastSearch returns the stats of the last search.
+func (f *Finder) LastSearch() SearchStats {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	st := f.last
+	st.Port, st.PortHeld = f.Port, f.conn != nil
+	return st
+}
+
+// SetExtraHosts sets the hosts added in the app; they are searched like
+// RENDERERS hosts. The next Find searches anew.
+func (f *Finder) SetExtraHosts(hosts []string) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.extra = append([]string(nil), hosts...)
+	f.at = time.Time{}
+}
+
+// hosts is RENDERERS hosts plus app hosts. Caller holds f.mu.
+func (f *Finder) hosts() []string {
+	out := append([]string(nil), f.Hosts...)
+	for _, h := range f.extra {
+		if !slices.Contains(out, h) {
+			out = append(out, h)
+		}
+	}
+	return out
 }
 
 // NewFinder splits entries into description URLs (with "://") and hosts.
@@ -62,23 +104,24 @@ func NewFinder(entries []string, ssdp bool, port int, c *Client) *Finder {
 		allow:   func(loc string) bool { return LANLocation(loc, OwnIPs()) },
 		lastLoc: map[string]string{},
 	}
-	f.search = func(ctx context.Context, wait time.Duration) ([]string, error) {
+	f.search = func(ctx context.Context, wait time.Duration) ([]string, int, error) {
+		// caller holds f.mu
 		if f.Port == 0 {
-			return Search(ctx, wait, 0, f.Hosts)
+			return Search(ctx, wait, 0, f.hosts())
 		}
-		if f.conn == nil { // caller holds f.mu
+		if f.conn == nil {
 			c, err := ListenSSDP(ctx, f.Port)
 			if err != nil {
-				return nil, err
+				return nil, 0, err
 			}
 			f.conn = c
 		}
-		locs, err := SearchOn(f.conn, wait, f.Hosts)
+		locs, n, err := SearchOn(f.conn, wait, f.hosts())
 		if err != nil {
 			f.conn.Close()
 			f.conn = nil
 		}
-		return locs, err
+		return locs, n, err
 	}
 	return f
 }
@@ -125,15 +168,18 @@ func (f *Finder) Find(_ context.Context, refresh bool) ([]Renderer, error) {
 
 	locs := append([]string(nil), f.Static...)
 	var errs []error
-	if f.SSDP || len(f.Hosts) > 0 {
-		found, err := f.search(ctx, f.Wait)
+	hosts := f.hosts()
+	answers := 0
+	if f.SSDP || len(hosts) > 0 {
+		found, n, err := f.search(ctx, f.Wait)
+		answers = n
 		if err != nil {
 			errs = append(errs, err)
 		}
 		answered := map[string]bool{}
 		for _, loc := range found {
 			h := hostOf(loc)
-			entry := slices.Contains(f.Hosts, h)
+			entry := slices.Contains(hosts, h)
 			if !f.SSDP && !entry {
 				continue
 			}
@@ -146,7 +192,7 @@ func (f *Finder) Find(_ context.Context, refresh bool) ([]Renderer, error) {
 				f.lastLoc[h], answered[h] = loc, true
 			}
 		}
-		for _, h := range f.Hosts {
+		for _, h := range hosts {
 			if !answered[h] && f.lastLoc[h] != "" {
 				locs = append(locs, f.lastLoc[h])
 			}
@@ -208,5 +254,10 @@ func (f *Finder) Find(_ context.Context, refresh bool) ([]Renderer, error) {
 	if len(out) > 0 {
 		f.cached, f.at = out, time.Now()
 	}
-	return out, errors.Join(errs...)
+	err := errors.Join(errs...)
+	f.last = SearchStats{At: time.Now(), Answers: answers, Renderers: len(out)}
+	if err != nil {
+		f.last.Err = err.Error()
+	}
+	return out, err
 }

@@ -19,6 +19,8 @@ internal/dlna/finder_test.go:10.0.0.5
 internal/dlna/finder_test.go:10.0.0.50
 internal/dlna/finder_test.go:10.0.0.35
 internal/dlna/finder_test.go:10.0.0.89
+internal/server/tvs_test.go:10.0.0.76
+internal/server/tvs_test.go:10.0.0.23
 internal/dlna/testdata/lg-positioninfo-stopped.xml:10.0.0.23
 internal/dlna/testdata/sonos-desc.xml:10.0.0.35
 internal/server/server.go:10.0.0.23

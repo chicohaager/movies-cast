@@ -252,3 +252,24 @@ func TestProbedSubtitlesAskPlaybackInfo(t *testing.T) {
 		t.Fatalf("got %q %+v", msID, subs)
 	}
 }
+
+// Ping uses the public info endpoint (no token) and reports anything but 200.
+func TestPing(t *testing.T) {
+	code := http.StatusOK
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/movies/System/Info/Public" || r.Header.Get("X-Emby-Authorization") != "" {
+			w.WriteHeader(http.StatusTeapot)
+			return
+		}
+		w.WriteHeader(code)
+	}))
+	defer srv.Close()
+	c := New(srv.URL+"/movies", "t")
+	if err := c.Ping(context.Background()); err != nil {
+		t.Fatalf("200: %v", err)
+	}
+	code = http.StatusNotFound
+	if err := c.Ping(context.Background()); err == nil {
+		t.Fatal("404 reported as reachable")
+	}
+}

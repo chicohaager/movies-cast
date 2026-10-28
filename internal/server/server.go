@@ -92,6 +92,7 @@ type Server struct {
 	// proven holds TV|container|codec combinations a TV has played for
 	// provenAfter; their format hint is skipped until the server restarts.
 	proven map[string]bool
+	prefs  tvPrefs // names, hidden TVs, TVs added by address (tvs.go)
 
 	loginFails map[string][]time.Time // by client IP
 	pairings   map[string]*pairing    // TV-app pairings by secret ID
@@ -147,12 +148,16 @@ func New(cfg Config, mc *movies.Client, tv Transport, r Renderers) *Server {
 		byTV:           map[string]*play{},
 		probedSubs:     map[string]probedSubs{},
 		proven:         map[string]bool{},
+		prefs:          tvPrefs{Labels: map[string]string{}, Hidden: map[string]bool{}},
 	}
 	if err := srv.loadSessions(); err != nil {
 		log.Printf("state: %v (starting without stored sessions)", err)
 	}
 	if err := srv.loadProven(); err != nil {
 		log.Printf("formats: %v (starting without proven formats)", err)
+	}
+	if err := srv.loadTVPrefs(); err != nil {
+		log.Printf("tvs: %v (starting without TV settings)", err)
 	}
 	return srv
 }
@@ -181,11 +186,16 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /api/movies", s.withSession(s.listMovies))
 	mux.HandleFunc("GET /api/poster/{id}", s.withSession(s.poster))
 	mux.HandleFunc("GET /api/renderers", s.withSession(s.listRenderers))
+	mux.HandleFunc("GET /api/tvs", s.withSession(s.listTVs))
+	mux.HandleFunc("POST /api/tvs", s.withSession(s.setTV))
+	mux.HandleFunc("POST /api/tvs/hosts", s.withSession(s.setTVHost))
+	mux.HandleFunc("GET /api/system", s.withSession(s.system))
 	mux.HandleFunc("POST /api/play", s.withSession(s.startPlay))
 	mux.HandleFunc("POST /api/control", s.withSession(s.control))
 	mux.HandleFunc("GET /api/status", s.withSession(s.status))
 	mux.HandleFunc("POST /api/tv/pair/start", s.tvPairStart)
 	mux.HandleFunc("GET /api/tv/pair/poll", s.tvPairPoll)
+	mux.HandleFunc("GET /api/tv/pair/qr", s.tvPairQR)
 	mux.HandleFunc("POST /api/tv/pair/approve", s.withSession(s.tvPairApprove))
 	mux.HandleFunc("POST /api/tv/play", s.withSession(s.tvPlay))
 	mux.HandleFunc("POST /api/tv/progress", s.withSession(s.tvProgress))
@@ -273,6 +283,9 @@ var errorsEn = map[string]string{
 	"Benutzer oder Passwort falsch":                               "wrong user or password",
 	"Anmeldung bei Movies abgelaufen":                             "Movies login expired",
 	"6-stelligen Code angeben":                                    "enter the 6-digit code",
+	"Name zu lang (höchstens 40 Zeichen)":                         "name too long (40 characters at most)",
+	"Speichern fehlgeschlagen":                                    "saving failed",
+	"Adresse ungültig (IPv4-Adresse im eigenen Netz)":             "invalid address (an IPv4 address on your own network)",
 }
 
 // english translates msg; a renderer suffix " (UPnP-Fehler N)" from faultCode
@@ -520,14 +533,25 @@ type rendererOut struct {
 
 func (s *Server) listRenderers(w http.ResponseWriter, r *http.Request, _ string, _ *session) {
 	rs, err := s.renderers.Find(r.Context(), r.URL.Query().Get("refresh") == "1")
-	if err != nil && len(rs) == 0 {
+	if err != nil {
 		log.Printf("renderers: %v", err)
-		fail(w, http.StatusBadGateway, "Suche nach Fernsehern fehlgeschlagen")
-		return
 	}
+	s.mu.Lock()
 	out := make([]rendererOut, 0, len(rs))
 	for _, x := range rs {
-		out = append(out, rendererOut{ID: x.ID, Name: x.Name, Model: x.Model, Host: x.Host()})
+		if s.prefs.Hidden[x.ID] {
+			continue
+		}
+		name := x.Name
+		if l := s.prefs.Labels[x.ID]; l != "" {
+			name = l
+		}
+		out = append(out, rendererOut{ID: x.ID, Name: name, Model: x.Model, Host: x.Host()})
+	}
+	s.mu.Unlock()
+	if len(out) == 0 {
+		s.emptyTVList(w, len(rs))
+		return
 	}
 	writeJSON(w, http.StatusOK, out)
 }
