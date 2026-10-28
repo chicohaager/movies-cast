@@ -1,4 +1,4 @@
-"""Render logo.svg to the PNG sizes the webOS app needs (and a large copy).
+"""Render logo.svg to the PNG sizes the webOS app and the phone page (manifest, home screen) need.
 
     python3 render.py   (needs Playwright with Chromium)
 """
@@ -9,7 +9,9 @@ from playwright.sync_api import sync_playwright
 
 here = pathlib.Path(__file__).resolve().parent
 svg = (here / "logo.svg").read_text()
-targets = {here.parent / "app" / "icon.png": 80, here.parent / "app" / "largeIcon.png": 130, here / "logo-512.png": 512}
+web = here.parent.parent.parent / "internal" / "server" / "web"
+targets = {here.parent / "app" / "icon.png": 80, here.parent / "app" / "largeIcon.png": 130, here / "logo-512.png": 512,
+           web / "icon-192.png": 192, web / "icon-512.png": 512, web / "apple-touch-icon.png": 180}
 if len(sys.argv) > 1:
     targets = {pathlib.Path(sys.argv[1]): int(sys.argv[2])}
 

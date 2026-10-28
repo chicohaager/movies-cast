@@ -71,6 +71,16 @@ func (f *fakeMovies) handler(t *testing.T) http.Handler {
 			id := strings.TrimPrefix(r.URL.Path, "/movies/Users/USERID0000/Items/")
 			for _, raw := range all.Items {
 				if strings.Contains(string(raw), `"Id": "`+id+`"`) {
+					if id == movieID && strings.Contains(r.URL.Query().Get("Fields"), "MediaStreams") {
+						// Shelter's two text subtitles (en, fr), from the captured answer.
+						var it, pi map[string]any
+						_ = json.Unmarshal(raw, &it)
+						b, _ := os.ReadFile("../movies/testdata/playbackinfo-shelter.json")
+						_ = json.Unmarshal(b, &pi)
+						it["MediaSources"] = pi["MediaSources"]
+						_ = json.NewEncoder(w).Encode(it)
+						return
+					}
 					_, _ = w.Write(raw)
 					return
 				}
@@ -92,10 +102,14 @@ func (f *fakeMovies) handler(t *testing.T) http.Handler {
 			f.streams = append(f.streams, r.Method+" "+r.URL.RequestURI()+" range="+r.Header.Get("Range"))
 			f.mu.Unlock()
 			http.ServeContent(w, r, "movie.mkv", time.Time{}, strings.NewReader(fileBytes))
-		case r.URL.Path == "/movies/Items/"+movieID+"/PlaybackInfo":
+		case strings.HasSuffix(r.URL.Path, "/PlaybackInfo"):
+			// Movies starts a transcode on every PlaybackInfo; movies-cast must not ask.
+			f.mu.Lock()
+			f.reports = append(f.reports, "PlaybackInfo "+r.URL.Path)
+			f.mu.Unlock()
 			b, _ := os.ReadFile("../movies/testdata/playbackinfo-shelter.json")
 			_, _ = w.Write(b)
-		case strings.HasPrefix(r.URL.Path, "/movies/Videos/"+movieID+"/"+movieID+"/Subtitles/"): // any index: the server must do the filtering
+		case strings.HasPrefix(r.URL.Path, "/movies/Videos/") && strings.Contains(r.URL.Path, "/Subtitles/"): // any film and index: the server must do the filtering
 			_, _ = io.WriteString(w, "WEBVTT\n\n00:45.943 --> 00:47.838\n[suspenseful music fades in]\n")
 		case strings.HasPrefix(r.URL.Path, "/movies/Sessions/"):
 			body, _ := io.ReadAll(r.Body)

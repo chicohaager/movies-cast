@@ -274,30 +274,30 @@ type Subtitle struct {
 	Label    string `json:"label"`
 }
 
-// Subtitles lists the text subtitles of an item and the media source ID the
-// subtitle URLs need. Only PlaybackInfo has them: the item answer lists
-// Video and Audio only (measured 2026-10-28, Movies 0.3.0). The answer's
-// DeliveryUrl carries ?api_key=<token> and is never used or passed on.
-func (c *Client) Subtitles(ctx context.Context, s *Session, id string) ([]Subtitle, string, error) {
-	var res struct {
-		MediaSources []struct {
-			Id           string
-			MediaStreams []struct {
-				Type, Language, DisplayTitle, DeliveryMethod string
-				Index                                        int
-			}
+// mediaSources is the part of an item or PlaybackInfo answer that lists streams.
+type mediaSources struct {
+	MediaSources []struct {
+		Id           string
+		MediaStreams []struct {
+			Type, Language, DisplayTitle, DeliveryMethod string
+			Index, Width                                 int
 		}
 	}
-	p := "/Items/" + url.PathEscape(id) + "/PlaybackInfo?UserId=" + url.QueryEscape(s.UserID)
-	if err := c.do(ctx, s, http.MethodPost, p, map[string]any{}, &res); err != nil {
-		return nil, "", err
-	}
+}
+
+// subtitles returns the text subtitles, the media source ID the subtitle URLs
+// need, and whether the streams look fully read (a video stream with a width).
+func (res mediaSources) subtitles() ([]Subtitle, string, bool) {
 	if len(res.MediaSources) == 0 {
-		return nil, "", nil
+		return nil, "", false
 	}
 	ms := res.MediaSources[0]
 	var out []Subtitle
+	probed := false
 	for _, st := range ms.MediaStreams {
+		if st.Type == "Video" && st.Width > 0 {
+			probed = true
+		}
 		// "External" = Movies converts it and serves Stream.vtt; image
 		// subtitles (PGS) would need burning in and are left out.
 		if st.Type != "Subtitle" || st.DeliveryMethod != "External" {
@@ -309,7 +309,39 @@ func (c *Client) Subtitles(ctx context.Context, s *Session, id string) ([]Subtit
 		}
 		out = append(out, Subtitle{Index: st.Index, Language: st.Language, Label: label})
 	}
-	return out, ms.Id, nil
+	return out, ms.Id, probed
+}
+
+// Subtitles lists the text subtitles from the item answer (Fields=MediaStreams;
+// without that field it shows Video and Audio only). listed is false when the
+// answer cannot be trusted to be complete: no subtitle and a video stream
+// without width. Measured 2026-10-28, Movies 0.3.0: Avatar's item lists its
+// five subtitles, Shelter's lists none and no width, while PlaybackInfo lists
+// Shelter's two. ProbedSubtitles asks PlaybackInfo, which has a cost.
+func (c *Client) Subtitles(ctx context.Context, s *Session, id string) (subs []Subtitle, msID string, listed bool, err error) {
+	var res mediaSources
+	q := url.Values{"Fields": {"MediaSources,MediaStreams"}}
+	p := "/Users/" + url.PathEscape(s.UserID) + "/Items/" + url.PathEscape(id) + "?" + q.Encode()
+	if err := c.do(ctx, s, http.MethodGet, p, nil, &res); err != nil {
+		return nil, "", false, err
+	}
+	subs, msID, probed := res.subtitles()
+	return subs, msID, probed || len(subs) > 0, nil
+}
+
+// ProbedSubtitles asks PlaybackInfo, which lists the subtitles of every film,
+// but Movies answers it by starting a transcode on the box (measured
+// 2026-10-28: log "[streamMedia] … transcode codec=h264" and ffmpeg for the
+// first segment), although the TV then plays the original file. So it is only
+// asked when someone wants subtitles and the item did not list them.
+func (c *Client) ProbedSubtitles(ctx context.Context, s *Session, id string) ([]Subtitle, string, error) {
+	var res mediaSources
+	p := "/Items/" + url.PathEscape(id) + "/PlaybackInfo?UserId=" + url.QueryEscape(s.UserID)
+	if err := c.do(ctx, s, http.MethodPost, p, map[string]any{}, &res); err != nil {
+		return nil, "", err
+	}
+	subs, msID, _ := res.subtitles()
+	return subs, msID, nil
 }
 
 // SubtitleRequest builds the request for one subtitle track as WebVTT.

@@ -158,14 +158,19 @@ func (s *Server) tvPlay(w http.ResponseWriter, r *http.Request, sid string, sess
 		return
 	}
 	// Subtitles are a bonus: without them the film still plays.
-	subs, msID, err := s.movies.Subtitles(r.Context(), sess.ms, m.ID)
+	subs, msID, listed, err := s.movies.Subtitles(r.Context(), sess.ms, m.ID)
 	if err != nil {
 		log.Printf("subtitles %s: %v", m.ID, err)
-		subs = nil
+		subs, listed = nil, true
 	}
+	s.mu.Lock()
+	if ps, ok := s.probedSubs[m.ID]; ok && !listed {
+		subs, msID, listed = ps.subs, ps.msID, true
+	}
+	s.mu.Unlock()
 	// One play per TV-app session: a new film replaces the running one.
 	tv := dlna.Renderer{ID: "app:" + sid, Name: "TV-App"}
-	p := &play{id: randomID(), sess: sess, movie: m, tv: tv, psID: randomID(), created: s.now(), browser: true, lastBeat: s.now(), subs: subs, msID: msID}
+	p := &play{id: randomID(), sess: sess, movie: m, tv: tv, psID: randomID(), created: s.now(), browser: true, lastBeat: s.now(), subs: subs, msID: msID, subsLater: !listed}
 	p.ctx, p.cancel = context.WithCancel(context.Background())
 	s.mu.Lock()
 	if old := s.byTV[tv.ID]; old != nil {
@@ -184,20 +189,67 @@ func (s *Server) tvPlay(w http.ResponseWriter, r *http.Request, sid string, sess
 	if ext == "" {
 		ext = "mkv"
 	}
-	type subOut struct {
-		Label string `json:"label"`
-		Lang  string `json:"lang,omitempty"`
-		URL   string `json:"url"`
-	}
-	outSubs := make([]subOut, 0, len(subs))
-	for _, st := range subs {
-		outSubs = append(outSubs, subOut{Label: st.Label, Lang: st.Language, URL: fmt.Sprintf("/api/tv/subs/%s/%d.vtt", p.id, st.Index)})
-	}
 	writeJSON(w, http.StatusOK, map[string]any{
 		"play": p.id, "url": "/s/" + p.id + "/movie." + ext, "title": m.Name,
 		"resumeSeconds": int64(resume / time.Second), "durationSeconds": m.Runtime,
-		"subtitles": outSubs,
+		"subtitles": subsOut(p.id, subs), "subtitlesOnRequest": !listed,
 	})
+}
+
+type probedSubs struct {
+	subs []movies.Subtitle
+	msID string
+}
+
+type subOut struct {
+	Label string `json:"label"`
+	Lang  string `json:"lang,omitempty"`
+	URL   string `json:"url"`
+}
+
+func subsOut(playID string, subs []movies.Subtitle) []subOut {
+	out := make([]subOut, 0, len(subs))
+	for _, st := range subs {
+		out = append(out, subOut{Label: st.Label, Lang: st.Language, URL: fmt.Sprintf("/api/tv/subs/%s/%d.vtt", playID, st.Index)})
+	}
+	return out
+}
+
+// tvSubsProbe lists the subtitles of a film whose item answer listed none, by
+// asking PlaybackInfo. That starts a transcode on the box, so the TV app asks
+// only when someone wants subtitles (down key, or a remembered language).
+func (s *Server) tvSubsProbe(w http.ResponseWriter, r *http.Request, sid string, sess *session) {
+	var in struct{ Play string }
+	if err := readJSON(r, &in); err != nil {
+		fail(w, http.StatusBadRequest, "ungültige Anfrage")
+		return
+	}
+	s.mu.Lock()
+	p := s.plays[in.Play]
+	if p == nil || p.sess != sess || !p.browser {
+		s.mu.Unlock()
+		fail(w, http.StatusNotFound, "Wiedergabe unbekannt")
+		return
+	}
+	later, movieID := p.subsLater, p.movie.ID
+	ps, cached := s.probedSubs[movieID]
+	s.mu.Unlock()
+	if later && !cached {
+		subs, msID, err := s.movies.ProbedSubtitles(r.Context(), sess.ms, movieID)
+		if err != nil {
+			s.moviesErr(w, sid, err)
+			return
+		}
+		ps = probedSubs{subs: subs, msID: msID}
+	}
+	s.mu.Lock()
+	if later {
+		s.probedSubs[movieID] = ps
+		p.subs, p.msID, p.subsLater = ps.subs, ps.msID, false
+	}
+	subs := p.subs
+	s.mu.Unlock()
+	writeJSON(w, http.StatusOK, map[string]any{"subtitles": subsOut(p.id, subs)})
 }
 
 // tvProgress is sent by the TV app every few seconds and on pause/stop/end.

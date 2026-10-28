@@ -146,28 +146,31 @@ func TestNoRedirectWithToken(t *testing.T) {
 	}
 }
 
-// Captured PlaybackInfo of Shelter (2026-10-28): two text subtitles, en and fr.
-func TestSubtitlesFromPlaybackInfo(t *testing.T) {
-	pi, err := os.ReadFile("testdata/playbackinfo-shelter.json")
+// Captured item answer of Avatar (2026-10-28, named fields only): five text
+// subtitles. They come from the item, never from PlaybackInfo: Movies answers
+// every PlaybackInfo that lists the streams by starting a transcode (log line
+// "[streamMedia] movie/1 transcode codec=h264", ffmpeg on the box), although
+// the TV then plays the original file.
+func TestSubtitlesFromItemStreams(t *testing.T) {
+	it, err := os.ReadFile("testdata/item-avatar-streams.json")
 	if err != nil {
 		t.Fatal(err)
 	}
-	var gotBody string
+	var got []string
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		b, _ := io.ReadAll(r.Body)
-		gotBody = r.Method + " " + r.URL.RequestURI() + " " + string(b)
-		_, _ = w.Write(pi)
+		got = append(got, r.Method+" "+r.URL.Path+" "+r.URL.Query().Get("Fields"))
+		_, _ = w.Write(it)
 	}))
 	defer srv.Close()
 	c := New(srv.URL+"/movies", "test")
-	subs, msID, err := c.Subtitles(context.Background(), &Session{Token: "t", UserID: "USERID0000"}, "01000000000000000000000000000006")
-	if err != nil {
-		t.Fatal(err)
+	subs, msID, listed, err := c.Subtitles(context.Background(), &Session{Token: "t", UserID: "USERID0000"}, "01000000000000000000000000000001")
+	if err != nil || !listed {
+		t.Fatal(err, listed)
 	}
-	if !strings.HasPrefix(gotBody, "POST /movies/Items/01000000000000000000000000000006/PlaybackInfo?UserId=USERID0000") {
-		t.Errorf("request %q", gotBody)
+	if len(got) != 1 || !strings.HasPrefix(got[0], "GET /movies/Users/USERID0000/Items/01000000000000000000000000000001 ") || !strings.Contains(got[0], "MediaStreams") {
+		t.Errorf("requests %q", got)
 	}
-	if msID != "01000000000000000000000000000006" || len(subs) != 2 || subs[0].Index != 3 || subs[0].Language != "en" || subs[1].Index != 4 || subs[1].Language != "fr" || subs[0].Label == "" {
+	if msID != "01000000000000000000000000000001" || len(subs) != 5 || subs[0].Index != 4 || subs[0].Language != "de" || subs[0].Label != "German" || subs[4].Index != 8 || subs[4].Language != "en" {
 		t.Fatalf("got %q %+v", msID, subs)
 	}
 }
@@ -207,8 +210,45 @@ func TestSubtitlesSkipImageTracks(t *testing.T) {
 {"Type":"Subtitle","Index":3,"Codec":"srt","Language":"en","DeliveryMethod":"External"}]}]}`)
 	}))
 	defer srv.Close()
-	subs, _, err := New(srv.URL+"/movies", "t").Subtitles(context.Background(), &Session{Token: "t", UserID: "u"}, "X")
+	subs, _, _, err := New(srv.URL+"/movies", "t").Subtitles(context.Background(), &Session{Token: "t", UserID: "u"}, "X")
 	if err != nil || len(subs) != 1 || subs[0].Index != 3 {
 		t.Fatalf("got %+v %v", subs, err)
+	}
+}
+
+// Shelter's item answer (2026-10-28) listed no subtitle and no video width,
+// while its PlaybackInfo listed en and fr: such an answer is not "listed".
+func TestSubtitlesNotListedWhenStreamsAreUnread(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, _ = io.WriteString(w, `{"Id":"S","MediaSources":[{"Id":"S","MediaStreams":[{"Type":"Video","Codec":"hevc"},{"Type":"Audio","Codec":"ac3"}]}]}`)
+	}))
+	defer srv.Close()
+	subs, _, listed, err := New(srv.URL+"/movies", "t").Subtitles(context.Background(), &Session{Token: "t", UserID: "u"}, "S")
+	if err != nil || listed || len(subs) != 0 {
+		t.Fatalf("listed=%v subs=%+v err=%v", listed, subs, err)
+	}
+}
+
+// Captured PlaybackInfo of Shelter: two text subtitles, en and fr.
+func TestProbedSubtitlesAskPlaybackInfo(t *testing.T) {
+	pi, err := os.ReadFile("testdata/playbackinfo-shelter.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	var got string
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		got = r.Method + " " + r.URL.RequestURI()
+		_, _ = w.Write(pi)
+	}))
+	defer srv.Close()
+	subs, msID, err := New(srv.URL+"/movies", "t").ProbedSubtitles(context.Background(), &Session{Token: "t", UserID: "USERID0000"}, "01000000000000000000000000000006")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got != "POST /movies/Items/01000000000000000000000000000006/PlaybackInfo?UserId=USERID0000" {
+		t.Errorf("request %q", got)
+	}
+	if msID != "01000000000000000000000000000006" || len(subs) != 2 || subs[0].Language != "en" || subs[1].Language != "fr" {
+		t.Fatalf("got %q %+v", msID, subs)
 	}
 }

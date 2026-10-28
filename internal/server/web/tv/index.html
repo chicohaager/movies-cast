@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Movies</title>
+<script src="../i18n.js"></script>
 <link rel="icon" href="../logo.svg" type="image/svg+xml">
 <link rel="stylesheet" href="tv.css">
 </head>
@@ -13,12 +14,12 @@
 <section id="pair" class="screen" hidden>
   <img class="pair-logo" src="../logo.svg" alt="">
   <h1>Movies</h1>
-  <p class="big">Fernseher koppeln</p>
+  <p class="big" data-i18n="pairtv.h">Fernseher koppeln</p>
   <div id="pair-code" class="code">––– –––</div>
   <ol class="steps">
-    <li>Am Handy <b id="pair-url"></b> öffnen und anmelden</li>
-    <li>„Fernseher-App koppeln“ wählen</li>
-    <li>Diesen Code eingeben</li>
+    <li><span data-i18n="pairtv.s1a">Am Handy </span><b id="pair-url"></b><span data-i18n="pairtv.s1b"> öffnen und anmelden</span></li>
+    <li data-i18n="pairtv.s2">„Fernseher-App koppeln“ wählen</li>
+    <li data-i18n="pairtv.s3">Diesen Code eingeben</li>
   </ol>
   <p id="pair-state" class="hint"></p>
 </section>
@@ -27,12 +28,12 @@
   <header class="bar"><h1><img class="logo" src="../logo.svg" alt="">Movies</h1><span id="lib-user" class="hint"></span></header>
   <div id="lib-scroll" class="lib-scroll">
     <div id="resume-wrap" hidden>
-      <h2>Weiterschauen</h2>
+      <h2 data-i18n="row.resume">Weiterschauen</h2>
       <div id="resume" class="grid"></div>
     </div>
-    <h2 id="all-h">Alle Filme</h2>
+    <h2 id="all-h" data-i18n="row.all">Alle Filme</h2>
     <div id="grid" class="grid"></div>
-    <p id="lib-empty" class="hint" hidden>Keine Filme in Movies gefunden.</p>
+    <p id="lib-empty" class="hint" hidden data-i18n="empty">Keine Filme in Movies gefunden.</p>
   </div>
 </section>
 
@@ -45,8 +46,8 @@
       <p id="d-overview" class="overview"></p>
       <div class="buttons">
         <button id="d-resume" class="btn focusable" hidden></button>
-        <button id="d-start" class="btn focusable">Von vorn abspielen</button>
-        <button id="d-back" class="btn ghost focusable">Zurück</button>
+        <button id="d-start" class="btn focusable" data-i18n="d.start">Von vorn abspielen</button>
+        <button id="d-back" class="btn ghost focusable" data-i18n="d.back">Zurück</button>
       </div>
     </div>
   </div>
@@ -57,9 +58,9 @@
   <div id="osd" class="osd">
     <div class="osd-top"><span id="o-state" class="badge"></span><strong id="o-title"></strong><span id="o-audio" class="hint"></span><span id="o-sub" class="hint"></span></div>
     <div class="track"><i id="o-fill"></i></div>
-    <div class="times"><span id="o-pos">0:00:00</span><span class="hint">OK Pause · ◀ −10 s · ▶ +30 s · ▲ Ton · ▼ Untertitel · Zurück beendet</span><span id="o-dur">0:00:00</span></div>
+    <div class="times"><span id="o-pos">0:00:00</span><span class="hint" data-i18n="osd.hint">OK Pause · ◀ −10 s · ▶ +30 s · ▲ Ton · ▼ Untertitel · Zurück beendet</span><span id="o-dur">0:00:00</span></div>
   </div>
-  <div id="spinner" class="spinner" hidden>lädt …</div>
+  <div id="spinner" class="spinner" hidden data-i18n="loading">lädt …</div>
 </section>
 
 <script src="tv.js"></script>

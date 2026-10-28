@@ -222,6 +222,13 @@ func TestTVPlayOffersSubtitlesOnlyToItsOwnSession(t *testing.T) {
 	if c, _ := tv.get(u); c != http.StatusNotFound {
 		t.Fatalf("after stop: %d", c)
 	}
+	phone.movies.mu.Lock()
+	defer phone.movies.mu.Unlock()
+	for _, rep := range phone.movies.reports {
+		if strings.HasPrefix(rep, "PlaybackInfo ") {
+			t.Fatalf("asked Movies for PlaybackInfo, which starts a transcode on the box: %s", rep)
+		}
+	}
 }
 
 func TestResumeRowInMoviesOrder(t *testing.T) {
@@ -234,5 +241,51 @@ func TestResumeRowInMoviesOrder(t *testing.T) {
 	a, g, sh := strings.Index(body, "Avatar"), strings.Index(body, "Glennkill"), strings.Index(body, "Shelter")
 	if sh < 0 || sh >= g || g >= a { // the fake answers reversed: Shelter, Glennkill, Avatar
 		t.Fatalf("order: %s", body)
+	}
+}
+
+func (r *rig) playbackInfos() int {
+	r.movies.mu.Lock()
+	defer r.movies.mu.Unlock()
+	n := 0
+	for _, rep := range r.movies.reports {
+		if strings.HasPrefix(rep, "PlaybackInfo ") {
+			n++
+		}
+	}
+	return n
+}
+
+// A film whose item answer lists no subtitles (streams not read, like Shelter
+// on 2026-10-28) plays without PlaybackInfo; the subtitles come on request,
+// PlaybackInfo is asked once per film, and only for the session's own play.
+func TestTVSubtitlesOnRequest(t *testing.T) {
+	phone := newRig(t)
+	tv := phone.tvClient()
+	phone.login()
+	pairTV(t, phone, tv)
+	const unread = "01000000000000000000000000000003" // its captured item has no width and no subtitle
+	code, out := tv.post("/api/tv/play", map[string]any{"movie": unread})
+	if code != http.StatusOK || out["subtitlesOnRequest"] != true || len(out["subtitles"].([]any)) != 0 {
+		t.Fatalf("play: %d %v", code, out)
+	}
+	if n := phone.playbackInfos(); n != 0 {
+		t.Fatalf("play asked PlaybackInfo %d times", n)
+	}
+	if c, _ := phone.post("/api/tv/subs-probe", map[string]any{"play": out["play"]}); c != http.StatusNotFound {
+		t.Fatalf("foreign session probe: %d", c)
+	}
+	c, pr := tv.post("/api/tv/subs-probe", map[string]any{"play": out["play"]})
+	subs, _ := pr["subtitles"].([]any)
+	if c != http.StatusOK || len(subs) != 2 || phone.playbackInfos() != 1 {
+		t.Fatalf("probe: %d %v, PlaybackInfo %d", c, pr, phone.playbackInfos())
+	}
+	if c, body := tv.get(subs[0].(map[string]any)["url"].(string)); c != http.StatusOK || !strings.HasPrefix(body, "WEBVTT") {
+		t.Fatalf("probed subtitle: %d", c)
+	}
+	// The same film again: listed from the cache, no second PlaybackInfo.
+	_, again := tv.post("/api/tv/play", map[string]any{"movie": unread})
+	if again["subtitlesOnRequest"] != false || len(again["subtitles"].([]any)) != 2 || phone.playbackInfos() != 1 {
+		t.Fatalf("second play: %v, PlaybackInfo %d", again, phone.playbackInfos())
 	}
 }

@@ -1,0 +1,86 @@
+{
+ "Id": "01000000000000000000000000000001",
+ "Name": "Avatar: Fire and Ash",
+ "MediaSources": [
+  {
+   "Id": "01000000000000000000000000000001",
+   "MediaStreams": [
+    {
+     "Type": "Video",
+     "Index": 0,
+     "Codec": "hevc",
+     "IsExternal": false
+    },
+    {
+     "Type": "Audio",
+     "Index": 1,
+     "Codec": "eac3",
+     "Language": "de",
+     "DisplayTitle": "German",
+     "IsExternal": false
+    },
+    {
+     "Type": "Audio",
+     "Index": 2,
+     "Codec": "eac3",
+     "Language": "de",
+     "DisplayTitle": "German",
+     "IsExternal": false
+    },
+    {
+     "Type": "Audio",
+     "Index": 3,
+     "Codec": "eac3",
+     "Language": "en",
+     "DisplayTitle": "English",
+     "IsExternal": false
+    },
+    {
+     "Type": "Subtitle",
+     "Index": 4,
+     "Codec": "srt",
+     "Language": "de",
+     "DisplayTitle": "German",
+     "IsExternal": false,
+     "DeliveryMethod": "External"
+    },
+    {
+     "Type": "Subtitle",
+     "Index": 5,
+     "Codec": "srt",
+     "Language": "de",
+     "DisplayTitle": "German [SDH]",
+     "IsExternal": false,
+     "DeliveryMethod": "External"
+    },
+    {
+     "Type": "Subtitle",
+     "Index": 6,
+     "Codec": "srt",
+     "Language": "en",
+     "DisplayTitle": "English [Forced]",
+     "IsExternal": false,
+     "DeliveryMethod": "External"
+    },
+    {
+     "Type": "Subtitle",
+     "Index": 7,
+     "Codec": "srt",
+     "Language": "en",
+     "DisplayTitle": "English",
+     "IsExternal": false,
+     "DeliveryMethod": "External"
+    },
+    {
+     "Type": "Subtitle",
+     "Index": 8,
+     "Codec": "srt",
+     "Language": "en",
+     "DisplayTitle": "English [SDH]",
+     "IsExternal": false,
+     "DeliveryMethod": "External"
+    }
+   ]
+  }
+ ]
+}
