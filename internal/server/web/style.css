@@ -30,6 +30,7 @@ button:disabled { opacity: .5; cursor: default; }
 .row select { margin-top: 0; flex: 1; min-width: 0; }
 .error { background: var(--error-bg); color: var(--danger); border-bottom: 1px solid var(--danger);
   padding: 10px 16px; font-weight: 600; }
+.section { font-size: 1rem; font-weight: 600; color: var(--muted); margin: 16px 0 8px; }
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; }
 .tile { background: var(--card); border: 1px solid var(--line); border-radius: 12px; overflow: hidden;
   padding: 0; text-align: left; color: var(--text); font-weight: 500; min-height: 0; }

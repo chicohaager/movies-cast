@@ -1,7 +1,7 @@
 "use strict";
 
 const $ = (id) => document.getElementById(id);
-const state = { movies: [], tv: localGet("tv"), selected: null, polling: null, status: null, seeking: false };
+const state = { movies: [], resume: [], wasPlaying: false, tv: localGet("tv"), selected: null, polling: null, status: null, seeking: false };
 
 function localGet(k) { try { return localStorage.getItem(k) || ""; } catch { return ""; } }
 function localSet(k, v) { try { localStorage.setItem(k, v); } catch { /* private mode */ } }
@@ -107,7 +107,12 @@ $("refresh").addEventListener("click", () => loadTVs(true));
 
 async function loadMovies() {
   try {
-    state.movies = await api("/api/movies");
+    const [movies, resume] = await Promise.all([
+      api("/api/movies"),
+      api("/api/resume").catch(() => []), // the row is extra; the list must not depend on it
+    ]);
+    state.movies = movies;
+    state.resume = resume || [];
     renderMovies();
   } catch (err) {
     showError(err.message);
@@ -138,10 +143,15 @@ function metaLine(m) {
 }
 
 function renderMovies() {
-  const list = $("list");
-  list.innerHTML = "";
+  $("resume-wrap").hidden = state.resume.length === 0;
+  renderTiles($("resume-list"), state.resume);
+  renderTiles($("list"), state.movies);
   $("empty").hidden = state.movies.length > 0;
-  for (const m of state.movies) {
+}
+
+function renderTiles(list, movies) {
+  list.innerHTML = "";
+  for (const m of movies) {
     const b = document.createElement("button");
     b.className = "tile";
     b.append(posterImg(m));
@@ -253,6 +263,9 @@ async function pollOnce() {
     if ($("error").textContent.startsWith("Fernseher:")) showError("");
     const active = st.ours && st.state !== "STOPPED" && st.state !== "NO_MEDIA_PRESENT";
     $("player").hidden = !active;
+    // A film just ended or was stopped: its new resume point belongs in the row.
+    if (state.wasPlaying && !active) loadMovies();
+    state.wasPlaying = active;
     if (!active) return;
     $("p-state").textContent = stateNames[st.state] || st.state;
     $("p-title").textContent = st.title || "";
