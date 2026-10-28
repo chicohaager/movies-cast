@@ -1,6 +1,10 @@
 package server
 
 import (
+	"bytes"
+	"io"
+	"net/http"
+	"os"
 	"regexp"
 	"strings"
 	"testing"
@@ -46,5 +50,24 @@ func checkNone(t *testing.T, name, src string, rules map[string]string) {
 				t.Errorf("%s:%d uses %s: %s", name, i+1, why, strings.TrimSpace(line))
 			}
 		}
+	}
+}
+
+// web/logo.svg is a copy of deploy/webos/logo/logo.svg, the source of the TV
+// app's icons; a change to one must reach the other.
+func TestLogoServedIsTheIconSource(t *testing.T) {
+	src, err := os.ReadFile("../../deploy/webos/logo/logo.svg")
+	if err != nil {
+		t.Fatal(err)
+	}
+	r := newRig(t)
+	resp, err := http.Get(r.srv.URL + "/logo.svg")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer resp.Body.Close()
+	body, _ := io.ReadAll(resp.Body)
+	if resp.StatusCode != http.StatusOK || resp.Header.Get("Content-Type") != "image/svg+xml" || !bytes.Equal(body, src) {
+		t.Fatalf("GET /logo.svg: %d %q, %d bytes, equal to source: %v", resp.StatusCode, resp.Header.Get("Content-Type"), len(body), bytes.Equal(body, src))
 	}
 }
