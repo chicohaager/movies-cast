@@ -1,6 +1,8 @@
 "use strict";
 
 const $ = (id) => document.getElementById(id);
+const t = I18N.t;
+I18N.apply();
 const state = { movies: [], resume: [], wasPlaying: false, tv: localGet("tv"), selected: null, polling: null, status: null, seeking: false };
 
 function localGet(k) { try { return localStorage.getItem(k) || ""; } catch { return ""; } }
@@ -20,15 +22,17 @@ async function api(path, body) {
   try {
     res = await fetch(path, { credentials: "same-origin", ...opt });
   } catch (err) {
-    throw new Error("Server nicht erreichbar");
+    throw new Error(t("err.server"));
   }
   let data = null;
   try { data = await res.json(); } catch { /* no body */ }
   if (res.status === 401 && path !== "/api/login") {
     showView("login");
-    throw new Error((data && data.error) || "Bitte neu anmelden");
+    const e = new Error(I18N.serverError(data) || t("err.relogin"));
+    e.status = 401;
+    throw e;
   }
-  if (!res.ok) throw new Error((data && data.error) || `Fehler ${res.status}`);
+  if (!res.ok) throw new Error(I18N.serverError(data) || t("err.http", res.status));
   return data;
 }
 
@@ -85,8 +89,8 @@ async function loadTVs(refresh) {
     const tvs = await api("/api/renderers" + (refresh ? "?refresh=1" : ""));
     sel.innerHTML = "";
     if (!tvs.length) {
-      sel.append(new Option("Kein Fernseher gefunden", ""));
-      showError("Kein Fernseher gefunden. Ist er eingeschaltet und im selben Netz?");
+      sel.append(new Option(t("tv.none"), ""));
+      showError(t("tv.noneHint"));
       return;
     }
     for (const tv of tvs) sel.append(new Option(`${tv.name} (${tv.host})`, tv.id));
@@ -185,7 +189,7 @@ function openDetail(m) {
   img.hidden = !m.hasPoster;
   const r = $("d-resume");
   r.hidden = !(m.resumeSeconds > 0);
-  r.textContent = `Fortsetzen bei ${hms(m.resumeSeconds)}`;
+  r.textContent = t("d.resume", hms(m.resumeSeconds));
   $("detail").showModal();
 }
 
@@ -193,7 +197,7 @@ $("detail").addEventListener("close", async () => {
   const v = $("detail").returnValue;
   if (v !== "resume" && v !== "start") return;
   if (!state.tv) {
-    showError("Erst einen Fernseher wählen.");
+    showError(t("play.chooseTv"));
     return;
   }
   showError("");
@@ -236,12 +240,12 @@ $("pair-form").addEventListener("submit", async (ev) => {
   const code = $("pair-code").value.replace(/\s+/g, "");
   const out = $("pair-result");
   if (!/^[0-9]{6}$/.test(code)) {
-    out.textContent = "Bitte die 6 Ziffern vom Fernseher eingeben.";
+    out.textContent = t("pair.need6");
     return;
   }
   try {
     await api("/api/tv/pair/approve", { code });
-    out.textContent = "Gekoppelt – der Fernseher zeigt gleich die Filme.";
+    out.textContent = t("pair.ok");
     $("pair-code").value = "";
     showError("");
   } catch (err) {
@@ -250,26 +254,22 @@ $("pair-form").addEventListener("submit", async (ev) => {
   }
 });
 
-const stateNames = {
-  PLAYING: "läuft", PAUSED_PLAYBACK: "Pause", STOPPED: "gestoppt",
-  TRANSITIONING: "lädt …", NO_MEDIA_PRESENT: "bereit",
-};
 
 async function pollOnce() {
   if (!state.tv) return;
   try {
     const st = await api(`/api/status?renderer=${encodeURIComponent(state.tv)}`);
     state.status = st;
-    if ($("error").textContent.startsWith("Fernseher:")) showError("");
+    if (state.tvError) { state.tvError = false; showError(""); }
     const active = st.ours && st.state !== "STOPPED" && st.state !== "NO_MEDIA_PRESENT";
     $("player").hidden = !active;
     // A film just ended or was stopped: its new resume point belongs in the row.
     if (state.wasPlaying && !active) loadMovies();
     state.wasPlaying = active;
     if (!active) return;
-    $("p-state").textContent = stateNames[st.state] || st.state;
+    $("p-state").textContent = t("st." + st.state) === "st." + st.state ? st.state : t("st." + st.state);
     $("p-title").textContent = st.title || "";
-    $("p-toggle").textContent = st.state === "PLAYING" ? "Pause" : "Weiter";
+    $("p-toggle").textContent = st.state === "PLAYING" ? t("p.pause") : t("p.continue");
     if (!state.seeking) {
       seek.max = st.durationSeconds || 0;
       seek.value = st.positionSeconds || 0;
@@ -281,7 +281,7 @@ async function pollOnce() {
   } catch (err) {
     // A TV that is switched off answers nothing; show it, keep polling.
     $("player").hidden = true;
-    if (!/anmelden/i.test(err.message)) showError(`Fernseher: ${err.message}`);
+    if (err.status !== 401) { state.tvError = true; showError(t("tv.err", err.message)); }
   }
 }
 

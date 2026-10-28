@@ -2,6 +2,8 @@
 // 2026-10-28): no async/await, no object spread, no ?. / ??, no padStart,
 // no Object.entries/values. TestTVAssetsFitChrome53 enforces this list.
 "use strict";
+var tr = I18N.t;
+I18N.apply();
 
 var KEY = {
   LEFT: 37, UP: 38, RIGHT: 39, DOWN: 40, OK: 13,
@@ -33,7 +35,7 @@ function api(path, body) {
   return fetch(path, opt).then(function (res) {
     return res.json().catch(function () { return null; }).then(function (data) {
       if (!res.ok) {
-        var err = new Error((data && data.error) || ("Fehler " + res.status));
+        var err = new Error(I18N.serverError(data) || tr("err.http", res.status));
         err.status = res.status;
         throw err;
       }
@@ -102,10 +104,10 @@ function startPairing() {
   clearTimeout(state.pairTimer);
   api("/api/tv/pair/start", {}).then(function (p) {
     $("pair-code").textContent = p.code.slice(0, 3) + " " + p.code.slice(3);
-    $("pair-state").textContent = "Wartet auf Bestätigung am Handy …";
+    $("pair-state").textContent = tr("pairtv.wait");
     pollPairing(p.id);
   }).catch(function (e) {
-    $("pair-state").textContent = "Kopplung nicht möglich: " + e.message + " — neuer Versuch in 10 s";
+    $("pair-state").textContent = tr("pairtv.fail", e.message);
     state.pairTimer = setTimeout(startPairing, 10000);
   });
 }
@@ -207,7 +209,7 @@ function openDetail(id) {
   $("d-poster").src = m.hasPoster ? posterURL(m) : "";
   var r = $("d-resume");
   r.hidden = !(m.resumeSeconds > 0);
-  r.textContent = "Fortsetzen bei " + hms(m.resumeSeconds);
+  r.textContent = tr("d.resume", hms(m.resumeSeconds));
   setFocus(r.hidden ? $("d-start") : r);
 }
 
@@ -224,7 +226,13 @@ function startPlay(resume) {
   $("o-sub").textContent = "";
   api("/api/tv/play", { movie: m.id, resume: resume }).then(function (p) {
     state.play = p;
-    setTracks(p.subtitles || []);
+    state.subsOnRequest = !!p.subtitlesOnRequest;
+    // Subtitle tracks come only once the picture runs: with a remembered
+    // language the LG held the start until that track had loaded, and Movies
+    // takes 30 s to extract an embedded track (measured: canplay at 30.1 s
+    // with tracks, 0.86 s without, Avatar, 2026-10-28).
+    setTracks([]);
+    state.pendingSubs = p.subtitles || [];
     video.src = p.url;
     var started = false;
     video.onloadedmetadata = function () {
@@ -235,7 +243,7 @@ function startPlay(resume) {
       applySub();
     };
     var pr = video.play();
-    if (pr && pr.catch) pr.catch(function (e) { showMsg("Wiedergabe: " + e.message); });
+    if (pr && pr.catch) pr.catch(function (e) { showMsg(tr("play.err", e.message)); });
     osd();
   }).catch(function (e) {
     showMsg(e.message);
@@ -266,8 +274,41 @@ function osd() {
   var o = $("osd");
   o.classList.remove("off");
   clearTimeout(state.osdTimer);
-  state.osdTimer = setTimeout(function () { if (!video.paused) o.classList.add("off"); }, 4000);
+  state.osdTimer = setTimeout(function () {
+    if (!video.paused) o.classList.add("off");
+    liftCues();
+  }, 4000);
   updateOSD();
+}
+
+// Rows a cue takes: its line breaks, plus one for a long line that wraps. Line
+// -N places the cue's first row N rows from the bottom; further rows run down
+// (two-row cues reached into the bar at -5, seen in a recording).
+function cueLines(text) {
+  var rows = String(text || "").split("\n"), n = rows.length;
+  for (var i = 0; i < rows.length; i++) if (rows[i].length > 42) n++;
+  return n;
+}
+
+// While the bar at the bottom shows, subtitles move up above it; they lay on
+// the key line before (seen in a recording, 2026-10-28). Cues load after the
+// track, so the cue count is part of the remembered state.
+function liftCues() {
+  var up = !$("osd").classList.contains("off");
+  var tt = video.textTracks, n = 0, i, j;
+  for (i = 0; i < tt.length; i++) n += tt[i].cues ? tt[i].cues.length : 0;
+  var key = (up ? "up:" : "down:") + n;
+  if (key === state.cueLift) return;
+  state.cueLift = key;
+  for (i = 0; i < tt.length; i++) {
+    var c = tt[i].cues;
+    if (!c) continue;
+    for (j = 0; j < c.length; j++) {
+      try { c[j].line = up ? -(4 + cueLines(c[j].text)) : "auto"; } catch (e) { /* a cue that refuses keeps its place */ }
+    }
+    // A cue on screen keeps its old place until the track is drawn again.
+    if (tt[i].mode === "showing") { tt[i].mode = "hidden"; tt[i].mode = "showing"; }
+  }
 }
 
 function updateOSD() {
@@ -275,7 +316,8 @@ function updateOSD() {
   $("o-pos").textContent = hms(video.currentTime);
   $("o-dur").textContent = hms(d);
   $("o-fill").style.width = d ? (100 * video.currentTime / d) + "%" : "0";
-  $("o-state").textContent = video.paused ? "Pause" : "läuft";
+  liftCues();
+  $("o-state").textContent = video.paused ? tr("o.paused") : tr("o.playing");
 }
 
 function seekBy(sec) {
@@ -292,7 +334,7 @@ function showAudio() {
   var at = audioTracks();
   for (var i = 0; i < at.length; i++) {
     if (at[i].enabled) {
-      $("o-audio").textContent = "Ton " + (i + 1) + "/" + at.length + (at[i].language ? " · " + at[i].language : "") + (at[i].label ? " · " + at[i].label : "");
+      $("o-audio").textContent = tr("o.audio", i + 1, at.length) + (at[i].language ? " · " + at[i].language : "") + (at[i].label ? " · " + at[i].label : "");
     }
   }
 }
@@ -327,7 +369,23 @@ video.textTracks.addEventListener("change", function () {
   if (state.screen === "player") applySub(); // applySub only writes on a difference, so no loop
 });
 video.addEventListener("waiting", function () { $("spinner").hidden = false; });
-video.addEventListener("playing", function () { $("spinner").hidden = true; report(); osd(); });
+video.addEventListener("playing", function () {
+  $("spinner").hidden = true;
+  attachPendingSubs(true);
+  report();
+  osd();
+});
+
+// attachPendingSubs adds the play's subtitle tracks; probe: also ask for
+// subtitles the item did not list when a language is remembered.
+function attachPendingSubs(probe) {
+  if (!state.pendingSubs) return;
+  var subs = state.pendingSubs;
+  state.pendingSubs = null;
+  setTracks(subs);
+  var want = loadPref("subLang");
+  if (probe && state.subsOnRequest && want && want !== "off") probeSubs(false);
+}
 video.addEventListener("pause", function () { report(); osd(); });
 video.addEventListener("timeupdate", function () {
   if (state.screen === "player") updateOSD();
@@ -336,7 +394,7 @@ video.addEventListener("timeupdate", function () {
 video.addEventListener("ended", stopPlay);
 video.addEventListener("error", function () {
   var e = video.error;
-  showMsg("Wiedergabe nicht möglich" + (e ? " (Code " + e.code + ")" : ""));
+  showMsg(tr("play.fail") + (e ? " (Code " + e.code + ")" : ""));
 });
 
 // ---- subtitles ----------------------------------------------------------
@@ -384,13 +442,43 @@ function savePref(k, v) { try { window.localStorage.setItem("moviescast." + k, v
 function showSub() {
   var tt = video.textTracks;
   if (!tt.length) { $("o-sub").textContent = ""; return; }
-  $("o-sub").textContent = state.subIdx < 0 ? "UT aus" : "UT " + (tt[state.subIdx].label || tt[state.subIdx].language);
+  $("o-sub").textContent = state.subIdx < 0 ? tr("o.subOff") : tr("o.sub", tt[state.subIdx].label || tt[state.subIdx].language);
 }
 
 // Down walks: off, track 1, ..., off.
+// probeSubs asks the server for subtitles the item did not list (the server
+// then asks Movies' PlaybackInfo once per film). pick: select the first track.
+function probeSubs(pick) {
+  if (!state.play || state.probing) return;
+  state.probing = true;
+  var playID = state.play.play;
+  $("o-sub").textContent = tr("o.subLoading");
+  osd();
+  api("/api/tv/subs-probe", { play: playID }).then(function (r) {
+    state.probing = false;
+    if (!state.play || state.play.play !== playID) return;
+    state.subsOnRequest = false;
+    setTracks(r.subtitles || []);
+    if (!video.textTracks.length) { $("o-sub").textContent = tr("o.subNone"); return; }
+    if (pick && state.subIdx < 0) {
+      state.subIdx = 0;
+      applySub();
+      savePref("subLang", video.textTracks[0].language || "off");
+    }
+  }).catch(function (e) {
+    state.probing = false;
+    showMsg(e.message);
+  });
+}
+
 function cycleSub() {
+  attachPendingSubs(false);
   var n = video.textTracks.length;
-  if (!n) { osd(); return; }
+  if (!n) {
+    if (state.subsOnRequest) probeSubs(true);
+    else osd();
+    return;
+  }
   state.subIdx = state.subIdx + 1 >= n ? -1 : state.subIdx + 1;
   applySub();
   savePref("subLang", state.subIdx < 0 ? "off" : (video.textTracks[state.subIdx].language || "off"));
@@ -460,5 +548,5 @@ document.addEventListener("click", function (ev) {
 
 api("/api/me").then(function () { openLibrary(); }).catch(function (e) {
   if (e.status === 401) startPairing();
-  else showMsg("Server nicht erreichbar: " + e.message);
+  else showMsg(tr("err.serverDetail", e.message));
 });

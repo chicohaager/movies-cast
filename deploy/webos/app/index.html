@@ -10,25 +10,31 @@ body { margin: 0; background: #0d0f14; color: #eef0f5; font: 2vw sans-serif; tex
 </style>
 </head>
 <body>
-<p id="t">Movies wird geöffnet …</p>
+<p id="t"></p>
 <p id="h" class="hint"></p>
 <script>
 var SERVER = "http://nas.local:8097";
+var DE = (navigator.language || "").toLowerCase().indexOf("de") === 0;
+var T = DE ? { open: "Movies wird geöffnet …", fail: "movies-cast auf {s} ist nicht erreichbar ({w}).", retry: "Neuer Versuch in 10 Sekunden …",
+               answer: "Antwort ", conn: "keine Verbindung", time: "keine Antwort" }
+           : { open: "Opening Movies …", fail: "movies-cast at {s} is not reachable ({w}).", retry: "Trying again in 10 seconds …",
+               answer: "answer ", conn: "no connection", time: "no answer" };
+document.getElementById("t").textContent = T.open;
 function probe() {
   var x = new XMLHttpRequest();
   x.open("GET", SERVER + "/healthz", true);
   x.timeout = 5000;
   x.onload = function () {
     if (x.status === 200) { location.replace(SERVER + "/tv/"); return; }
-    fail("Antwort " + x.status);
+    fail(T.answer + x.status);
   };
-  x.onerror = function () { fail("keine Verbindung"); };
-  x.ontimeout = function () { fail("keine Antwort"); };
+  x.onerror = function () { fail(T.conn); };
+  x.ontimeout = function () { fail(T.time); };
   x.send();
 }
 function fail(why) {
-  document.getElementById("t").textContent = "movies-cast auf " + SERVER + " ist nicht erreichbar (" + why + ").";
-  document.getElementById("h").textContent = "Neuer Versuch in 10 Sekunden …";
+  document.getElementById("t").textContent = T.fail.replace("{s}", SERVER).replace("{w}", why);
+  document.getElementById("h").textContent = T.retry;
   setTimeout(probe, 10000);
 }
 probe();

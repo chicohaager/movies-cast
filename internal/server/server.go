@@ -85,6 +85,9 @@ type Server struct {
 	sessions map[string]*session
 	plays    map[string]*play // by play ID
 	byTV     map[string]*play // active play per renderer ID
+	// probedSubs keeps what PlaybackInfo listed per film, so it is asked once
+	// per film and server start (each answer starts a transcode on the box).
+	probedSubs map[string]probedSubs
 
 	loginFails map[string][]time.Time // by client IP
 	pairings   map[string]*pairing    // TV-app pairings by secret ID
@@ -113,6 +116,7 @@ type play struct {
 	browser   bool // played by the TV app's <video>, not via DLNA
 	subs      []movies.Subtitle
 	msID      string    // media source ID the subtitle URLs need
+	subsLater bool      // the item listed none; ask PlaybackInfo when subtitles are wanted
 	lastBeat  time.Time // last progress from the TV app
 	paused    bool
 }
@@ -136,6 +140,7 @@ func New(cfg Config, mc *movies.Client, tv Transport, r Renderers) *Server {
 		sessions:       map[string]*session{},
 		plays:          map[string]*play{},
 		byTV:           map[string]*play{},
+		probedSubs:     map[string]probedSubs{},
 	}
 	if err := srv.loadSessions(); err != nil {
 		log.Printf("state: %v (starting without stored sessions)", err)
@@ -176,6 +181,7 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("POST /api/tv/play", s.withSession(s.tvPlay))
 	mux.HandleFunc("POST /api/tv/progress", s.withSession(s.tvProgress))
 	mux.HandleFunc("GET /api/tv/subs/{play}/{file}", s.withSession(s.tvSubtitle))
+	mux.HandleFunc("POST /api/tv/subs-probe", s.withSession(s.tvSubsProbe))
 	mux.HandleFunc("GET /api/resume", s.withSession(s.listResume))
 	mux.HandleFunc("GET /s/{play}/{name}", s.serveStream)
 	mux.HandleFunc("HEAD /s/{play}/{name}", s.serveStream)
@@ -225,8 +231,53 @@ func writeJSON(w http.ResponseWriter, code int, v any) {
 	_ = json.NewEncoder(w).Encode(v)
 }
 
+// fail answers with the German message and its English text (errorEn); the
+// page shows the one of its language. TestEveryFailMessageHasEnglish keeps
+// errorsEn complete.
 func fail(w http.ResponseWriter, code int, msg string) {
-	writeJSON(w, code, map[string]string{"error": msg})
+	writeJSON(w, code, map[string]string{"error": msg, "errorEn": english(msg)})
+}
+
+var errorsEn = map[string]string{
+	"Movies nicht erreichbar":                                     "Movies not reachable",
+	"Fernseher nicht gefunden":                                    "TV not found",
+	"Zu viele Fehlversuche, bitte in einigen Minuten erneut":      "Too many failed attempts, please try again in a few minutes",
+	"ungültige Anfrage":                                           "invalid request",
+	"nicht angemeldet":                                            "not logged in",
+	"zu viele offene Kopplungen, bitte in einigen Minuten erneut": "too many open pairings, please try again in a few minutes",
+	"Wiedergabe wurde inzwischen ersetzt oder gestoppt":           "the playback was replaced or stopped in the meantime",
+	"Wiedergabe unbekannt":                                        "unknown playback",
+	"ungültige ID":                                                "invalid ID",
+	"unbekannte Aktion":                                           "unknown action",
+	"Suche nach Fernsehern fehlgeschlagen":                        "search for TVs failed",
+	"Movies antwortet nicht wie erwartet":                         "Movies does not answer as expected",
+	"Kopplung abgelaufen":                                         "pairing expired",
+	"keine Netzverbindung zum Fernseher":                          "no network connection to the TV",
+	"Film und Fernseher angeben":                                  "choose a film and a TV",
+	"Film angeben":                                                "choose a film",
+	"Fernseher startet nicht":                                     "the TV does not start",
+	"Fernseher hat nicht reagiert":                                "the TV did not react",
+	"Fernseher hat den Film abgelehnt":                            "the TV refused the film",
+	"Fernseher antwortet nicht":                                   "the TV does not answer",
+	"Code unbekannt oder abgelaufen":                              "unknown or expired code",
+	"Benutzer und Passwort angeben":                               "enter user and password",
+	"Benutzer oder Passwort falsch":                               "wrong user or password",
+	"Anmeldung bei Movies abgelaufen":                             "Movies login expired",
+	"6-stelligen Code angeben":                                    "enter the 6-digit code",
+}
+
+// english translates msg; a renderer suffix " (UPnP-Fehler N)" from faultCode
+// is kept with its number. Unknown text stays German rather than empty.
+func english(msg string) string {
+	base, suffix, _ := strings.Cut(msg, " (UPnP-Fehler ")
+	en, ok := errorsEn[base]
+	if !ok {
+		return msg
+	}
+	if suffix != "" {
+		en += " (UPnP error " + suffix
+	}
+	return en
 }
 
 func readJSON(r *http.Request, v any) error {

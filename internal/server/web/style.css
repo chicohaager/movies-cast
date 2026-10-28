@@ -45,8 +45,12 @@ button:disabled { opacity: .5; cursor: default; }
 .player .now strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .badge { font-size: .75rem; padding: 2px 8px; border-radius: 99px; background: var(--line); white-space: nowrap; }
 .times { display: flex; justify-content: space-between; color: var(--muted); font-size: .85rem; font-variant-numeric: tabular-nums; }
-.controls { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
-.controls button { flex: 1 1 auto; }
+/* One row of four equal buttons: with wrap, the wider "Resume" pushed Stop onto its own line (recording, 2026-10-28). */
+.controls { display: flex; flex-wrap: nowrap; gap: 8px; margin-top: 10px; }
+.controls button { flex: 1 1 0; min-width: 0; padding: 10px 4px; white-space: nowrap; }
+.controls button[data-skip] { flex-grow: 0.75; }
+.controls #p-toggle { flex-grow: 1.25; }
+@media (max-width: 359px) { .controls { gap: 6px; } .controls button { font-size: 14px; } }
 .vol { margin-top: 12px; }
 .pair summary { cursor: pointer; font-weight: 600; min-height: 32px; }
 .pair form { margin-top: 10px; }

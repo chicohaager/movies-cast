@@ -7,6 +7,7 @@ internal/movies/movies_test.go:/Users/AuthenticateByName
 internal/movies/movies_test.go:/Users/USERID0000
 internal/server/server_test.go:/Users/AuthenticateByName
 internal/server/server_test.go:/Users/USERID0000
+deploy/tools/resume-guard.py:/Users/AuthenticateByName
 
 # Invented LAN addresses of the test fakes and doc examples (the real ones were replaced
 # 2026-10-28); the code under test needs private-range addresses.

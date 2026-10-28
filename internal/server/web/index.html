@@ -5,13 +5,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#111318">
 <title>Movies auf dem Fernseher</title>
+<script src="i18n.js"></script>
 <link rel="icon" href="logo.svg" type="image/svg+xml">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <header>
-  <h1><img class="logo" src="logo.svg" alt="">Movies <span>auf dem Fernseher</span></h1>
-  <button id="logout" class="ghost" hidden>Abmelden</button>
+  <h1><img class="logo" src="logo.svg" alt="">Movies <span data-i18n="sub">auf dem Fernseher</span></h1>
+  <button id="logout" class="ghost" hidden data-i18n="logout">Abmelden</button>
 </header>
 
 <div id="error" class="error" role="alert" hidden></div>
@@ -19,20 +22,20 @@
 <main>
   <section id="login-view" hidden>
     <form id="login-form" class="card">
-      <h2>Anmelden</h2>
-      <p class="hint">Mit deinem ZimaOS-Konto.</p>
-      <label>Benutzer <input name="user" autocomplete="username" required></label>
-      <label>Passwort <input name="password" type="password" autocomplete="current-password" required></label>
-      <button type="submit">Anmelden</button>
+      <h2 data-i18n="login.h">Anmelden</h2>
+      <p class="hint" data-i18n="login.hint">Mit deinem ZimaOS-Konto.</p>
+      <label><span data-i18n="login.user">Benutzer</span> <input name="user" autocomplete="username" required></label>
+      <label><span data-i18n="login.pw">Passwort</span> <input name="password" type="password" autocomplete="current-password" required></label>
+      <button type="submit" data-i18n="login.h">Anmelden</button>
     </form>
   </section>
 
   <section id="app-view" hidden>
     <div class="tvbar card">
-      <label for="tv">Fernseher</label>
+      <label for="tv" data-i18n="tv.label">Fernseher</label>
       <div class="row">
         <select id="tv"></select>
-        <button id="refresh" class="ghost" title="Neu suchen">Suchen</button>
+        <button id="refresh" class="ghost" title="Neu suchen" data-i18n="tv.search" data-i18n-attr="title:tv.searchTitle">Suchen</button>
       </div>
     </div>
 
@@ -45,32 +48,32 @@
       <div class="times"><span id="p-pos">0:00:00</span><span id="p-dur">0:00:00</span></div>
       <div class="controls">
         <button data-skip="-30" class="ghost">−30 s</button>
-        <button id="p-toggle">Pause</button>
+        <button id="p-toggle" data-i18n="p.pause">Pause</button>
         <button data-skip="30" class="ghost">+30 s</button>
-        <button id="p-stop" class="danger">Stopp</button>
+        <button id="p-stop" class="danger" data-i18n="p.stop">Stopp</button>
       </div>
       <div id="p-volrow" class="vol" hidden>
-        <label for="p-vol">Lautstärke</label>
+        <label for="p-vol" data-i18n="p.vol">Lautstärke</label>
         <input id="p-vol" type="range" min="0" max="100">
       </div>
     </div>
 
     <details class="card pair">
-      <summary>Fernseher-App koppeln</summary>
+      <summary data-i18n="pair.summary">Fernseher-App koppeln</summary>
       <form id="pair-form" class="row">
-        <input id="pair-code" inputmode="numeric" pattern="[0-9 ]*" maxlength="7" placeholder="Code vom Fernseher" autocomplete="off" aria-label="Code vom Fernseher">
-        <button type="submit">Koppeln</button>
+        <input id="pair-code" inputmode="numeric" pattern="[0-9 ]*" maxlength="7" placeholder="Code vom Fernseher" autocomplete="off" aria-label="Code vom Fernseher" data-i18n-attr="placeholder:pair.placeholder;aria-label:pair.placeholder">
+        <button type="submit" data-i18n="pair.btn">Koppeln</button>
       </form>
       <p id="pair-result" class="hint"></p>
     </details>
 
     <div id="resume-wrap" hidden>
-      <h2 class="section">Weiterschauen</h2>
+      <h2 class="section" data-i18n="row.resume">Weiterschauen</h2>
       <div id="resume-list" class="grid"></div>
-      <h2 class="section">Alle Filme</h2>
+      <h2 class="section" data-i18n="row.all">Alle Filme</h2>
     </div>
     <div id="list" class="grid" aria-live="polite"></div>
-    <p id="empty" class="hint" hidden>Keine Filme in Movies gefunden.</p>
+    <p id="empty" class="hint" hidden data-i18n="empty">Keine Filme in Movies gefunden.</p>
   </section>
 </main>
 
@@ -83,8 +86,8 @@
       <p id="d-overview"></p>
       <div class="controls">
         <button id="d-resume" value="resume" hidden>Fortsetzen</button>
-        <button id="d-start" value="start">Von vorn abspielen</button>
-        <button value="cancel" class="ghost">Schließen</button>
+        <button id="d-start" value="start" data-i18n="d.start">Von vorn abspielen</button>
+        <button value="cancel" class="ghost" data-i18n="d.close">Schließen</button>
       </div>
     </div>
   </form>

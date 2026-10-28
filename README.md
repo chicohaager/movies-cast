@@ -91,10 +91,22 @@ with the server; the TV gets no Movies token.
   gets its own session that shares the phone's Movies login (phone logout keeps the TV logged in;
   only the last session logs out at Movies).
 - **Library:** a "Weiterschauen" row (Movies' `Items/Resume`, its order) above "Alle Filme".
-- **Subtitles:** text tracks from Movies' PlaybackInfo (only there; the item answer lists none), served
-  as WebVTT through `/api/tv/subs/<play>/<index>.vtt` (own session's play only). Image subtitles (PGS)
-  are left out. Measured on the TV: 1276 cues loaded, cue shown at 0:46. Movies' `DeliveryUrl`
-  carries `?api_key=` and is never used. The last choice (a language or "off") is kept in the TV's
+- **Subtitles:** text tracks from the item answer with `Fields=MediaStreams`, served as WebVTT through
+  `/api/tv/subs/<play>/<index>.vtt` (own session's play only). Image subtitles (PGS) are left out.
+  Measured on the TV: 1276 cues loaded, cue shown at 0:46. **PlaybackInfo only on request:** Movies answers every
+  PlaybackInfo that lists the streams by starting a transcode on the box (log `[streamMedia] movie/1
+  transcode codec=h264 codec_decision=client_hevc_not_supported_or_profile_limited`, ffmpeg with VAAPI
+  for the first segment), although the TV plays the original file; flags or a device profile in the
+  request only gave `NoCompatibleStream` or still a transcode (measured 2026-10-28). Embedded subtitles
+  are extracted by Movies on first use (30 s for one track of a 37 GiB MKV).
+  **On request:** for 3 of the 4 films on .143 the item answer listed no subtitle and no video width (Shelter: none,
+  while PlaybackInfo lists en and fr). Such a play answers `subtitlesOnRequest`; the TV asks `/api/tv/subs-probe`
+  only when someone wants subtitles (▼, or a remembered language), and the server then asks PlaybackInfo once per
+  film and keeps the answer. Measured on the LG: Shelter starts without PlaybackInfo, ▼ loads en/fr (1276 cues).
+  Tracks are attached only once the picture runs: with a remembered language the LG held the start until
+  that track had loaded (Avatar: canplay at 30.1 s, Movies needs 30 s per embedded track; 2.1 s since 0.13).
+  While the bar at the bottom shows, cues move up above it (line −(4 + rows), measured on the LG: one row −5,
+  two rows −6). The last choice (a language or "off") is kept in the TV's
   `localStorage` and preselected for the next film; it survives an app restart (measured). Exactly
   one track shows: preselecting before load left both "showing" on the TV, so the choice is enforced
   again after load and on every track-list change.
@@ -108,10 +120,21 @@ with the server; the TV gets no Movies token.
   plays the original MKV (HEVC 4K, AC3/E-AC3) and seeks in < 1 s; `audioTracks` switches language;
   `canPlayType("video/x-matroska")` answers "" anyway, so the UI never asks it. The full flow
   (pair → library → detail → play → +30 s → audio → pause → Back) ran on the TV.
+- **Languages:** German and English (`internal/server/web/i18n.js`, both pages and the webOS start page). The device
+  language decides (`navigator.language`, the LG reports `de-DE`); `?lang=en` or `?lang=de` overrides it and is
+  remembered. Server errors carry `error` (German) and `errorEn`; `TestEveryFailMessageHasEnglish` and
+  `TestI18nKeysComplete` keep both complete.
+- **Phone home screen:** `manifest.json` with 192/512 px icons and an `apple-touch-icon` (rendered from the logo by
+  `deploy/webos/logo/render.py`; `TestManifestIconsExist`).
 - **Chrome 53:** no async/await, `?.`, `??`, object spread, padStart, CSS grid, flex `gap`,
   `aspect-ratio`; `TestTVAssetsFitChrome53` fails the build on them.
 - **Sessions survive restarts** with `STATE_FILE` (bind `/DATA/AppData/movies-cast/state`, dir owned
   by 65534, file 0600). Without it every update sent the TV back to pairing (seen on the TV).
+
+**Testing on a real library:** a test playback is a real playback; each stop overwrites the user's resume point on
+every device. `deploy/tools/resume-guard.py save|restore <file>` (env `MOVIES_URL`, `MOVIES_USER`,
+`MOVIES_PASSWORD_FILE`) saves all positions before and writes them back after a test, exit 1 if Movies does not
+answer with the saved state.
 
 Install / update on the TV (developer mode, device `lgtv` in ares):
 
