@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"log"
+	"net"
 	"net/http"
 	"net/url"
 	"slices"
@@ -38,6 +39,7 @@ type Finder struct {
 	at      time.Time
 	cached  []Renderer
 	lastLoc map[string]string // host → last description URL SSDP gave for it
+	conn    net.PacketConn    // SSDP socket, open for good when Port is fixed
 }
 
 // NewFinder splits entries into description URLs (with "://") and hosts.
@@ -61,7 +63,22 @@ func NewFinder(entries []string, ssdp bool, port int, c *Client) *Finder {
 		lastLoc: map[string]string{},
 	}
 	f.search = func(ctx context.Context, wait time.Duration) ([]string, error) {
-		return Search(ctx, wait, f.Port, f.Hosts)
+		if f.Port == 0 {
+			return Search(ctx, wait, 0, f.Hosts)
+		}
+		if f.conn == nil { // caller holds f.mu
+			c, err := ListenSSDP(ctx, f.Port)
+			if err != nil {
+				return nil, err
+			}
+			f.conn = c
+		}
+		locs, err := SearchOn(f.conn, wait, f.Hosts)
+		if err != nil {
+			f.conn.Close()
+			f.conn = nil
+		}
+		return locs, err
 	}
 	return f
 }
@@ -72,6 +89,23 @@ func hostOf(loc string) string {
 		return ""
 	}
 	return u.Hostname()
+}
+
+// Open binds the fixed SSDP port right away, so the firewall sees the port
+// before the first search (otherwise that search's answers can arrive before
+// ZFW has opened it). No-op without a fixed port.
+func (f *Finder) Open(ctx context.Context) error {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	if f.Port == 0 || f.conn != nil {
+		return nil
+	}
+	c, err := ListenSSDP(ctx, f.Port)
+	if err != nil {
+		return err
+	}
+	f.conn = c
+	return nil
 }
 
 // Find returns the cached list, or searches when it is stale or refresh is set.

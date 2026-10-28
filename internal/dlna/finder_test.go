@@ -6,6 +6,7 @@ import (
 	"net"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -216,4 +217,36 @@ func TestSearchSendsFromFixedPort(t *testing.T) {
 	if got := <-fromPort; got != port {
 		t.Fatalf("query left from port %d, want %d", got, port)
 	}
+}
+
+// With a fixed port the socket stays open between searches, so a firewall
+// that opens a host port only while it is listened on keeps it open.
+func TestFinderKeepsFixedPortOpen(t *testing.T) {
+	probe, err := net.ListenPacket("udp4", ":0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	port := probe.LocalAddr().(*net.UDPAddr).Port
+	probe.Close()
+	old := multicastTarget
+	multicastTarget = "127.0.0.1:9" // discard; no answer needed
+	defer func() { multicastTarget = old }()
+	f := NewFinder(nil, true, port, NewClient())
+	f.Wait = 100 * time.Millisecond
+	if err := f.Open(context.Background()); err != nil {
+		t.Fatal(err)
+	}
+	if c, err := net.ListenPacket("udp4", ":"+strconv.Itoa(port)); err == nil {
+		c.Close()
+		t.Fatalf("port %d free right after Open", port)
+	}
+	_, _ = f.Find(context.Background(), true)
+	if c, err := net.ListenPacket("udp4", ":"+strconv.Itoa(port)); err == nil {
+		c.Close()
+		t.Fatalf("port %d was free after the search, want it held open", port)
+	}
+	if f.conn == nil {
+		t.Fatal("no socket kept")
+	}
+	f.conn.Close()
 }

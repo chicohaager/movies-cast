@@ -102,6 +102,10 @@ func main() {
 		log.Fatalf("SSDP_PORT %q: not a port", os.Getenv("SSDP_PORT"))
 	}
 	finder := dlna.NewFinder(static, env("SSDP", "true") != "false", ssdpPort, tv)
+	if err := finder.Open(context.Background()); err != nil {
+		log.Printf("ssdp: port %d: %v (searching from a random port instead)", ssdpPort, err)
+		finder.Port = 0
+	}
 	srv := server.New(server.Config{PublicURL: os.Getenv("PUBLIC_URL"), Port: port, StateFile: os.Getenv("STATE_FILE")}, mc, tv, finder)
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)

@@ -42,9 +42,12 @@ press play. Pause, ±30 s, seek bar, stop and "continue at" work; progress goes 
 On .143, SSDP from a random port finds nothing: ZFW drops the TV's answers (default-deny INPUT; the LG
 answers from a random source port, so neither a multicast nor a unicast query gets a reply through —
 0 replies measured on .143, replies on .250). The LG does **not** keep its port either: 1795 earlier,
-1626 after a later start (measured 2026-10-28), so a fixed URL breaks. Hence the fixed search port:
-allow UDP `SSDP_PORT` (1901) from the LAN in the firewall, then SSDP works and `RENDERERS` can name
-hosts (`10.0.0.252,10.0.0.86`) instead of URLs. The Samsung UE50MU6179 answers the multicast query
+1626 after a later start (measured 2026-10-28), so a fixed URL breaks. Hence the fixed search port,
+held open from start-up: ZFW (v1.0.28+) treats it as a new app port, opens it to the LAN and asks
+once in its Exposure tab — answer *LAN only*. Measured on .143 with 0.16.0: port held, ZFW logged
+"new app port … 1901 udp", a search found both TVs by host with 0 drops. (A socket open only for the
+2 s of a search was opened by ZFW and closed again 19 s later; the answers fell in between.) Then
+`RENDERERS` can name hosts (`10.0.0.252,10.0.0.86`) instead of URLs. The Samsung UE50MU6179 answers the multicast query
 only, not a unicast one (measured), so it needs the multicast answer to come through as well.
 
 ## Format hint before sending

@@ -186,12 +186,26 @@ func FetchRenderer(ctx context.Context, hc *http.Client, location string) (Rende
 // A fixed port can be allowed in the firewall. The Samsung UE50MU6179 answers
 // the multicast query only, not a unicast one (measured 2026-10-28).
 func Search(ctx context.Context, wait time.Duration, port int, hosts []string) ([]string, error) {
-	var lc net.ListenConfig
-	conn, err := lc.ListenPacket(ctx, "udp4", ":"+strconv.Itoa(port))
+	conn, err := ListenSSDP(ctx, port)
 	if err != nil {
 		return nil, err
 	}
 	defer conn.Close()
+	return SearchOn(conn, wait, hosts)
+}
+
+// ListenSSDP opens the UDP socket a search sends from and reads answers on.
+func ListenSSDP(ctx context.Context, port int) (net.PacketConn, error) {
+	var lc net.ListenConfig
+	return lc.ListenPacket(ctx, "udp4", ":"+strconv.Itoa(port))
+}
+
+// SearchOn searches on an open socket. The Finder keeps its socket open for
+// good: ZimaOS ZFW opens a new host port to the LAN only while something
+// listens on it — a socket open for the 2 s of a search was seen at 18:28:36
+// and closed again at 18:28:55, and the Samsung's answers fell in between
+// (measured 2026-10-28).
+func SearchOn(conn net.PacketConn, wait time.Duration, hosts []string) ([]string, error) {
 	dst, err := net.ResolveUDPAddr("udp4", multicastTarget)
 	if err != nil {
 		return nil, err
