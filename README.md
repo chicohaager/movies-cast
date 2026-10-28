@@ -70,9 +70,9 @@ Whether the LG keeps port 1795 across reboots is not measured.
 
 ```bash
 go vet ./... && go test -race ./...
-SSHPASS_FILE=/path/to/pw deploy/zimaos/build-on-host.sh Demo@10.0.0.143 0.1.0
+SSHPASS_FILE=/path/to/pw deploy/zimaos/build-on-host.sh <user>@<nas> 0.1.0
 # first install:
-ZIMA_USER=… ZIMA_PASS=… python3 ~/dev/zimapp/zimapp.py install --host 10.0.0.143 --ssh-user Demo deploy/zimaos/docker-compose.yml
+ZIMA_USER=… ZIMA_PASS=… python3 ~/dev/zimapp/zimapp.py install --host <nas> --ssh-user <user> deploy/zimaos/docker-compose.yml
 # update after a rebuild, on the host:
 cd /var/lib/casaos/apps/movies-cast && sudo docker compose up -d --force-recreate movies-cast
 ```
@@ -83,8 +83,8 @@ file on .143 was edited by hand (`RENDERERS`, `TZ: Europe/Berlin`); backups unde
 
 ## TV app (webOS, stage 2)
 
-`deploy/webos/app` is a hosted web app (`de.demo.moviescast`, title "Movies"): it checks
-`http://10.0.0.143:8097/healthz` and then opens `/tv/` on movies-cast. The UI is one code base
+`deploy/webos/app` is a hosted web app (title "Movies"): it checks `<SERVER_URL>/healthz` and then
+opens `/tv/` on movies-cast. The UI is one code base
 with the server; the TV gets no Movies token.
 
 - **Pairing:** the TV shows a six-digit code; on the phone, "Fernseher-App koppeln" confirms it. The TV
@@ -98,6 +98,9 @@ with the server; the TV gets no Movies token.
   `localStorage` and preselected for the next film; it survives an app restart (measured). Exactly
   one track shows: preselecting before load left both "showing" on the TV, so the choice is enforced
   again after load and on every track-list change.
+- **Audio track:** the last language chosen with ▲ (`moviescast.audioLang` in `localStorage`) is enabled
+  at the next film's start; a film without that language keeps its own first track. Measured on the TV:
+  Shelter de→en, then Shelter and Avatar start in en, also after an app restart.
 - **Remote:** arrows move, OK opens/plays; in the player OK = pause, ◀ −10 s, ▶ +30 s, ▲ audio track, ▼ subtitles (off → each track → off),
   Back (461) or Stop = end and back to the library; Play/Pause/FF/RW keys work too. Progress goes to
   Movies, so "continue at" is the same on phone and TV.
@@ -113,10 +116,20 @@ with the server; the TV gets no Movies token.
 Install / update on the TV (developer mode, device `lgtv` in ares):
 
 ```bash
-ares-package deploy/webos/app -o deploy/webos/out -n
-ares-install -d lgtv deploy/webos/out/de.demo.moviescast_0.1.0_all.ipk
-ares-launch -d lgtv de.demo.moviescast
+deploy/webos/package.sh        # reads deploy/webos/local.env: APP_ID, VENDOR, SERVER_URL
+ares-install -d lgtv deploy/webos/out/<APP_ID>_0.1.0_all.ipk
+ares-launch -d lgtv <APP_ID>
 ```
+
+`deploy/webos/app` carries neutral defaults (`io.github.moviescast`, `http://nas.local:8097`); the
+values of one installation stay in the git-ignored `local.env`. Keep `APP_ID` once the app is
+installed: another id installs a second app with its own storage (pairing, track choices).
+
+**Logo:** `deploy/webos/logo/logo.svg` (a TV whose screen is a film frame, colours of the TV UI) is the
+source. `python3 deploy/webos/logo/render.py` (Playwright/Chromium) writes the app icons `icon.png`
+(80 px), `largeIcon.png` (130 px) and `logo-512.png`. `internal/server/web/logo.svg` is a copy for the
+phone and TV pages (header, pairing screen, favicon); `TestLogoServedIsTheIconSource` fails when the
+two differ.
 
 Device setup pitfalls (measured): log in to the Developer Mode app with the **e-mail** ID; after
 `ares-novacom --getkey` set `ares-setup-device -m lgtv -i privateKey=lgtv_webos -i passphrase=…`
