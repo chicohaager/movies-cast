@@ -1,0 +1,25 @@
+# Exemptions for check-public-data.py. Every entry is path-scoped.
+#
+# Jellyfin API paths that IceWhale Movies implements (/Users/AuthenticateByName,
+# /Users/<user id>/Items/...); "USERID0000" is the invented id of the test fakes.
+internal/movies/movies.go:/Users/AuthenticateByName
+internal/movies/movies_test.go:/Users/AuthenticateByName
+internal/movies/movies_test.go:/Users/USERID0000
+internal/server/server_test.go:/Users/AuthenticateByName
+internal/server/server_test.go:/Users/USERID0000
+
+# Invented LAN addresses of the test fakes and doc examples (the real ones were replaced
+# 2026-10-28); the code under test needs private-range addresses.
+internal/dlna/dlna_test.go:10.0.0.252
+internal/dlna/dlna_test.go:10.0.0.9
+internal/dlna/finder_test.go:10.0.0.143
+internal/dlna/finder_test.go:10.0.0.252
+internal/dlna/finder_test.go:10.0.0.5
+internal/dlna/finder_test.go:10.0.0.50
+internal/dlna/finder_test.go:10.0.0.65
+internal/dlna/finder_test.go:10.0.0.99
+internal/dlna/testdata/lg-positioninfo-stopped.xml:10.0.0.143
+internal/dlna/testdata/sonos-desc.xml:10.0.0.65
+internal/server/server.go:10.0.0.143
+README.md:10.0.0.143
+README.md:10.0.0.252

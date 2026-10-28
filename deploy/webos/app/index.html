@@ -13,7 +13,7 @@ body { margin: 0; background: #0d0f14; color: #eef0f5; font: 2vw sans-serif; tex
 <p id="t">Movies wird geöffnet …</p>
 <p id="h" class="hint"></p>
 <script>
-var SERVER = "http://10.0.0.143:8097";
+var SERVER = "http://nas.local:8097";
 function probe() {
   var x = new XMLHttpRequest();
   x.open("GET", SERVER + "/healthz", true);

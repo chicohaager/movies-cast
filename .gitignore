@@ -1,2 +1,5 @@
 # built webOS packages (ares-package)
 deploy/webos/out/
+# values of one installation (APP_ID, VENDOR, SERVER_URL), read by deploy/webos/package.sh
+deploy/webos/local.env
+__pycache__/

@@ -85,13 +85,13 @@ func TestFinderDoesNotCacheEmptyResult(t *testing.T) {
 func TestLANLocation(t *testing.T) {
 	own := []net.IP{net.ParseIP("10.0.0.143")}
 	for loc, want := range map[string]bool{
-		"http://10.0.0.252:1795/":                      true,
+		"http://10.0.0.252:1795/":                         true,
 		"http://10.0.0.5:1400/xml/device_description.xml": true,
 		"http://127.0.0.1:8080/":                          false, // loopback services of the NAS
-		"http://10.0.0.143:5000/v2/":                   false, // the NAS itself
+		"http://10.0.0.143:5000/v2/":                      false, // the NAS itself
 		"http://169.254.169.254/latest/":                  false, // link-local
 		"http://8.8.8.8/":                                 false, // not LAN
-		"https://10.0.0.252/":                          false,
+		"https://10.0.0.252/":                             false,
 		"http://tv.local:1795/":                           false, // names could resolve anywhere
 		"file:///etc/passwd":                              false,
 	} {

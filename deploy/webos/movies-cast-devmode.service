@@ -5,6 +5,7 @@ Wants=network-online.target
 
 [Service]
 Type=oneshot
-User=Demo
+# The account that owns DEVMODE_DIR (its files are 0600).
+User=CHANGE_ME
 Environment=DEVMODE_DIR=/DATA/AppData/movies-cast-devmode
 ExecStart=/DATA/AppData/movies-cast-devmode/renew-devmode.sh

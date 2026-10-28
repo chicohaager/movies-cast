@@ -1,7 +1,7 @@
 {
-  "id": "de.demo.moviescast",
+  "id": "io.github.moviescast",
   "version": "0.1.0",
-  "vendor": "Demo",
+  "vendor": "movies-cast",
   "type": "web",
   "main": "index.html",
   "title": "Movies",

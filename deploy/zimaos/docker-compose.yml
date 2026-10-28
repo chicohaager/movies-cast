@@ -17,10 +17,10 @@ services:
       - TZ=$TZ
       - LISTEN=:8097
       - MOVIES_URL=http://127.0.0.1/movies
-      # SSDP answers do not pass the ZFW firewall on .143 (default-deny INPUT,
-      # the LG answers from a random port); the TV is named here instead.
-      # More TVs: comma-separated description URLs.
-      - RENDERERS=http://10.0.0.252:1795/
+      # Where a firewall drops SSDP answers (ZimaOS ZFW: default-deny INPUT, an
+      # LG answers from a random port), name the TV here, e.g.
+      # http://<tv-ip>:1795/ (LG). More TVs: comma-separated description URLs.
+      - RENDERERS=
       # Sessions (with Movies tokens, 0600) survive restarts; without it every
       # update sends the TV back to pairing.
       - STATE_FILE=/state/sessions.json
@@ -47,8 +47,8 @@ x-casaos:
   architectures:
     - amd64
   main: movies-cast
-  author: Demo
-  developer: Demo
+  author: movies-cast
+  developer: movies-cast
   category: Media
   title:
     en_us: Movies Cast
