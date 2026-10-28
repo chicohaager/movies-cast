@@ -65,3 +65,14 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
 @media (max-width: 420px) { .detail { grid-template-columns: 1fr; } .detail img { width: 45%; } }
 .error.force { padding-top: 0; }
 .error.force button { margin: 0; }
+.mrow { display: grid; grid-template-columns: 1fr auto; gap: 6px 8px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--line, #ddd); }
+.mrow input { margin-top: 0; letter-spacing: normal; }
+.mrow small { color: var(--muted); }
+.mrow .chk { display: flex; align-items: center; justify-content: flex-start; gap: 8px; font-weight: 400; margin: 0; color: var(--text); }
+.mrow .chk input { width: auto; flex: none; margin: 0; }
+.mhosts { list-style: none; padding: 0; margin: 6px 0; }
+.mhosts li { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.kv { display: grid; grid-template-columns: auto 1fr; gap: 6px 12px; margin: 10px 0 0; }
+.kv dt { color: var(--muted); }
+.kv dd { margin: 0; overflow-wrap: anywhere; }
+#m-host { letter-spacing: normal; }

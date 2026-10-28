@@ -66,6 +66,23 @@
         <button type="submit" data-i18n="pair.btn">Koppeln</button>
       </form>
       <p id="pair-result" class="hint"></p>
+      <p class="hint" data-i18n="pair.note">Nur für die movies-cast-App auf dem Fernseher. Fernseher mit DLNA brauchen keine Kopplung.</p>
+    </details>
+
+    <details id="manage" class="card pair">
+      <summary data-i18n="m.summary">Fernseher verwalten</summary>
+      <div id="m-list"></div>
+      <form id="m-add" class="row">
+        <input id="m-host" inputmode="decimal" autocomplete="off" placeholder="IP des Fernsehers" aria-label="IP des Fernsehers" data-i18n-attr="placeholder:m.hostPh;aria-label:m.hostPh">
+        <button type="submit" data-i18n="m.add">Hinzufügen</button>
+      </form>
+      <ul id="m-hosts" class="mhosts"></ul>
+      <p id="m-result" class="hint" role="status"></p>
+    </details>
+
+    <details id="sys" class="card pair">
+      <summary data-i18n="s.summary">Status</summary>
+      <dl id="s-list" class="kv"></dl>
     </details>
 
     <div id="resume-wrap" hidden>

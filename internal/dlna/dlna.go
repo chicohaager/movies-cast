@@ -185,10 +185,10 @@ func FetchRenderer(ctx context.Context, hc *http.Client, location string) (Rende
 // unicast query (measured 2026-10-28, 0 replies on .143, replies on .250).
 // A fixed port can be allowed in the firewall. The Samsung UE50MU6179 answers
 // the multicast query only, not a unicast one (measured 2026-10-28).
-func Search(ctx context.Context, wait time.Duration, port int, hosts []string) ([]string, error) {
+func Search(ctx context.Context, wait time.Duration, port int, hosts []string) ([]string, int, error) {
 	conn, err := ListenSSDP(ctx, port)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 	defer conn.Close()
 	return SearchOn(conn, wait, hosts)
@@ -205,10 +205,14 @@ func ListenSSDP(ctx context.Context, port int) (net.PacketConn, error) {
 // listens on it — a socket open for the 2 s of a search was seen at 18:28:36
 // and closed again at 18:28:55, and the Samsung's answers fell in between
 // (measured 2026-10-28).
-func SearchOn(conn net.PacketConn, wait time.Duration, hosts []string) ([]string, error) {
+//
+// answers counts every datagram that came back, also from devices that are
+// not TVs: zero answers on a LAN full of SSDP devices means the answers are
+// being dropped (a firewall), not that there is no TV.
+func SearchOn(conn net.PacketConn, wait time.Duration, hosts []string) (locs []string, answers int, err error) {
 	dst, err := net.ResolveUDPAddr("udp4", multicastTarget)
 	if err != nil {
-		return nil, err
+		return nil, 0, err
 	}
 	mx := int(wait / time.Second)
 	if mx < 1 {
@@ -220,7 +224,7 @@ func SearchOn(conn net.PacketConn, wait time.Duration, hosts []string) ([]string
 	// Two sends: SSDP is UDP and a single datagram gets lost on busy Wi-Fi.
 	for i := 0; i < 2; i++ {
 		if _, err := conn.WriteTo(msg(ssdpAddr), dst); err != nil {
-			return nil, fmt.Errorf("ssdp send: %w", err)
+			return nil, 0, fmt.Errorf("ssdp send: %w", err)
 		}
 	}
 	for _, h := range hosts {
@@ -235,23 +239,23 @@ func SearchOn(conn net.PacketConn, wait time.Duration, hosts []string) ([]string
 	}
 	_ = conn.SetReadDeadline(time.Now().Add(wait))
 	seen := map[string]bool{}
-	var out []string
 	buf := make([]byte, 4096)
 	for {
 		n, from, err := conn.ReadFrom(buf)
 		if err != nil {
 			var ne net.Error
 			if errors.As(err, &ne) && ne.Timeout() {
-				return out, nil
+				return locs, answers, nil
 			}
-			return out, err
+			return locs, answers, err
 		}
+		answers++
 		loc := ParseSSDPLocation(buf[:n])
 		if loc == "" || seen[loc] || !sameHost(from, loc) {
 			continue
 		}
 		seen[loc] = true
-		out = append(out, loc)
+		locs = append(locs, loc)
 	}
 }
 

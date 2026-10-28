@@ -37,6 +37,25 @@ func New(base, version string) *Client {
 	}, Version: version}
 }
 
+// Ping asks Movies' public info endpoint, which needs no token (measured
+// 2026-10-28: /System/Info/Public 200, /System/Ping 404 on Movies 0.3.0).
+func (c *Client) Ping(ctx context.Context) error {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.Base+"/System/Info/Public", nil)
+	if err != nil {
+		return err
+	}
+	resp, err := c.HTTP.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	_, _ = io.Copy(io.Discard, io.LimitReader(resp.Body, 1<<16))
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("movies: /System/Info/Public: HTTP %d", resp.StatusCode)
+	}
+	return nil
+}
+
 // Session is one login at Movies.
 type Session struct {
 	Token    string

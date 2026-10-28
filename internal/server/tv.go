@@ -22,6 +22,8 @@ import (
 	"strings"
 	"time"
 
+	"rsc.io/qr"
+
 	"movies-cast/internal/dlna"
 	"movies-cast/internal/movies"
 )
@@ -77,6 +79,37 @@ func (s *Server) tvPairStart(w http.ResponseWriter, _ *http.Request) {
 	id := randomID()
 	s.pairings[id] = &pairing{code: code, created: s.now()}
 	writeJSON(w, http.StatusOK, map[string]any{"id": id, "code": code, "expiresSeconds": int(pairTTL / time.Second)})
+}
+
+// tvPairQR draws the phone link with the code as a QR code for the pairing
+// screen: the phone camera opens the page with the code filled in, nothing to
+// type. Keyed by the pairing's secret ID (only the TV has it), so the server
+// draws no QR code for text of anyone's choosing. The link uses the host the
+// TV reached this server by — the phone in the same Wi-Fi reaches it too.
+func (s *Server) tvPairQR(w http.ResponseWriter, r *http.Request) {
+	id := r.URL.Query().Get("id")
+	s.mu.Lock()
+	s.sweepPairingsLocked()
+	p := s.pairings[id]
+	code := ""
+	if p != nil && p.approved == nil {
+		code = p.code
+	}
+	s.mu.Unlock()
+	host := r.Host
+	if code == "" || host == "" || strings.ContainsAny(host, "/\\?#@ ") {
+		fail(w, http.StatusNotFound, "Kopplung abgelaufen")
+		return
+	}
+	c, err := qr.Encode("http://"+host+"/?pair="+code, qr.M)
+	if err != nil {
+		fail(w, http.StatusInternalServerError, "ungültige Anfrage")
+		return
+	}
+	c.Scale = 8
+	w.Header().Set("Content-Type", "image/png")
+	w.Header().Set("Cache-Control", "no-store")
+	_, _ = w.Write(c.PNG())
 }
 
 // tvPairPoll is polled by the TV; once the phone approved, it turns the

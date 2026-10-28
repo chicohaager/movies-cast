@@ -104,6 +104,11 @@ function startPairing() {
   clearTimeout(state.pairTimer);
   api("/api/tv/pair/start", {}).then(function (p) {
     $("pair-code").textContent = p.code.slice(0, 3) + " " + p.code.slice(3);
+    // The phone camera opens the page with this code filled in (tvPairQR).
+    var img = $("pair-qr");
+    img.onload = function () { img.hidden = false; $("pair-qrhint").hidden = false; };
+    img.onerror = function () { img.hidden = true; $("pair-qrhint").hidden = true; };
+    img.src = "/api/tv/pair/qr?id=" + encodeURIComponent(p.id);
     $("pair-state").textContent = tr("pairtv.wait");
     pollPairing(p.id);
   }).catch(function (e) {

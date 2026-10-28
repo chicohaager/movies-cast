@@ -49,8 +49,8 @@ func TestFinderKeepsTVDropsSpeakerIgnoresCallerCancel(t *testing.T) {
 	lgSrv := fakeDevice(t, "lg-oled55b9-desc.xml", "lg-protocolinfo.xml")
 	sonos := fakeDevice(t, "sonos-desc.xml", "sonos-protocolinfo.xml")
 	f := NewFinder(nil, true, 0, NewClient())
-	f.search = func(context.Context, time.Duration) ([]string, error) {
-		return []string{lgSrv.URL + "/", sonos.URL + "/xml/device_description.xml"}, nil
+	f.search = func(context.Context, time.Duration) ([]string, int, error) {
+		return []string{lgSrv.URL + "/", sonos.URL + "/xml/device_description.xml"}, 2, nil
 	}
 	f.allow = func(string) bool { return true } // httptest listens on loopback
 	ctx, cancel := context.WithCancel(context.Background())
@@ -69,10 +69,10 @@ func TestFinderDoesNotCacheEmptyResult(t *testing.T) {
 	f := NewFinder(nil, true, 0, NewClient())
 	answers := [][]string{nil, {lgSrv.URL + "/"}}
 	f.allow = func(string) bool { return true }
-	f.search = func(context.Context, time.Duration) ([]string, error) {
+	f.search = func(context.Context, time.Duration) ([]string, int, error) {
 		a := answers[0]
 		answers = answers[1:]
-		return a, nil
+		return a, len(a), nil
 	}
 	if rs, _ := f.Find(context.Background(), false); len(rs) != 0 {
 		t.Fatalf("first search: %+v", rs)
@@ -104,7 +104,9 @@ func TestLANLocation(t *testing.T) {
 
 func TestFinderDropsLocationsOutsideLAN(t *testing.T) {
 	f := NewFinder(nil, true, 0, NewClient())
-	f.search = func(context.Context, time.Duration) ([]string, error) { return []string{"http://127.0.0.1:1/"}, nil }
+	f.search = func(context.Context, time.Duration) ([]string, int, error) {
+		return []string{"http://127.0.0.1:1/"}, 1, nil
+	}
 	fetched := false
 	f.HTTP = &http.Client{Transport: roundTripFunc(func(*http.Request) (*http.Response, error) {
 		fetched = true
@@ -149,7 +151,7 @@ func TestSearchIgnoresAnswerFromOtherHost(t *testing.T) {
 		// Answers from 127.0.0.1 but names another host.
 		_, _ = tv.WriteTo([]byte("HTTP/1.1 200 OK\r\nLOCATION: http://10.0.0.99:1795/\r\n\r\n"), from)
 	}()
-	locs, err := Search(context.Background(), 400*time.Millisecond, 0, nil)
+	locs, _, err := Search(context.Background(), 400*time.Millisecond, 0, nil)
 	if err != nil || len(locs) != 0 {
 		t.Fatalf("got %v %v", locs, err)
 	}
@@ -168,10 +170,10 @@ func TestFinderHostEntryFollowsSSDPAndKeepsLastURL(t *testing.T) {
 	f.allow = func(string) bool { return true }
 	f.TTL = 0 // no cache carry-over: only the remembered URL may keep the TV listed
 	answers := [][]string{{lgSrv.URL + "/", otherURL}, nil}
-	f.search = func(context.Context, time.Duration) ([]string, error) {
+	f.search = func(context.Context, time.Duration) ([]string, int, error) {
 		a := answers[0]
 		answers = answers[1:]
-		return a, nil
+		return a, len(a), nil
 	}
 	rs, err := f.Find(context.Background(), true)
 	if err != nil || len(rs) != 1 || rs[0].Host() != "127.0.0.1" {
@@ -210,7 +212,10 @@ func TestSearchSendsFromFixedPort(t *testing.T) {
 		fromPort <- from.(*net.UDPAddr).Port
 		_, _ = tv.WriteTo([]byte("HTTP/1.1 200 OK\r\nLOCATION: http://127.0.0.1:1626/\r\n\r\n"), from)
 	}()
-	locs, err := Search(context.Background(), 400*time.Millisecond, port, nil)
+	locs, n, err := Search(context.Background(), 400*time.Millisecond, port, nil)
+	if n != 1 {
+		t.Errorf("answers = %d, want 1", n)
+	}
 	if err != nil || len(locs) != 1 || locs[0] != "http://127.0.0.1:1626/" {
 		t.Fatalf("got %v %v", locs, err)
 	}
@@ -249,4 +254,32 @@ func TestFinderKeepsFixedPortOpen(t *testing.T) {
 		t.Fatal("no socket kept")
 	}
 	f.conn.Close()
+}
+
+// Hosts added in the app are searched like RENDERERS hosts; the stats count
+// every answer, so zero answers can be told apart from "no TV among them".
+func TestFinderExtraHostsAndStats(t *testing.T) {
+	lgSrv := fakeDevice(t, "lg-oled55b9-desc.xml", "lg-protocolinfo.xml")
+	other := fakeDevice(t, "lg-oled55b9-desc.xml", "lg-protocolinfo.xml")
+	otherURL := strings.Replace(other.URL, "127.0.0.1", "localhost", 1) + "/"
+	f := NewFinder(nil, false, 0, NewClient())
+	f.allow = func(string) bool { return true }
+	answers := [][]string{{lgSrv.URL + "/", otherURL}, nil}
+	f.search = func(context.Context, time.Duration) ([]string, int, error) {
+		a := answers[0]
+		answers = answers[1:]
+		return a, len(a), nil
+	}
+	if rs, _ := f.Find(context.Background(), true); len(rs) != 0 {
+		t.Fatalf("no hosts, SSDP off: %+v", rs)
+	}
+	answers = [][]string{{lgSrv.URL + "/", otherURL}}
+	f.SetExtraHosts([]string{"127.0.0.1"})
+	rs, _ := f.Find(context.Background(), false) // SetExtraHosts forces a new search
+	if len(rs) != 1 || rs[0].Host() != "127.0.0.1" {
+		t.Fatalf("with app host: %+v", rs)
+	}
+	if st := f.LastSearch(); st.Answers != 2 || st.Renderers != 1 {
+		t.Fatalf("stats %+v, want 2 answers, 1 renderer", st)
+	}
 }

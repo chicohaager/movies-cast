@@ -28,6 +28,13 @@ Open `http://<nas>:8097` on the phone — on .143: `http://10.0.0.143:8097` in t
 advertises no subnet route, so the LAN address does not work over Tailscale. Log in with the **ZimaOS account**, pick a film, pick the TV,
 press play. Pause, ±30 s, seek bar, stop and "continue at" work; progress goes back to Movies.
 
+- **Manage TVs** (card on the phone): give a TV a name ("Living room"), hide one (a TV nobody uses),
+  or add one by IP when the search cannot see it. Stored in `tvs.json` next to `STATE_FILE` (0600);
+  an added IP is searched like a `RENDERERS` host. An empty list says why: no answer at all to the
+  search (firewall?), answers but no video device, or every TV hidden.
+- **Status** (card on the phone): version, Movies reachable (`/System/Info/Public`, no token), last
+  search (time, answers, TVs), search port held, hidden/added TVs, proven formats, active plays.
+
 ## Configuration (environment)
 
 | Variable | Default | Meaning |
@@ -104,7 +111,11 @@ file on .143 was edited by hand (`RENDERERS`, `TZ: Europe/Berlin`); backups unde
 opens `/tv/` on movies-cast. The UI is one code base
 with the server; the TV gets no Movies token.
 
-- **Pairing:** the TV shows a six-digit code; on the phone, "Fernseher-App koppeln" confirms it. The TV
+- **Pairing:** the TV shows a six-digit code and a QR code (`/api/tv/pair/qr?id=<pairing id>`, only
+  for an open pairing, drawn server-side with `rsc.io/qr`). The QR code holds
+  `http://<host the TV used>/?pair=<code>`: the phone camera opens the page with the code filled in and
+  the pairing card open — pairing still takes a tap on "Koppeln", so a code from another TV is never
+  approved unasked. Typing the code works as before. The TV
   gets its own session that shares the phone's Movies login (phone logout keeps the TV logged in;
   only the last session logs out at Movies).
 - **Library:** a "Weiterschauen" row (Movies' `Items/Resume`, its order) above "Alle Filme".
