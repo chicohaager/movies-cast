@@ -5,18 +5,26 @@ import (
 	"errors"
 	"log"
 	"net/http"
+	"net/url"
+	"slices"
 	"sort"
+	"strings"
 	"sync"
 	"time"
 )
 
-// Finder caches renderers found by SSDP plus a fixed list of description
-// URLs (for networks where multicast does not reach the container). Only
-// renderers that accept video are kept; Sonos speakers answer SSDP for
-// AVTransport too (measured: 5 on this LAN).
+// Finder caches renderers found by SSDP plus fixed entries (for networks
+// where multicast does not reach the container). An entry is a description
+// URL or just a host: the LG moved its description from port 1795 to 1626
+// between two starts (measured 2026-10-28), so a host is asked by SSDP
+// unicast for its current URL, and the last answer is kept for a TV that
+// misses a search. Only renderers that accept video are kept; Sonos speakers
+// answer SSDP for AVTransport too (measured: 5 on this LAN).
 type Finder struct {
-	Static []string
+	Static []string // description URLs
+	Hosts  []string // hosts whose URL SSDP finds
 	SSDP   bool
+	Port   int // local SSDP port; fixed so a firewall can allow the answers
 	Wait   time.Duration
 	TTL    time.Duration
 	HTTP   *http.Client
@@ -26,21 +34,44 @@ type Finder struct {
 	// own configuration and is not filtered.
 	allow func(string) bool
 
-	mu     sync.Mutex
-	at     time.Time
-	cached []Renderer
+	mu      sync.Mutex
+	at      time.Time
+	cached  []Renderer
+	lastLoc map[string]string // host → last description URL SSDP gave for it
 }
 
-func NewFinder(static []string, ssdp bool, c *Client) *Finder {
-	return &Finder{
-		Static: static, SSDP: ssdp, Wait: 2 * time.Second, TTL: 5 * time.Minute,
+// NewFinder splits entries into description URLs (with "://") and hosts.
+func NewFinder(entries []string, ssdp bool, port int, c *Client) *Finder {
+	var static, hosts []string
+	for _, e := range entries {
+		if strings.Contains(e, "://") {
+			static = append(static, e)
+		} else {
+			hosts = append(hosts, e)
+		}
+	}
+	f := &Finder{
+		Static: static, Hosts: hosts, SSDP: ssdp, Port: port, Wait: 2 * time.Second, TTL: 5 * time.Minute,
 		HTTP: &http.Client{
 			Timeout:       4 * time.Second,
 			CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse },
 		},
-		search: Search, video: c.PlaysVideo,
-		allow: func(loc string) bool { return LANLocation(loc, OwnIPs()) },
+		video:   c.PlaysVideo,
+		allow:   func(loc string) bool { return LANLocation(loc, OwnIPs()) },
+		lastLoc: map[string]string{},
 	}
+	f.search = func(ctx context.Context, wait time.Duration) ([]string, error) {
+		return Search(ctx, wait, f.Port, f.Hosts)
+	}
+	return f
+}
+
+func hostOf(loc string) string {
+	u, err := url.Parse(loc)
+	if err != nil {
+		return ""
+	}
+	return u.Hostname()
 }
 
 // Find returns the cached list, or searches when it is stale or refresh is set.
@@ -60,16 +91,30 @@ func (f *Finder) Find(_ context.Context, refresh bool) ([]Renderer, error) {
 
 	locs := append([]string(nil), f.Static...)
 	var errs []error
-	if f.SSDP {
+	if f.SSDP || len(f.Hosts) > 0 {
 		found, err := f.search(ctx, f.Wait)
 		if err != nil {
 			errs = append(errs, err)
 		}
+		answered := map[string]bool{}
 		for _, loc := range found {
-			if f.allow(loc) {
-				locs = append(locs, loc)
-			} else {
+			h := hostOf(loc)
+			entry := slices.Contains(f.Hosts, h)
+			if !f.SSDP && !entry {
+				continue
+			}
+			if !f.allow(loc) {
 				log.Printf("ssdp: ignoring location %q (not a private LAN address of another host)", loc)
+				continue
+			}
+			locs = append(locs, loc)
+			if entry {
+				f.lastLoc[h], answered[h] = loc, true
+			}
+		}
+		for _, h := range f.Hosts {
+			if !answered[h] && f.lastLoc[h] != "" {
+				locs = append(locs, f.lastLoc[h])
 			}
 		}
 	}

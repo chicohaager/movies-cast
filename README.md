@@ -35,13 +35,27 @@ press play. Pause, ±30 s, seek bar, stop and "continue at" work; progress goes 
 | `LISTEN` | `:8097` | listen address |
 | `MOVIES_URL` | `http://127.0.0.1/movies` | Movies' Jellyfin-compatible API |
 | `PUBLIC_URL` | derived per TV | URL the TV uses to reach this server |
-| `RENDERERS` | — | comma-separated DLNA description URLs, in addition to SSDP |
+| `RENDERERS` | — | comma-separated DLNA description URLs **or hosts**, in addition to SSDP; a host gets its current URL by SSDP (multicast and unicast), the last one found stands in when the TV misses a search |
+| `SSDP_PORT` | `1901` | local UDP port of the SSDP search, so a firewall can allow the answers (`0` = any port) |
 | `SSDP` | `true` | `false` turns discovery off |
 
-On .143, SSDP finds nothing: ZFW drops the TV's answers (default-deny INPUT; the LG answers from a
-random source port, so neither a multicast nor a unicast query gets a reply through — 0 replies
-measured on .143, replies on .250). There the TV is set with `RENDERERS=http://10.0.0.252:1795/`.
-Whether the LG keeps port 1795 across reboots is not measured.
+On .143, SSDP from a random port finds nothing: ZFW drops the TV's answers (default-deny INPUT; the LG
+answers from a random source port, so neither a multicast nor a unicast query gets a reply through —
+0 replies measured on .143, replies on .250). The LG does **not** keep its port either: 1795 earlier,
+1626 after a later start (measured 2026-10-28), so a fixed URL breaks. Hence the fixed search port:
+allow UDP `SSDP_PORT` (1901) from the LAN in the firewall, then SSDP works and `RENDERERS` can name
+hosts (`10.0.0.252,10.0.0.86`) instead of URLs. The Samsung UE50MU6179 answers the multicast query
+only, not a unicast one (measured), so it needs the multicast answer to come through as well.
+
+## Format hint before sending
+
+movies-cast sends the original file and never transcodes. Before a DLNA send it reads the TV's
+format list (`GetProtocolInfo`) and, if the film's container or HEVC is not in it, answers 409 with
+the missing names; the phone shows the hint and a "Play anyway" button. It is a hint, not a block:
+the LG OLED55B9 lists no HEVC and plays 4K HEVC; the 2012 Samsung UE32EH5300 lists none either; the
+2017 Samsung UE50MU6179 lists `video/hevc` (lists captured in `internal/dlna/testdata`). Once a TV
+reports PLAYING past 10 s, its TV/container/codec combination counts as proven and the hint is skipped;
+with `STATE_FILE` set the proven list is kept in `formats.json` next to it (0600).
 
 ## LG quirks the code handles (all measured)
 

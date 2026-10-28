@@ -12,6 +12,9 @@ function showError(msg) {
   const e = $("error");
   e.textContent = msg;
   e.hidden = !msg;
+  $("force-row").hidden = true;
+  // The line sits under the header; a film tapped further down left it out of view.
+  if (msg) window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 async function api(path, body) {
@@ -32,7 +35,11 @@ async function api(path, body) {
     e.status = 401;
     throw e;
   }
-  if (!res.ok) throw new Error(I18N.serverError(data) || t("err.http", res.status));
+  if (!res.ok) {
+    const e = new Error(I18N.serverError(data) || t("err.http", res.status));
+    e.data = data;
+    throw e;
+  }
   return data;
 }
 
@@ -201,13 +208,24 @@ $("detail").addEventListener("close", async () => {
     return;
   }
   showError("");
+  play({ renderer: state.tv, movie: state.selected.id, resume: v === "resume" });
+});
+
+// The server answers 409 + "unlisted" when the TV's format list lacks this
+// film's container or HEVC; the TV may still play it (the LG lists no HEVC
+// and plays it), so the user decides.
+async function play(req) {
   try {
-    await api("/api/play", { renderer: state.tv, movie: state.selected.id, resume: v === "resume" });
+    await api("/api/play", req);
     pollOnce();
   } catch (err) {
     showError(err.message);
+    if (err.data && Array.isArray(err.data.unlisted) && !req.force) {
+      $("force-row").hidden = false;
+      $("force").onclick = () => { showError(""); play({ ...req, force: true }); };
+    }
   }
-});
+}
 
 async function control(action, extra) {
   try {

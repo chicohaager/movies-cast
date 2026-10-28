@@ -17,9 +17,10 @@ services:
       - TZ=$TZ
       - LISTEN=:8097
       - MOVIES_URL=http://127.0.0.1/movies
-      # Where a firewall drops SSDP answers (ZimaOS ZFW: default-deny INPUT, an
-      # LG answers from a random port), name the TV here, e.g.
-      # http://<tv-ip>:1795/ (LG). More TVs: comma-separated description URLs.
+      # TVs by address (<tv-ip>,<tv-ip>): SSDP finds their current URL (the LG
+      # changes its port). A firewall must let SSDP answers in: ZimaOS ZFW
+      # (default-deny INPUT) needs UDP SSDP_PORT (1901) allowed from the LAN.
+      # A full description URL works too, without SSDP.
       - RENDERERS=
       # Sessions (with Movies tokens, 0600) survive restarts; without it every
       # update sends the TV back to pairing.
@@ -37,8 +38,8 @@ services:
       envs:
         - container: RENDERERS
           description:
-            en_us: Comma-separated DLNA description URLs of the TVs (needed where SSDP replies are firewalled)
-            de_de: Kommagetrennte DLNA-Beschreibungs-URLs der Fernseher (nötig, wenn die Firewall SSDP-Antworten verwirft)
+            en_us: Comma-separated TV addresses (IP, URL found by SSDP) or DLNA description URLs; allow UDP 1901 from the LAN in the firewall
+            de_de: Kommagetrennte Fernseher-Adressen (IP, die URL findet SSDP) oder DLNA-Beschreibungs-URLs; in der Firewall UDP 1901 aus dem LAN erlauben
         - container: MOVIES_URL
           description:
             en_us: Movies' Jellyfin-compatible API behind the ZimaOS gateway

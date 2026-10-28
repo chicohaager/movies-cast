@@ -47,7 +47,7 @@ func TestParseSonosUsesRendererSubdeviceConnectionManager(t *testing.T) {
 func TestFinderKeepsTVDropsSpeakerIgnoresCallerCancel(t *testing.T) {
 	lgSrv := fakeDevice(t, "lg-oled55b9-desc.xml", "lg-protocolinfo.xml")
 	sonos := fakeDevice(t, "sonos-desc.xml", "sonos-protocolinfo.xml")
-	f := NewFinder(nil, true, NewClient())
+	f := NewFinder(nil, true, 0, NewClient())
 	f.search = func(context.Context, time.Duration) ([]string, error) {
 		return []string{lgSrv.URL + "/", sonos.URL + "/xml/device_description.xml"}, nil
 	}
@@ -65,7 +65,7 @@ func TestFinderKeepsTVDropsSpeakerIgnoresCallerCancel(t *testing.T) {
 
 func TestFinderDoesNotCacheEmptyResult(t *testing.T) {
 	lgSrv := fakeDevice(t, "lg-oled55b9-desc.xml", "lg-protocolinfo.xml")
-	f := NewFinder(nil, true, NewClient())
+	f := NewFinder(nil, true, 0, NewClient())
 	answers := [][]string{nil, {lgSrv.URL + "/"}}
 	f.allow = func(string) bool { return true }
 	f.search = func(context.Context, time.Duration) ([]string, error) {
@@ -102,7 +102,7 @@ func TestLANLocation(t *testing.T) {
 }
 
 func TestFinderDropsLocationsOutsideLAN(t *testing.T) {
-	f := NewFinder(nil, true, NewClient())
+	f := NewFinder(nil, true, 0, NewClient())
 	f.search = func(context.Context, time.Duration) ([]string, error) { return []string{"http://127.0.0.1:1/"}, nil }
 	fetched := false
 	f.HTTP = &http.Client{Transport: roundTripFunc(func(*http.Request) (*http.Response, error) {
@@ -148,8 +148,72 @@ func TestSearchIgnoresAnswerFromOtherHost(t *testing.T) {
 		// Answers from 127.0.0.1 but names another host.
 		_, _ = tv.WriteTo([]byte("HTTP/1.1 200 OK\r\nLOCATION: http://10.0.0.99:1795/\r\n\r\n"), from)
 	}()
-	locs, err := Search(context.Background(), 400*time.Millisecond)
+	locs, err := Search(context.Background(), 400*time.Millisecond, 0, nil)
 	if err != nil || len(locs) != 0 {
 		t.Fatalf("got %v %v", locs, err)
+	}
+}
+
+// A host entry gets its URL from SSDP; when the TV misses a later search,
+// the last URL stands in. Without SSDP=true, other answers are not listed.
+func TestFinderHostEntryFollowsSSDPAndKeepsLastURL(t *testing.T) {
+	lgSrv := fakeDevice(t, "lg-oled55b9-desc.xml", "lg-protocolinfo.xml")
+	other := fakeDevice(t, "lg-oled55b9-desc.xml", "lg-protocolinfo.xml")
+	otherURL := strings.Replace(other.URL, "127.0.0.1", "localhost", 1) + "/"
+	f := NewFinder([]string{"127.0.0.1"}, false, 0, NewClient())
+	if len(f.Hosts) != 1 || len(f.Static) != 0 {
+		t.Fatalf("entries split as hosts=%v static=%v", f.Hosts, f.Static)
+	}
+	f.allow = func(string) bool { return true }
+	f.TTL = 0 // no cache carry-over: only the remembered URL may keep the TV listed
+	answers := [][]string{{lgSrv.URL + "/", otherURL}, nil}
+	f.search = func(context.Context, time.Duration) ([]string, error) {
+		a := answers[0]
+		answers = answers[1:]
+		return a, nil
+	}
+	rs, err := f.Find(context.Background(), true)
+	if err != nil || len(rs) != 1 || rs[0].Host() != "127.0.0.1" {
+		t.Fatalf("first search: %+v %v", rs, err)
+	}
+	rs, err = f.Find(context.Background(), true)
+	if err != nil || len(rs) != 1 || rs[0].Host() != "127.0.0.1" {
+		t.Fatalf("TV missed the search, last URL should stand in: %+v %v", rs, err)
+	}
+}
+
+// The query leaves from the fixed port, so a firewall rule for that port lets
+// the answer in; the answer to it is read.
+func TestSearchSendsFromFixedPort(t *testing.T) {
+	probe, err := net.ListenPacket("udp4", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	port := probe.LocalAddr().(*net.UDPAddr).Port
+	probe.Close()
+	tv, err := net.ListenPacket("udp4", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer tv.Close()
+	old := multicastTarget
+	multicastTarget = tv.LocalAddr().String()
+	defer func() { multicastTarget = old }()
+	fromPort := make(chan int, 1)
+	go func() {
+		buf := make([]byte, 2048)
+		_, from, err := tv.ReadFrom(buf)
+		if err != nil {
+			return
+		}
+		fromPort <- from.(*net.UDPAddr).Port
+		_, _ = tv.WriteTo([]byte("HTTP/1.1 200 OK\r\nLOCATION: http://127.0.0.1:1626/\r\n\r\n"), from)
+	}()
+	locs, err := Search(context.Background(), 400*time.Millisecond, port, nil)
+	if err != nil || len(locs) != 1 || locs[0] != "http://127.0.0.1:1626/" {
+		t.Fatalf("got %v %v", locs, err)
+	}
+	if got := <-fromPort; got != port {
+		t.Fatalf("query left from port %d, want %d", got, port)
 	}
 }

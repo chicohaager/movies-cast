@@ -191,3 +191,31 @@ func TestSeekThatNeverAnswersTimesOut(t *testing.T) {
 		t.Fatalf("want timeout error within 2s, got %v after %v", err, time.Since(start))
 	}
 }
+
+// Sink lists captured 2026-10-28 from the three TVs in the house.
+func TestUnlistedRealTVs(t *testing.T) {
+	sink := func(name string) string { return xmlField(fixture(t, name), "Sink") }
+	cases := []struct {
+		name, fixture, container, codec string
+		want                            string
+	}{
+		{"LG lists matroska, no HEVC", "lg-protocolinfo.xml", "mkv", "hevc", "HEVC (H.265)"},
+		{"LG with H.264", "lg-protocolinfo.xml", "mkv", "h264", ""},
+		{"Samsung 2017 lists x-mkv and video/hevc", "sink-samsung-ue50mu6179.xml", "mkv", "hevc", ""},
+		{"Samsung 2012 lists x-mkv, no HEVC", "sink-samsung-ue32eh5300.xml", "mkv", "hevc", "HEVC (H.265)"},
+		{"Samsung 2012 with H.264", "sink-samsung-ue32eh5300.xml", "mkv", "h264", ""},
+		{"Samsung 2012 mp4", "sink-samsung-ue32eh5300.xml", "mp4", "h264", ""},
+		{"Sonos has no video container", "sonos-protocolinfo.xml", "mkv", "h264", "MKV"},
+		{"unknown container is not judged", "sonos-protocolinfo.xml", "xyz", "", ""},
+	}
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			if got := strings.Join(Unlisted(sink(c.fixture), c.container, c.codec), ", "); got != c.want {
+				t.Errorf("Unlisted = %q, want %q", got, c.want)
+			}
+		})
+	}
+	if got := Unlisted("http-get:*:*:*", "mkv", "hevc"); len(got) != 0 {
+		t.Errorf("wildcard sink: Unlisted = %v, want nothing", got)
+	}
+}

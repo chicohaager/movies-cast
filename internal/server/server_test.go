@@ -3,12 +3,14 @@ package server
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/cookiejar"
 	"net/http/httptest"
 	"net/url"
 	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 	"testing"
@@ -127,6 +129,7 @@ func (f *fakeMovies) handler(t *testing.T) http.Handler {
 type fakeTV struct {
 	onPlay func()
 	down   bool
+	sink   string // GetProtocolInfo sink; empty = accepts everything
 	mu     sync.Mutex
 	uri    string
 	state  string
@@ -184,7 +187,15 @@ func (f *fakeTV) Volume(context.Context, dlna.Renderer) (int, error) {
 	return 0, &dlna.Fault{Code: 606, Description: "Action not authorized"}
 }
 func (f *fakeTV) SetVolume(context.Context, dlna.Renderer, int) error { return nil }
-func (f *fakeTV) set(s string)                                        { f.mu.Lock(); f.state = s; f.mu.Unlock() }
+func (f *fakeTV) Sink(context.Context, dlna.Renderer) (string, error) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	if f.sink == "" {
+		return "http-get:*:*:*", nil
+	}
+	return f.sink, nil
+}
+func (f *fakeTV) set(s string) { f.mu.Lock(); f.state = s; f.mu.Unlock() }
 func (f *fakeTV) get() (string, string, []time.Duration) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
@@ -538,5 +549,79 @@ func TestLoginThrottleAndSessionCap(t *testing.T) {
 	r.app.mu.Unlock()
 	if n > maxSessions {
 		t.Fatalf("%d sessions kept", n)
+	}
+}
+
+// The test film is HEVC in MKV (Shelter). A TV whose list names Matroska but
+// no HEVC gets a hint; "force" sends anyway; after the TV played it for
+// provenAfter, the hint is gone for that TV and format.
+func TestPlayHintsUnlistedFormatAndLearnsFromAPlay(t *testing.T) {
+	r := newRig(t)
+	r.login()
+	r.tv.mu.Lock()
+	r.tv.sink = "http-get:*:video/x-matroska:*,http-get:*:video/mp4:*"
+	r.tv.mu.Unlock()
+	code, out := r.post("/api/play", map[string]any{"renderer": lg.ID, "movie": movieID})
+	if code != 409 || fmt.Sprint(out["unlisted"]) != "[HEVC (H.265)]" || !strings.Contains(fmt.Sprint(out["errorEn"]), "HEVC") {
+		t.Fatalf("hint: %d %v", code, out)
+	}
+	if uri, _, _ := r.tv.get(); uri != "" {
+		t.Fatalf("TV got %q before the user chose to send anyway", uri)
+	}
+	if code, out := r.post("/api/play", map[string]any{"renderer": lg.ID, "movie": movieID, "force": true}); code != 200 {
+		t.Fatalf("force: %d %v", code, out)
+	}
+	r.tv.mu.Lock()
+	r.tv.state, r.tv.pos = "PLAYING", provenAfter+time.Second
+	r.tv.mu.Unlock()
+	deadline := time.Now().Add(2 * time.Second)
+	for {
+		r.app.mu.Lock()
+		n := len(r.app.proven)
+		r.app.mu.Unlock()
+		if n == 1 {
+			break
+		}
+		if time.Now().After(deadline) {
+			t.Fatal("a play of 11 s was not remembered")
+		}
+		time.Sleep(5 * time.Millisecond)
+	}
+	if code, out := r.post("/api/play", map[string]any{"renderer": lg.ID, "movie": movieID}); code != 200 {
+		t.Fatalf("after a proven play: %d %v", code, out)
+	}
+}
+
+// A proven format survives a restart (formats.json next to the sessions).
+func TestProvenFormatSurvivesRestart(t *testing.T) {
+	r, f := newRigWithState(t)
+	r.login()
+	r.tv.mu.Lock()
+	r.tv.sink = "http-get:*:video/x-matroska:*"
+	r.tv.mu.Unlock()
+	if code, out := r.post("/api/play", map[string]any{"renderer": lg.ID, "movie": movieID, "force": true}); code != 200 {
+		t.Fatalf("force: %d %v", code, out)
+	}
+	r.tv.mu.Lock()
+	r.tv.state, r.tv.pos = "PLAYING", provenAfter+time.Second
+	r.tv.mu.Unlock()
+	formats := filepath.Join(filepath.Dir(f), "formats.json")
+	deadline := time.Now().Add(2 * time.Second)
+	for {
+		if b, err := os.ReadFile(formats); err == nil && strings.Contains(string(b), "|mkv|hevc") {
+			break
+		}
+		if time.Now().After(deadline) {
+			t.Fatal("formats.json not written")
+		}
+		time.Sleep(5 * time.Millisecond)
+	}
+	if fi, _ := os.Stat(formats); fi.Mode().Perm() != 0o600 {
+		t.Errorf("formats.json mode %v, want 0600", fi.Mode().Perm())
+	}
+	r2 := r.restart(f)
+	carryCookie(t, r, r2)
+	if code, out := r2.post("/api/play", map[string]any{"renderer": lg.ID, "movie": movieID}); code != 200 {
+		t.Fatalf("after restart: %d %v", code, out)
 	}
 }

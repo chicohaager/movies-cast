@@ -16,6 +16,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net"
 	"net/http"
 	"net/url"
@@ -174,16 +175,19 @@ func FetchRenderer(ctx context.Context, hc *http.Client, location string) (Rende
 	return ParseDescription(location, body)
 }
 
-// Search sends an SSDP M-SEARCH for AVTransport and returns the LOCATION
-// headers that answered within wait.
+// Search sends an SSDP M-SEARCH for AVTransport to the multicast group and,
+// once each, to the given hosts, and returns the LOCATION headers that
+// answered within wait.
 //
-// Behind a default-deny INPUT chain (ZFW on .143) nothing comes back: the LG
-// answers from a random source port, so conntrack ties the reply neither to a
-// multicast nor to a unicast query (measured 2026-10-28, both 0 replies on
-// .143, replies on .250 without that firewall). Use RENDERERS there.
-func Search(ctx context.Context, wait time.Duration) ([]string, error) {
+// port fixes the local UDP port (0 = any). Behind a default-deny INPUT chain
+// (ZFW on .143) a random port gets nothing back: the LG answers from a random
+// source port, so conntrack ties the reply neither to a multicast nor to a
+// unicast query (measured 2026-10-28, 0 replies on .143, replies on .250).
+// A fixed port can be allowed in the firewall. The Samsung UE50MU6179 answers
+// the multicast query only, not a unicast one (measured 2026-10-28).
+func Search(ctx context.Context, wait time.Duration, port int, hosts []string) ([]string, error) {
 	var lc net.ListenConfig
-	conn, err := lc.ListenPacket(ctx, "udp4", ":0")
+	conn, err := lc.ListenPacket(ctx, "udp4", ":"+strconv.Itoa(port))
 	if err != nil {
 		return nil, err
 	}
@@ -196,11 +200,23 @@ func Search(ctx context.Context, wait time.Duration) ([]string, error) {
 	if mx < 1 {
 		mx = 1
 	}
-	msg := "M-SEARCH * HTTP/1.1\r\nHOST: " + ssdpAddr + "\r\nMAN: \"ssdp:discover\"\r\nMX: " + strconv.Itoa(mx) + "\r\nST: " + svcAVTransport + "\r\n\r\n"
+	msg := func(host string) []byte {
+		return []byte("M-SEARCH * HTTP/1.1\r\nHOST: " + host + "\r\nMAN: \"ssdp:discover\"\r\nMX: " + strconv.Itoa(mx) + "\r\nST: " + svcAVTransport + "\r\n\r\n")
+	}
 	// Two sends: SSDP is UDP and a single datagram gets lost on busy Wi-Fi.
 	for i := 0; i < 2; i++ {
-		if _, err := conn.WriteTo([]byte(msg), dst); err != nil {
+		if _, err := conn.WriteTo(msg(ssdpAddr), dst); err != nil {
 			return nil, fmt.Errorf("ssdp send: %w", err)
+		}
+	}
+	for _, h := range hosts {
+		ua, err := net.ResolveUDPAddr("udp4", net.JoinHostPort(h, "1900"))
+		if err != nil {
+			log.Printf("ssdp: %s: %v", h, err)
+			continue
+		}
+		if _, err := conn.WriteTo(msg(ua.String()), ua); err != nil {
+			log.Printf("ssdp: unicast to %s: %v", h, err)
 		}
 	}
 	_ = conn.SetReadDeadline(time.Now().Add(wait))
@@ -525,6 +541,70 @@ func SinkHasVideo(raw []byte) bool {
 		}
 	}
 	return false
+}
+
+// Sink returns the renderer's GetProtocolInfo sink list as sent.
+func (c *Client) Sink(ctx context.Context, r Renderer) (string, error) {
+	if r.ConnMgr == "" {
+		return "", errors.New("renderer has no ConnectionManager")
+	}
+	raw, err := c.callNoInstance(ctx, r.ConnMgr, svcConnectionManager, "GetProtocolInfo")
+	if err != nil {
+		return "", err
+	}
+	return xmlField(raw, "Sink"), nil
+}
+
+// containerFormats maps a file extension to the contentFormat spellings TVs
+// use for it: the LG lists "video/x-matroska", both Samsungs "video/x-mkv"
+// (measured 2026-10-28).
+var containerFormats = map[string][]string{
+	"mkv":  {"matroska", "x-mkv", "video/mkv"},
+	"mp4":  {"video/mp4"},
+	"m4v":  {"video/mp4", "x-m4v"},
+	"mov":  {"quicktime", "video/mp4"},
+	"avi":  {"avi", "x-msvideo", "divx"},
+	"webm": {"webm"},
+	"ts":   {"mp2t", "mpeg-tts", "mpeg2"},
+	"m2ts": {"mp2t", "mpeg-tts", "mpeg2"},
+}
+
+// Unlisted names what a sink list does not mention for this file: the
+// container and, for HEVC, the codec. It is a hint, not a verdict: the LG
+// OLED55B9 lists no HEVC at all and still decodes 4K HEVC (measured
+// 2026-10-28); the 2012 Samsung UE32EH5300 lists none either. Codecs other
+// than HEVC are not checked — sink lists name containers, rarely codecs.
+func Unlisted(sink, container, codec string) []string {
+	s := strings.ToLower(sink)
+	// Only http-get counts: movies-cast serves over HTTP, and Sonos lists
+	// "x-rincon:*:*:*" wildcards for its own protocols (measured).
+	var formats []string
+	for _, pi := range strings.Split(s, ",") {
+		if parts := strings.SplitN(strings.TrimSpace(pi), ":", 4); len(parts) >= 3 && parts[0] == "http-get" {
+			formats = append(formats, parts[2])
+		}
+	}
+	listed := func(names []string) bool {
+		for _, f := range formats {
+			if f == "*" {
+				return true
+			}
+			for _, n := range names {
+				if strings.Contains(f, n) {
+					return true
+				}
+			}
+		}
+		return false
+	}
+	var out []string
+	if names, known := containerFormats[strings.ToLower(container)]; known && !listed(names) {
+		out = append(out, strings.ToUpper(container))
+	}
+	if c := strings.ToLower(codec); (c == "hevc" || c == "h265") && !listed(nil) && !strings.Contains(s, "hevc") && !strings.Contains(s, "h265") {
+		out = append(out, "HEVC (H.265)")
+	}
+	return out
 }
 
 // Volume returns 0–100, or an error (the LG answers 606).
