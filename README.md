@@ -20,6 +20,9 @@ phone ──HTTP──> movies-cast :8097 ──Jellyfin API──> Movies (127.
 
 ## Use
 
+The phone shows the same "Weiterschauen" row above all films; it reloads when a film on the TV ends
+or is stopped, so the new resume point appears.
+
 Open `http://<nas>:8097` on the phone — on .143: `http://10.0.0.143:8097` in the home Wi-Fi,
 `http://100.64.0.10:8097` (or `http://my-nas:8097`) via Tailscale from outside; .143
 advertises no subnet route, so the LAN address does not work over Tailscale. Log in with the **ZimaOS account**, pick a film, pick the TV,
