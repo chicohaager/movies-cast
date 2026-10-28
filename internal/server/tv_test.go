@@ -2,6 +2,7 @@ package server
 
 import (
 	"bytes"
+	"context"
 	"io"
 
 	"encoding/json"
@@ -322,5 +323,49 @@ func TestPairQRCodeHoldsPhoneLinkWithCode(t *testing.T) {
 	r.post("/api/tv/pair/approve", map[string]string{"code": code})
 	if c, _ := r.get("/api/tv/pair/qr?id=" + id); c != http.StatusNotFound {
 		t.Fatalf("approved pairing still draws a code: %d", c)
+	}
+}
+
+// DLNA stays the way even with the TV's movies-cast app open; the app gets
+// the film only when the phone asks ("app": true). A failing DLNA start says
+// whether the app is open, so the phone can offer it.
+func TestAppOnlyOnRequestAndOfferedWhenDLNAFails(t *testing.T) {
+	phone := newRig(t)
+	phone.login()
+	tv := phone.tvClient()
+	pairTV(t, phone, tv)
+	if c, out := tv.getJSON("/api/tv/cmd"); c != http.StatusOK || len(out) != 0 {
+		t.Fatalf("first poll: %d %v", c, out)
+	}
+	if code, out := phone.post("/api/play", map[string]any{"renderer": lg.ID, "movie": movieID}); code != http.StatusOK || out["viaApp"] == true {
+		t.Fatalf("default play: %d %v", code, out)
+	}
+	if uri, _, _ := phone.tv.get(); uri == "" {
+		t.Fatal("default play did not go by DLNA")
+	}
+	code, out := phone.post("/api/play", map[string]any{"renderer": lg.ID, "movie": movieID, "resume": true, "app": true})
+	if code != http.StatusOK || out["viaApp"] != true {
+		t.Fatalf("app play: %d %v", code, out)
+	}
+	if c, out := tv.getJSON("/api/tv/cmd"); c != http.StatusOK || out["movie"] != movieID || out["resume"] != true {
+		t.Fatalf("app got %d %v", c, out)
+	}
+	if _, out := tv.getJSON("/api/tv/cmd"); len(out) != 0 {
+		t.Fatalf("command handed out twice: %v", out)
+	}
+	phone.tv.mu.Lock()
+	phone.tv.playErr = context.DeadlineExceeded
+	phone.tv.mu.Unlock()
+	if code, out := phone.post("/api/play", map[string]any{"renderer": lg.ID, "movie": movieID}); code != http.StatusBadGateway || out["appAvailable"] != true {
+		t.Fatalf("failing DLNA with the app open: %d %v", code, out)
+	}
+	// An app that stopped polling is neither offered nor used.
+	phone.app.mu.Lock()
+	for _, ss := range phone.app.sessions {
+		ss.appPolled = ss.appPolled.Add(-time.Minute)
+	}
+	phone.app.mu.Unlock()
+	if code, out := phone.post("/api/play", map[string]any{"renderer": lg.ID, "movie": movieID, "app": true}); code != http.StatusConflict || out["viaApp"] == true {
+		t.Fatalf("silent app used: %d %v", code, out)
 	}
 }

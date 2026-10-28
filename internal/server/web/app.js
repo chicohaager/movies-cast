@@ -3,12 +3,33 @@
 const $ = (id) => document.getElementById(id);
 const t = I18N.t;
 I18N.apply();
+
+// Language picker: every language /strings.js has; the choice is remembered.
+(function () {
+  const sel = document.getElementById("lang");
+  for (const [code, name] of I18N.languages()) sel.append(new Option(name, code));
+  sel.value = I18N.lang;
+  sel.addEventListener("change", () => {
+    const u = new URL(location.href);
+    u.searchParams.set("lang", sel.value);
+    location.href = u.toString();
+  });
+})();
 const state = { movies: [], resume: [], wasPlaying: false, tv: localGet("tv"), selected: null, polling: null, status: null, seeking: false };
 
 function localGet(k) { try { return localStorage.getItem(k) || ""; } catch { return ""; } }
 function localSet(k, v) { try { localStorage.setItem(k, v); } catch { /* private mode */ } }
 
+// showNotice is the neutral line under the header (not an error).
+function showNotice(msg) {
+  const n = $("notice");
+  n.textContent = msg;
+  n.hidden = !msg;
+  if (msg) window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
 function showError(msg) {
+  if (msg) showNotice("");
   const e = $("error");
   e.textContent = msg;
   e.hidden = !msg;
@@ -346,13 +367,26 @@ $("detail").addEventListener("close", async () => {
 // and plays it), so the user decides.
 async function play(req) {
   try {
-    await api("/api/play", req);
+    const r = await api("/api/play", req);
+    if (r && r.viaApp) {
+      // The TV's movies-cast app opens the film itself; the TV's remote controls it.
+      showNotice(t("play.viaApp", r.title));
+      return;
+    }
+    showNotice("");
     pollOnce();
   } catch (err) {
     showError(err.message);
-    if (err.data && Array.isArray(err.data.unlisted) && !req.force) {
+    const d = err.data || {};
+    const canForce = Array.isArray(d.unlisted) && !req.force && !req.app;
+    // DLNA stays the way; the TV's movies-cast app is offered only when it is open there.
+    const canApp = d.appAvailable === true && !req.app;
+    if (canForce || canApp) {
       $("force-row").hidden = false;
+      $("force").hidden = !canForce;
       $("force").onclick = () => { showError(""); play({ ...req, force: true }); };
+      $("inapp").hidden = !canApp;
+      $("inapp").onclick = () => { showError(""); play({ ...req, app: true }); };
     }
   }
 }

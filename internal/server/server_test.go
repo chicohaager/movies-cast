@@ -127,15 +127,16 @@ func (f *fakeMovies) handler(t *testing.T) http.Handler {
 
 // fakeTV is a renderer whose state the test drives.
 type fakeTV struct {
-	onPlay func()
-	down   bool
-	sink   string // GetProtocolInfo sink; empty = accepts everything
-	mu     sync.Mutex
-	uri    string
-	state  string
-	pos    time.Duration
-	seeks  []time.Duration
-	calls  []string
+	onPlay  func()
+	down    bool
+	sink    string // GetProtocolInfo sink; empty = accepts everything
+	playErr error  // returned by Play (the LG did not answer Play, 2026-10-28)
+	mu      sync.Mutex
+	uri     string
+	state   string
+	pos     time.Duration
+	seeks   []time.Duration
+	calls   []string
 }
 
 func (f *fakeTV) rec(c string) { f.mu.Lock(); f.calls = append(f.calls, c); f.mu.Unlock() }
@@ -147,6 +148,12 @@ func (f *fakeTV) SetURI(_ context.Context, _ dlna.Renderer, m dlna.Media) error 
 	return nil
 }
 func (f *fakeTV) Play(context.Context, dlna.Renderer) error {
+	f.mu.Lock()
+	perr := f.playErr
+	f.mu.Unlock()
+	if perr != nil {
+		return perr
+	}
 	if f.onPlay != nil {
 		f.onPlay()
 	}
@@ -623,5 +630,50 @@ func TestProvenFormatSurvivesRestart(t *testing.T) {
 	carryCookie(t, r, r2)
 	if code, out := r2.post("/api/play", map[string]any{"renderer": lg.ID, "movie": movieID}); code != 200 {
 		t.Fatalf("after restart: %d %v", code, out)
+	}
+}
+
+// A TV that did not start a format is remembered (formats-failed.json, also
+// across a restart): the next send says so instead of trying again blindly;
+// "force" still sends, and a proven play clears the entry.
+func TestFailedFormatIsRememberedUntilAPlayProvesIt(t *testing.T) {
+	r, f := newRigWithState(t)
+	r.login()
+	r.tv.mu.Lock()
+	r.tv.playErr = context.DeadlineExceeded
+	r.tv.mu.Unlock()
+	if code, _ := r.post("/api/play", map[string]any{"renderer": lg.ID, "movie": movieID}); code != http.StatusBadGateway {
+		t.Fatalf("failing play: %d", code)
+	}
+	r2 := r.restart(f)
+	carryCookie(t, r, r2)
+	code, out := r2.post("/api/play", map[string]any{"renderer": lg.ID, "movie": movieID})
+	if code != http.StatusConflict || out["key"] != "format.failedBefore" || !strings.Contains(fmt.Sprint(out["errorEn"]), "movies-cast app") {
+		t.Fatalf("after a failure: %d %v", code, out)
+	}
+	r.tv.mu.Lock()
+	r.tv.playErr = nil
+	r.tv.mu.Unlock()
+	if code, out := r2.post("/api/play", map[string]any{"renderer": lg.ID, "movie": movieID, "force": true}); code != http.StatusOK {
+		t.Fatalf("force: %d %v", code, out)
+	}
+	r.tv.mu.Lock()
+	r.tv.state, r.tv.pos = "PLAYING", provenAfter+time.Second
+	r.tv.mu.Unlock()
+	deadline := time.Now().Add(2 * time.Second)
+	for {
+		r2.app.mu.Lock()
+		n := len(r2.app.failed)
+		r2.app.mu.Unlock()
+		if n == 0 {
+			break
+		}
+		if time.Now().After(deadline) {
+			t.Fatal("a proven play did not clear the failure")
+		}
+		time.Sleep(5 * time.Millisecond)
+	}
+	if code, out := r2.post("/api/play", map[string]any{"renderer": lg.ID, "movie": movieID}); code != http.StatusOK {
+		t.Fatalf("after the proven play: %d %v", code, out)
 	}
 }

@@ -1,69 +1,16 @@
-// Texts of the phone and the TV page in German and English. ES5 only: the TV
-// runs Chrome 53. The language is the device's (navigator.language); "?lang=en"
-// or "?lang=de" overrides it and is remembered in localStorage.
+// Texts of the phone and the TV page. ES5 only: the TV runs Chrome 53.
+// The strings come from /strings.js (web/i18n/<lang>.json, served by the
+// server), English the default and the fallback for every missing key. The
+// language is "?lang=xx" (remembered in localStorage), else the remembered
+// one, else the first device language we have, else English.
 var I18N = (function () {
   "use strict";
-  var DE = {
-    "title": "Movies auf dem Fernseher", "sub": "auf dem Fernseher", "logout": "Abmelden",
-    "login.h": "Anmelden", "login.hint": "Mit deinem ZimaOS-Konto.", "login.user": "Benutzer", "login.pw": "Passwort",
-    "tv.label": "Fernseher", "tv.search": "Suchen", "tv.searchTitle": "Neu suchen",
-    "tv.none": "Kein Fernseher gefunden", "tv.noneHint": "Kein Fernseher gefunden. Ist er eingeschaltet und im selben Netz?",
-    "tv.err": "Fernseher: {0}", "play.chooseTv": "Erst einen Fernseher wählen.", "play.force": "Trotzdem abspielen",
-    "p.pause": "Pause", "p.continue": "Weiter", "p.stop": "Stopp", "p.vol": "Lautstärke",
-    "pair.summary": "Fernseher-App koppeln", "pair.placeholder": "Code vom Fernseher", "pair.btn": "Koppeln",
-    "pair.note": "Nur für die movies-cast-App auf dem Fernseher. Fernseher mit DLNA brauchen keine Kopplung.",
-    "m.summary": "Fernseher verwalten", "m.hostPh": "IP des Fernsehers", "m.add": "Hinzufügen", "m.none": "Noch kein Fernseher gefunden.",
-    "m.name": "Name für {0}", "m.hide": "ausblenden", "m.save": "Speichern", "m.saved": "Gespeichert.", "m.added": "Hinzugefügt – wird bei der nächsten Suche gefragt.",
-    "m.remove": "Entfernen", "m.hostsH": "Von Hand hinzugefügt:",
-    "s.summary": "Status", "s.version": "Version", "s.movies": "Movies", "s.ok": "erreichbar", "s.bad": "nicht erreichbar ({0})",
-    "s.search": "Letzte Suche", "s.never": "noch keine", "s.found": "{0} · {1} Antworten · {2} Fernseher", "s.searchErr": "Suchfehler",
-    "s.port": "Suchport", "s.portHeld": "UDP {0}, offen", "s.portFree": "UDP {0}, nicht gebunden", "s.portRandom": "zufällig",
-    "s.hidden": "Ausgeblendete Fernseher", "s.added": "Von Hand hinzugefügt", "s.formats": "Bewährte Formate", "s.plays": "Laufende Wiedergaben",
-    "pair.need6": "Bitte die 6 Ziffern vom Fernseher eingeben.", "pair.ok": "Gekoppelt – der Fernseher zeigt gleich die Filme.",
-    "row.resume": "Weiterschauen", "row.all": "Alle Filme", "empty": "Keine Filme in Movies gefunden.",
-    "d.resume": "Fortsetzen bei {0}", "d.start": "Von vorn abspielen", "d.close": "Schließen", "d.back": "Zurück",
-    "st.PLAYING": "läuft", "st.PAUSED_PLAYBACK": "Pause", "st.STOPPED": "gestoppt", "st.TRANSITIONING": "lädt …",
-    "st.NO_MEDIA_PRESENT": "bereit",
-    "err.server": "Server nicht erreichbar", "err.serverDetail": "Server nicht erreichbar: {0}",
-    "err.relogin": "Bitte neu anmelden", "err.http": "Fehler {0}",
-    "pairtv.h": "Fernseher koppeln", "pairtv.s1a": "Am Handy ", "pairtv.s1b": " öffnen und anmelden",
-    "pairtv.qr": "Mit der Handykamera scannen – oder:", "pair.fromQR": "Code vom Fernseher übernommen – jetzt „Koppeln“ drücken.",
-    "pairtv.s2": "„Fernseher-App koppeln“ wählen", "pairtv.s3": "Diesen Code eingeben",
-    "pairtv.wait": "Wartet auf Bestätigung am Handy …", "pairtv.fail": "Kopplung nicht möglich: {0} — neuer Versuch in 10 s",
-    "osd.hint": "OK Pause · ◀ −10 s · ▶ +30 s · ▲ Ton · ▼ Untertitel · Zurück beendet", "loading": "lädt …",
-    "o.playing": "läuft", "o.paused": "Pause", "o.audio": "Ton {0}/{1}", "o.subOff": "UT aus", "o.sub": "UT {0}", "o.subLoading": "Untertitel werden geladen …", "o.subNone": "Keine Untertitel",
-    "play.err": "Wiedergabe: {0}", "play.fail": "Wiedergabe nicht möglich"
-  };
-  var EN = {
-    "title": "Movies on the TV", "sub": "on the TV", "logout": "Log out",
-    "login.h": "Log in", "login.hint": "With your ZimaOS account.", "login.user": "User", "login.pw": "Password",
-    "tv.label": "TV", "tv.search": "Search", "tv.searchTitle": "Search again",
-    "tv.none": "No TV found", "tv.noneHint": "No TV found. Is it switched on and on the same network?",
-    "tv.err": "TV: {0}", "play.chooseTv": "Choose a TV first.", "play.force": "Play anyway",
-    "p.pause": "Pause", "p.continue": "Resume", "p.stop": "Stop", "p.vol": "Volume",
-    "pair.summary": "Pair the TV app", "pair.placeholder": "Code from the TV", "pair.btn": "Pair",
-    "pair.note": "Only for the movies-cast app on the TV. TVs with DLNA need no pairing.",
-    "m.summary": "Manage TVs", "m.hostPh": "TV IP address", "m.add": "Add", "m.none": "No TV found yet.",
-    "m.name": "Name for {0}", "m.hide": "hide", "m.save": "Save", "m.saved": "Saved.", "m.added": "Added – asked at the next search.",
-    "m.remove": "Remove", "m.hostsH": "Added by hand:",
-    "s.summary": "Status", "s.version": "Version", "s.movies": "Movies", "s.ok": "reachable", "s.bad": "not reachable ({0})",
-    "s.search": "Last search", "s.never": "none yet", "s.found": "{0} · {1} answers · {2} TVs", "s.searchErr": "Search error",
-    "s.port": "Search port", "s.portHeld": "UDP {0}, open", "s.portFree": "UDP {0}, not bound", "s.portRandom": "random",
-    "s.hidden": "Hidden TVs", "s.added": "Added by hand", "s.formats": "Proven formats", "s.plays": "Active plays",
-    "pair.need6": "Enter the 6 digits shown on the TV.", "pair.ok": "Paired – the TV shows your films in a moment.",
-    "row.resume": "Continue watching", "row.all": "All films", "empty": "No films found in Movies.",
-    "d.resume": "Continue at {0}", "d.start": "Play from the start", "d.close": "Close", "d.back": "Back",
-    "st.PLAYING": "playing", "st.PAUSED_PLAYBACK": "paused", "st.STOPPED": "stopped", "st.TRANSITIONING": "loading …",
-    "st.NO_MEDIA_PRESENT": "ready",
-    "err.server": "Server not reachable", "err.serverDetail": "Server not reachable: {0}",
-    "err.relogin": "Please log in again", "err.http": "Error {0}",
-    "pairtv.h": "Pair this TV", "pairtv.s1a": "On your phone, open ", "pairtv.s1b": " and log in",
-    "pairtv.qr": "Scan with the phone camera – or:", "pair.fromQR": "Code taken from the TV – now press “Pair”.",
-    "pairtv.s2": "Choose “Pair the TV app”", "pairtv.s3": "Enter this code",
-    "pairtv.wait": "Waiting for confirmation on the phone …", "pairtv.fail": "Pairing not possible: {0} — retrying in 10 s",
-    "osd.hint": "OK pause · ◀ −10 s · ▶ +30 s · ▲ audio · ▼ subtitles · Back ends", "loading": "loading …",
-    "o.playing": "playing", "o.paused": "paused", "o.audio": "Audio {0}/{1}", "o.subOff": "Subtitles off", "o.sub": "Subtitles {0}", "o.subLoading": "Loading subtitles …", "o.subNone": "No subtitles",
-    "play.err": "Playback: {0}", "play.fail": "Playback not possible"
+  var ALL = window.I18N_STRINGS || { en: {} };
+  // Native names for the language picker, in ZimaOS' set (assets on .143, 2026-10-28).
+  var NAMES = {
+    en: "English", de: "Deutsch", fr: "Français", es: "Español", it: "Italiano", nl: "Nederlands",
+    pl: "Polski", cs: "Čeština", hu: "Magyar", sv: "Svenska", tr: "Türkçe", ru: "Русский",
+    ja: "日本語", ko: "한국어", zh_CN: "简体中文", zh_TW: "繁體中文", pt_BR: "Português (Brasil)", pt_PT: "Português (Portugal)"
   };
 
   function store(v) {
@@ -74,15 +21,42 @@ var I18N = (function () {
     return "";
   }
 
-  var m = /[?&]lang=(de|en)\b/.exec(location.search);
-  if (m) store(m[1]);
-  var lang = (m && m[1]) || store() || ((navigator.language || "en").toLowerCase().indexOf("de") === 0 ? "de" : "en");
-  var dict = lang === "de" ? DE : EN;
+  // match turns a tag like "pt-BR", "zh-Hant-TW", "de" or "fr_FR" into a code we have, or "".
+  function match(tag) {
+    if (!tag) return "";
+    var t = String(tag).replace(/-/g, "_");
+    var low = t.toLowerCase();
+    var p = low.split("_");
+    if (p[0] === "zh") {
+      if (low.indexOf("hant") >= 0 || p.indexOf("tw") > 0 || p.indexOf("hk") > 0 || p.indexOf("mo") > 0) return ALL.zh_TW ? "zh_TW" : "";
+      return ALL.zh_CN ? "zh_CN" : "";
+    }
+    if (p[0] === "pt") {
+      if (p[1] === "br") return ALL.pt_BR ? "pt_BR" : "";
+      return ALL.pt_PT ? "pt_PT" : (ALL.pt_BR ? "pt_BR" : "");
+    }
+    if (ALL[t]) return t;
+    return ALL[p[0]] ? p[0] : "";
+  }
+
+  var q = /[?&]lang=([A-Za-z_-]+)/.exec(location.search);
+  var asked = q ? match(q[1]) : "";
+  if (asked) store(asked);
+  var lang = asked || match(store());
+  var tags = navigator.languages || [navigator.language];
+  for (var i = 0; !lang && i < tags.length; i++) lang = match(tags[i]);
+  if (!lang) lang = "en";
+  var dict = ALL[lang] || {};
+  var en = ALL.en || {};
 
   function t(key) {
-    var s = dict.hasOwnProperty(key) ? dict[key] : key;
+    var s = dict.hasOwnProperty(key) ? dict[key] : (en.hasOwnProperty(key) ? en[key] : key);
     for (var i = 1; i < arguments.length; i++) s = s.split("{" + (i - 1) + "}").join(String(arguments[i]));
     return s;
+  }
+
+  function tArgs(key, args) {
+    return t.apply(null, [key].concat(args || []));
   }
 
   // data-i18n="key" sets the text, data-i18n-attr="placeholder:key;title:key" sets attributes.
@@ -97,15 +71,28 @@ var I18N = (function () {
         if (kv.length === 2) el.setAttribute(kv[0], t(kv[1]));
       }
     }
-    document.documentElement.lang = lang;
+    document.documentElement.lang = lang.replace("_", "-");
     document.title = t("title");
   }
 
-  // Server errors carry "error" (German) and "errorEn".
+  // Server errors carry "key" (+ "args", + "suffix") for every language, and
+  // "error" (German) / "errorEn" for anything without a key.
   function serverError(data) {
     if (!data) return "";
+    if (data.key && (dict.hasOwnProperty(data.key) || en.hasOwnProperty(data.key))) {
+      var s = tArgs(data.key, data.args);
+      if (data.suffix && data.suffix.key) s += " " + tArgs(data.suffix.key, data.suffix.args);
+      return s;
+    }
     return lang === "de" ? data.error : (data.errorEn || data.error);
   }
 
-  return { lang: lang, t: t, apply: apply, serverError: serverError, DE: DE, EN: EN };
+  // The languages for a picker: [code, native name], English first.
+  function languages() {
+    var out = [];
+    for (var c in NAMES) if (NAMES.hasOwnProperty(c) && ALL[c]) out.push([c, NAMES[c]]);
+    return out;
+  }
+
+  return { lang: lang, t: t, apply: apply, serverError: serverError, languages: languages, match: match };
 })();

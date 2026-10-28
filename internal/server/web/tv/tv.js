@@ -549,6 +549,26 @@ document.addEventListener("click", function (ev) {
   else if (el.id === "d-back") openLibrary(state.selected && state.selected.id);
 });
 
+// ---- films sent from the phone -----------------------------------------
+// While the library or a detail page shows, the app asks every 3 s whether the
+// phone chose a film for this TV (server: tvCmd). The phone's choice used to go
+// by DLNA, which the LG refused for HEVC MKV ("file not recognised", 2026-10-28).
+
+function pollCommand() {
+  if (state.screen !== "lib" && state.screen !== "detail") return;
+  api("/api/tv/cmd").then(function (c) {
+    if (!c || !c.movie) return;
+    var go = function () {
+      if (!findMovie(c.movie)) return;
+      openDetail(c.movie);
+      startPlay(!!c.resume);
+    };
+    if (findMovie(c.movie)) { go(); return; }
+    api("/api/movies").then(function (list) { state.movies = list; go(); });
+  }).catch(function () { /* next poll */ });
+}
+setInterval(pollCommand, 3000);
+
 // ---- start --------------------------------------------------------------
 
 api("/api/me").then(function () { openLibrary(); }).catch(function (e) {

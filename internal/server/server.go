@@ -92,7 +92,13 @@ type Server struct {
 	// proven holds TV|container|codec combinations a TV has played for
 	// provenAfter; their format hint is skipped until the server restarts.
 	proven map[string]bool
+	// failed holds combinations a TV refused or did not start via DLNA (the
+	// LG: no answer to Play, "file not recognised" on screen, twice on
+	// 2026-10-28); a later proven play clears the entry.
+	failed map[string]bool
 	prefs  tvPrefs // names, hidden TVs, TVs added by address (tvs.go)
+	// strings is /strings.js, built once from web/i18n/*.json (strings.go).
+	strings []byte
 
 	loginFails map[string][]time.Time // by client IP
 	pairings   map[string]*pairing    // TV-app pairings by secret ID
@@ -104,6 +110,11 @@ type session struct {
 	ms        *movies.Session
 	lastSeen  time.Time
 	savedSeen time.Time // lastSeen as last written to the state file
+	// Set by the TV app's command poll (tvCmd): where it runs and when it last
+	// asked. A phone's play for a renderer on that address goes to the app.
+	appIP     string
+	appPolled time.Time
+	cmd       *tvCommand // waiting for the app's next poll
 }
 
 type play struct {
@@ -148,6 +159,7 @@ func New(cfg Config, mc *movies.Client, tv Transport, r Renderers) *Server {
 		byTV:           map[string]*play{},
 		probedSubs:     map[string]probedSubs{},
 		proven:         map[string]bool{},
+		failed:         map[string]bool{},
 		prefs:          tvPrefs{Labels: map[string]string{}, Hidden: map[string]bool{}},
 	}
 	if err := srv.loadSessions(); err != nil {
@@ -156,6 +168,11 @@ func New(cfg Config, mc *movies.Client, tv Transport, r Renderers) *Server {
 	if err := srv.loadProven(); err != nil {
 		log.Printf("formats: %v (starting without proven formats)", err)
 	}
+	b, err := buildStrings()
+	if err != nil {
+		panic(err) // embedded at build time; a broken file is caught by TestStringsComplete
+	}
+	srv.strings = b
 	if err := srv.loadTVPrefs(); err != nil {
 		log.Printf("tvs: %v (starting without TV settings)", err)
 	}
@@ -180,6 +197,7 @@ func (s *Server) Handler() http.Handler {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		_, _ = io.WriteString(w, "ok\n")
 	})
+	mux.HandleFunc("GET /strings.js", s.stringsJS)
 	mux.HandleFunc("POST /api/login", s.login)
 	mux.HandleFunc("POST /api/logout", s.withSession(s.logout))
 	mux.HandleFunc("GET /api/me", s.withSession(s.me))
@@ -198,6 +216,7 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /api/tv/pair/qr", s.tvPairQR)
 	mux.HandleFunc("POST /api/tv/pair/approve", s.withSession(s.tvPairApprove))
 	mux.HandleFunc("POST /api/tv/play", s.withSession(s.tvPlay))
+	mux.HandleFunc("GET /api/tv/cmd", s.withSession(s.tvCmd))
 	mux.HandleFunc("POST /api/tv/progress", s.withSession(s.tvProgress))
 	mux.HandleFunc("GET /api/tv/subs/{play}/{file}", s.withSession(s.tvSubtitle))
 	mux.HandleFunc("POST /api/tv/subs-probe", s.withSession(s.tvSubsProbe))
@@ -250,11 +269,43 @@ func writeJSON(w http.ResponseWriter, code int, v any) {
 	_ = json.NewEncoder(w).Encode(v)
 }
 
-// fail answers with the German message and its English text (errorEn); the
-// page shows the one of its language. TestEveryFailMessageHasEnglish keeps
-// errorsEn complete.
+// fail answers with the German message, its English text (errorEn) and a key
+// for every other language: "srv:<English>" in web/i18n/<lang>.json, plus the
+// suffix a TV error carries ("sfx.upnp" with the code, "sfx.noAnswer").
+// TestEveryFailMessageHasEnglish keeps errorsEn complete.
 func fail(w http.ResponseWriter, code int, msg string) {
-	writeJSON(w, code, map[string]string{"error": msg, "errorEn": english(msg)})
+	writeJSON(w, code, errorBody(msg))
+}
+
+func errorBody(msg string) map[string]any {
+	out := map[string]any{"error": msg, "errorEn": english(msg)}
+	base, suffix := splitSuffix(msg)
+	if en, ok := errorsEn[base]; ok {
+		out["key"] = "srv:" + en
+	}
+	switch {
+	case suffix == noAnswerSuffix:
+		out["suffix"] = map[string]any{"key": "sfx.noAnswer"}
+	case strings.HasPrefix(suffix, upnpSuffix):
+		out["suffix"] = map[string]any{"key": "sfx.upnp", "args": []string{strings.TrimSuffix(strings.TrimPrefix(suffix, upnpSuffix), ")")}}
+	}
+	return out
+}
+
+const (
+	upnpSuffix     = " (UPnP-Fehler "
+	noAnswerSuffix = " (keine Antwort)"
+)
+
+// splitSuffix separates a TV error's suffix from faultCode.
+func splitSuffix(msg string) (base, suffix string) {
+	if b, ok := strings.CutSuffix(msg, noAnswerSuffix); ok {
+		return b, noAnswerSuffix
+	}
+	if i := strings.Index(msg, upnpSuffix); i >= 0 {
+		return msg[:i], msg[i:]
+	}
+	return msg, ""
 }
 
 var errorsEn = map[string]string{
@@ -283,6 +334,7 @@ var errorsEn = map[string]string{
 	"Benutzer oder Passwort falsch":                               "wrong user or password",
 	"Anmeldung bei Movies abgelaufen":                             "Movies login expired",
 	"6-stelligen Code angeben":                                    "enter the 6-digit code",
+	"Die movies-cast-App auf diesem Fernseher ist nicht geöffnet": "the movies-cast app is not open on this TV",
 	"Name zu lang (höchstens 40 Zeichen)":                         "name too long (40 characters at most)",
 	"Speichern fehlgeschlagen":                                    "saving failed",
 	"Adresse ungültig (IPv4-Adresse im eigenen Netz)":             "invalid address (an IPv4 address on your own network)",
@@ -291,13 +343,16 @@ var errorsEn = map[string]string{
 // english translates msg; a renderer suffix " (UPnP-Fehler N)" from faultCode
 // is kept with its number. Unknown text stays German rather than empty.
 func english(msg string) string {
-	base, suffix, _ := strings.Cut(msg, " (UPnP-Fehler ")
+	base, suffix := splitSuffix(msg)
 	en, ok := errorsEn[base]
 	if !ok {
 		return msg
 	}
-	if suffix != "" {
-		en += " (UPnP error " + suffix
+	switch {
+	case suffix == noAnswerSuffix: // was left German until 0.17 ("… (keine Antwort)")
+		en += " (no answer)"
+	case suffix != "":
+		en += " (UPnP error " + strings.TrimPrefix(suffix, upnpSuffix)
 	}
 	return en
 }
@@ -466,10 +521,10 @@ func (s *Server) loginFailed(ip string) {
 func faultCode(err error) string {
 	var f *dlna.Fault
 	if errors.As(err, &f) && f.Code != 0 {
-		return " (UPnP-Fehler " + strconv.Itoa(f.Code) + ")"
+		return upnpSuffix + strconv.Itoa(f.Code) + ")"
 	}
 	if errors.Is(err, context.DeadlineExceeded) || strings.Contains(err.Error(), "Timeout") {
-		return " (keine Antwort)"
+		return noAnswerSuffix
 	}
 	return ""
 }
@@ -591,6 +646,7 @@ func (s *Server) startPlay(w http.ResponseWriter, r *http.Request, sid string, s
 		Movie    string `json:"movie"`
 		Resume   bool   `json:"resume"`
 		Force    bool   `json:"force"` // send although the TV does not list the format
+		App      bool   `json:"app"`   // open the film in the TV's movies-cast app instead of DLNA
 	}
 	if err := readJSON(r, &in); err != nil || in.Renderer == "" || in.Movie == "" {
 		fail(w, http.StatusBadRequest, "Film und Fernseher angeben")
@@ -606,13 +662,36 @@ func (s *Server) startPlay(w http.ResponseWriter, r *http.Request, sid string, s
 		s.moviesErr(w, sid, err)
 		return
 	}
+	// DLNA is the way; the app only when the phone asks for it, after DLNA
+	// failed and the answer said the app is open (appAvailable).
+	if in.App {
+		if s.sendToApp(tv, m, in.Resume) {
+			writeJSON(w, http.StatusOK, map[string]any{"ok": true, "viaApp": true, "title": m.Name})
+			return
+		}
+		fail(w, http.StatusConflict, "Die movies-cast-App auf diesem Fernseher ist nicht geöffnet")
+		return
+	}
+	appOpen := s.appOpen(tv)
 	ext := m.Container
 	if ext == "" {
 		ext = "mkv"
 	}
+	key := formatKey(tv, ext, m.VideoCodec)
 	s.mu.Lock()
-	proven := s.proven[formatKey(tv, ext, m.VideoCodec)]
+	proven, failed := s.proven[key], s.failed[key]
 	s.mu.Unlock()
+	if !in.Force && failed {
+		writeJSON(w, http.StatusConflict, map[string]any{
+			"error":        "Dieser Fernseher hat diese Art Datei per DLNA schon einmal nicht abgespielt. Hat er die movies-cast-App, spiel den Film dort.",
+			"args":         []string{},
+			"errorEn":      "This TV failed to play this kind of file via DLNA before. If it has the movies-cast app, play the film there.",
+			"key":          "format.failedBefore",
+			"unlisted":     []string{},
+			"appAvailable": appOpen,
+		})
+		return
+	}
 	if !in.Force && !proven {
 		// A hint, not a block: the LG lists no HEVC and plays it (dlna.Unlisted).
 		sink, err := s.tv.Sink(r.Context(), tv)
@@ -621,9 +700,12 @@ func (s *Server) startPlay(w http.ResponseWriter, r *http.Request, sid string, s
 		} else if miss := dlna.Unlisted(sink, ext, m.VideoCodec); len(miss) > 0 {
 			list := strings.Join(miss, ", ")
 			writeJSON(w, http.StatusConflict, map[string]any{
-				"error":    "Dieser Fernseher nennt " + list + " nicht in seiner Formatliste, das Bild bleibt dann womöglich schwarz.",
-				"errorEn":  "This TV does not list " + list + " among its formats; the screen may stay black.",
-				"unlisted": miss,
+				"error":        "Dieser Fernseher nennt " + list + " nicht in seiner Formatliste, das Bild bleibt dann womöglich schwarz.",
+				"errorEn":      "This TV does not list " + list + " among its formats; the screen may stay black.",
+				"key":          "format.unlisted",
+				"args":         []string{list},
+				"unlisted":     miss,
+				"appAvailable": appOpen,
 			})
 			return
 		}
@@ -650,13 +732,20 @@ func (s *Server) startPlay(w http.ResponseWriter, r *http.Request, sid string, s
 	if err := s.tv.SetURI(ctx, tv, media); err != nil {
 		s.abortPlay(p.id)
 		log.Printf("SetURI %s: %v", tv.Name, err)
-		fail(w, http.StatusBadGateway, "Fernseher hat den Film abgelehnt"+faultCode(err))
+		s.markFailed(key)
+		b := errorBody("Fernseher hat den Film abgelehnt" + faultCode(err))
+		b["appAvailable"] = appOpen
+		writeJSON(w, http.StatusBadGateway, b)
 		return
 	}
+	t0 := s.now()
 	if err := s.tv.Play(ctx, tv); err != nil {
 		s.abortPlay(p.id)
-		log.Printf("Play %s: %v", tv.Name, err)
-		fail(w, http.StatusBadGateway, "Fernseher startet nicht"+faultCode(err))
+		log.Printf("Play %s: %v after %v", tv.Name, err, s.now().Sub(t0).Round(time.Millisecond))
+		s.markFailed(key)
+		b := errorBody("Fernseher startet nicht" + faultCode(err))
+		b["appAvailable"] = appOpen
+		writeJSON(w, http.StatusBadGateway, b)
 		return
 	}
 	var resume time.Duration
@@ -672,6 +761,7 @@ func (s *Server) startPlay(w http.ResponseWriter, r *http.Request, sid string, s
 		fail(w, http.StatusConflict, "Wiedergabe wurde inzwischen ersetzt oder gestoppt")
 		return
 	}
+	log.Printf("Play %s: answered after %v (%s %s)", tv.Name, s.now().Sub(t0).Round(time.Millisecond), ext, m.VideoCodec)
 	go s.watch(p.ctx, p, resume)
 	writeJSON(w, http.StatusOK, map[string]any{"ok": true, "title": m.Name, "resumeSeconds": int64(resume / time.Second)})
 }
@@ -679,6 +769,15 @@ func (s *Server) startPlay(w http.ResponseWriter, r *http.Request, sid string, s
 // provenAfter is how long a TV must report PLAYING before its format counts
 // as playable on it.
 const provenAfter = 10 * time.Second
+
+func (s *Server) markFailed(key string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if !s.failed[key] {
+		s.failed[key] = true
+		s.saveProvenLocked()
+	}
+}
 
 func formatKey(tv dlna.Renderer, container, codec string) string {
 	return tv.ID + "|" + strings.ToLower(container) + "|" + strings.ToLower(codec)
@@ -784,6 +883,7 @@ func (s *Server) watch(ctx context.Context, p *play, resume time.Duration) {
 				p.sawPlay = true
 				if k := formatKey(p.tv, p.ext, p.movie.VideoCodec); st.Position >= provenAfter && !s.proven[k] {
 					s.proven[k] = true
+					delete(s.failed, k)
 					s.saveProvenLocked()
 				}
 			}
@@ -944,8 +1044,13 @@ func (s *Server) serveStream(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("transferMode.dlna.org", "Streaming")
 	w.Header().Set("contentFeatures.dlna.org", "DLNA.ORG_OP=01;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=01700000000000000000000000000000")
 	w.WriteHeader(resp.StatusCode)
-	if r.Method == http.MethodHead {
-		return
+	t0 := time.Now()
+	var n int64
+	if r.Method != http.MethodHead {
+		n, _ = io.Copy(w, resp.Body)
 	}
-	_, _ = io.Copy(w, resp.Body)
+	// What the TV asked for and got: the DLNA failures of 2026-10-28 left no
+	// trace of whether the TV fetched the file at all. No play ID in the line.
+	host, _, _ := net.SplitHostPort(r.RemoteAddr)
+	log.Printf("stream %s %s range=%q -> %d, %d B in %v", host, r.Method, r.Header.Get("Range"), resp.StatusCode, n, time.Since(t0).Round(time.Millisecond))
 }

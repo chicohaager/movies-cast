@@ -10,7 +10,7 @@ h1 { font-size: 2.6vw; margin: 0; }
 .msg { position: fixed; top: 1.5vw; left: 50%; transform: translateX(-50%); z-index: 20; background: #3b1416;
   color: #fecaca; padding: 1vw 2vw; border-radius: 0.8vw; font-size: 1.5vw; max-width: 80vw; }
 
-#pair { text-align: center; padding-top: 5vw; }
+#pair { text-align: center; padding-top: 2.5vw; }
 .pair-logo { display: block; width: 9vw; height: 9vw; margin: 0 auto 1.2vw; }
 h1 .logo { width: 2.6vw; height: 2.6vw; vertical-align: -0.45vw; margin-right: 0.8vw; }
 .big { font-size: 2.2vw; margin: 2vw 0 1vw; }

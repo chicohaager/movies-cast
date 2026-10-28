@@ -17,6 +17,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"net"
 	"net/http"
 	"strconv"
 	"strings"
@@ -419,4 +420,72 @@ func (s *Server) listResume(w http.ResponseWriter, r *http.Request, sid string, 
 		return
 	}
 	writeJSON(w, http.StatusOK, ms)
+}
+
+// A film can go to the TV's movies-cast app instead of DLNA, when the phone
+// asks for it ("app": true) after DLNA failed and the answer said the app is
+// open — DLNA stays the way (owner, 2026-10-28: "DLNA is the top feature"). Measured 2026-10-28: the LG did not answer the
+// DLNA Play for an HEVC MKV twice ("file not recognised" on screen) and the
+// owner then started the same film in the app, where it plays.
+
+type tvCommand struct {
+	Movie  string    `json:"movie"`
+	Resume bool      `json:"resume"`
+	at     time.Time // dropped when no poll took it within appCmdTTL
+}
+
+const (
+	appPollFresh = 10 * time.Second // the app polls every 3 s while not playing
+	appCmdTTL    = 30 * time.Second
+)
+
+// appSessionLocked is the TV app session on the renderer's address that
+// polled recently, or nil. Caller holds s.mu.
+func (s *Server) appSessionLocked(tv dlna.Renderer) *session {
+	host := tv.Host()
+	var best *session
+	for _, ss := range s.sessions {
+		if ss.appIP == host && s.now().Sub(ss.appPolled) < appPollFresh && (best == nil || ss.appPolled.After(best.appPolled)) {
+			best = ss
+		}
+	}
+	return best
+}
+
+func (s *Server) appOpen(tv dlna.Renderer) bool {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.appSessionLocked(tv) != nil
+}
+
+// sendToApp queues the film for the TV app on the renderer's address, if one
+// polled recently. Caller does not hold s.mu.
+func (s *Server) sendToApp(tv dlna.Renderer, m movies.Movie, resume bool) bool {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	best := s.appSessionLocked(tv)
+	if best == nil {
+		return false
+	}
+	best.cmd = &tvCommand{Movie: m.ID, Resume: resume, at: s.now()}
+	return true
+}
+
+// tvCmd is polled by the TV app while it is not playing; it marks the session
+// as an app on this address and hands over a film the phone chose.
+func (s *Server) tvCmd(w http.ResponseWriter, r *http.Request, _ string, sess *session) {
+	host, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err != nil {
+		host = r.RemoteAddr
+	}
+	s.mu.Lock()
+	sess.appIP, sess.appPolled = host, s.now()
+	cmd := sess.cmd
+	sess.cmd = nil
+	s.mu.Unlock()
+	if cmd == nil || s.now().Sub(cmd.at) > appCmdTTL {
+		writeJSON(w, http.StatusOK, map[string]any{})
+		return
+	}
+	writeJSON(w, http.StatusOK, cmd)
 }

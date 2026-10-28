@@ -16,6 +16,7 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
+	"strconv"
 	"strings"
 	"time"
 	"unicode/utf8"
@@ -120,24 +121,29 @@ func (s *Server) searchStats() (dlna.SearchStats, bool) {
 
 // emptyTVList explains why no TV can be offered, from what the search saw.
 func (s *Server) emptyTVList(w http.ResponseWriter, found int) {
-	de, en := "Kein Fernseher gefunden", "No TV found"
+	de, en, key, args := "Kein Fernseher gefunden", "No TV found", "tv.none", []string{}
 	st, ok := s.searchStats()
 	switch {
 	case found > 0:
 		de = "Alle gefundenen Fernseher sind ausgeblendet (Fernseher verwalten)"
 		en = "Every TV found is hidden (Manage TVs)"
+		key = "tvs.allHidden"
+	case ok && st.Answers == 0 && st.Port != 0:
+		port := strconv.Itoa(st.Port)
+		de = "Keine Antwort auf die Fernseher-Suche. Lässt die Firewall UDP " + port + " aus dem LAN durch? Sonst Fernseher per IP hinzufügen."
+		en = "No answer to the TV search. Does the firewall let UDP " + port + " in from the LAN? Otherwise add the TV by IP."
+		key, args = "tvs.noAnswer", []string{port}
 	case ok && st.Answers == 0:
-		port := "die Suche"
-		if st.Port != 0 {
-			port = fmt.Sprintf("UDP %d", st.Port)
-		}
-		de = fmt.Sprintf("Keine Antwort auf die Fernseher-Suche. Lässt die Firewall %s aus dem LAN durch? Sonst Fernseher per IP hinzufügen.", port)
-		en = fmt.Sprintf("No answer to the TV search. Does the firewall let %s in from the LAN? Otherwise add the TV by IP.", port)
+		de = "Keine Antwort auf die Fernseher-Suche. Lässt die Firewall die Suche durch? Sonst Fernseher per IP hinzufügen."
+		en = "No answer to the TV search. Does the firewall let the search through? Otherwise add the TV by IP."
+		key = "tvs.noAnswerRandom"
 	case ok:
-		de = fmt.Sprintf("%d Geräte haben auf die Suche geantwortet, aber keins spielt Video", st.Answers)
-		en = fmt.Sprintf("%d devices answered the search, none of them plays video", st.Answers)
+		n := strconv.Itoa(st.Answers)
+		de = n + " Geräte haben auf die Suche geantwortet, aber keins spielt Video"
+		en = n + " devices answered the search, none of them plays video"
+		key, args = "tvs.noVideo", []string{n}
 	}
-	writeJSON(w, http.StatusBadGateway, map[string]string{"error": de, "errorEn": en})
+	writeJSON(w, http.StatusBadGateway, map[string]any{"error": de, "errorEn": en, "key": key, "args": args})
 }
 
 func (s *Server) listTVs(w http.ResponseWriter, r *http.Request, _ string, _ *session) {
