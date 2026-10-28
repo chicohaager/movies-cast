@@ -231,6 +231,7 @@ function startPlay(resume) {
       if (!started && p.resumeSeconds > 0) video.currentTime = p.resumeSeconds;
       started = true;
       showAudio();
+      applySub();
     };
     var pr = video.play();
     if (pr && pr.catch) pr.catch(function (e) { showMsg("Wiedergabe: " + e.message); });
@@ -306,6 +307,9 @@ function cycleAudio(dir) {
   osd();
 }
 
+video.textTracks.addEventListener("change", function () {
+  if (state.screen === "player") applySub(); // applySub only writes on a difference, so no loop
+});
 video.addEventListener("waiting", function () { $("spinner").hidden = false; });
 video.addEventListener("playing", function () { $("spinner").hidden = true; report(); osd(); });
 video.addEventListener("pause", function () { report(); osd(); });
@@ -333,13 +337,33 @@ function setTracks(subs) {
     video.appendChild(t);
   });
   state.subIdx = -1;
-  subsOff();
+  // The last choice ("off" or a language) carries over to the next film.
+  var pref = loadPref("subLang");
+  for (var j = 0; j < video.textTracks.length; j++) {
+    if (pref && pref !== "off" && video.textTracks[j].language === pref) {
+      state.subIdx = j;
+      break;
+    }
+  }
+  applySub();
+}
+
+// Exactly state.subIdx shows. Measured on the TV: with the choice set before
+// the film loaded, both tracks ended up "showing"; so the choice is enforced
+// again after load and whenever the track list changes.
+function applySub() {
+  var tt = video.textTracks;
+  for (var i = 0; i < tt.length; i++) {
+    var want = i === state.subIdx ? "showing" : "disabled";
+    if (tt[i].mode !== want) tt[i].mode = want;
+  }
   showSub();
 }
 
-function subsOff() {
-  for (var i = 0; i < video.textTracks.length; i++) video.textTracks[i].mode = "disabled";
-}
+// localStorage can be missing or throw (private mode, quota); the choice is a
+// convenience, so failures fall back to "off".
+function loadPref(k) { try { return window.localStorage.getItem("moviescast." + k) || ""; } catch (e) { return ""; } }
+function savePref(k, v) { try { window.localStorage.setItem("moviescast." + k, v); } catch (e) { /* ignore */ } }
 
 function showSub() {
   var tt = video.textTracks;
@@ -352,8 +376,8 @@ function cycleSub() {
   var n = video.textTracks.length;
   if (!n) { osd(); return; }
   state.subIdx = state.subIdx + 1 >= n ? -1 : state.subIdx + 1;
-  subsOff();
-  if (state.subIdx >= 0) video.textTracks[state.subIdx].mode = "showing";
+  applySub();
+  savePref("subLang", state.subIdx < 0 ? "off" : (video.textTracks[state.subIdx].language || "off"));
   showSub();
   osd();
 }

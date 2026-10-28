@@ -91,7 +91,10 @@ with the server; the TV gets no Movies token.
 - **Subtitles:** text tracks from Movies' PlaybackInfo (only there; the item answer lists none), served
   as WebVTT through `/api/tv/subs/<play>/<index>.vtt` (own session's play only). Image subtitles (PGS)
   are left out. Measured on the TV: 1276 cues loaded, cue shown at 0:46. Movies' `DeliveryUrl`
-  carries `?api_key=` and is never used.
+  carries `?api_key=` and is never used. The last choice (a language or "off") is kept in the TV's
+  `localStorage` and preselected for the next film; it survives an app restart (measured). Exactly
+  one track shows: preselecting before load left both "showing" on the TV, so the choice is enforced
+  again after load and on every track-list change.
 - **Remote:** arrows move, OK opens/plays; in the player OK = pause, ◀ −10 s, ▶ +30 s, ▲ audio track, ▼ subtitles (off → each track → off),
   Back (461) or Stop = end and back to the library; Play/Pause/FF/RW keys work too. Progress goes to
   Movies, so "continue at" is the same on phone and TV.
