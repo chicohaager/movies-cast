@@ -230,6 +230,7 @@ function startPlay(resume) {
     video.onloadedmetadata = function () {
       if (!started && p.resumeSeconds > 0) video.currentTime = p.resumeSeconds;
       started = true;
+      applyAudioPref();
       showAudio();
       applySub();
     };
@@ -303,8 +304,23 @@ function cycleAudio(dir) {
   for (var i = 0; i < at.length; i++) if (at[i].enabled) cur = i;
   var next = (cur + dir + at.length) % at.length;
   for (var j = 0; j < at.length; j++) at[j].enabled = j === next;
+  if (at[next].language) savePref("audioLang", at[next].language);
   showAudio();
   osd();
+}
+
+// The last chosen audio language carries over to the next film. A film
+// without that language keeps its own default track; the pref stays.
+function applyAudioPref() {
+  var pref = loadPref("audioLang");
+  var at = audioTracks();
+  if (!pref || at.length < 2) return;
+  var want = -1;
+  for (var i = 0; i < at.length; i++) {
+    if (at[i].language === pref) { want = i; break; }
+  }
+  if (want < 0 || at[want].enabled) return;
+  for (var j = 0; j < at.length; j++) at[j].enabled = j === want;
 }
 
 video.textTracks.addEventListener("change", function () {
