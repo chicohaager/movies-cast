@@ -32,6 +32,10 @@ const (
 	svcConnectionManager = "urn:schemas-upnp-org:service:ConnectionManager:1"
 	ssdpAddr             = "239.255.255.250:1900"
 	soapTimeout          = 6 * time.Second
+	// The LG answers Play only once it has opened the file: 1.7–4.0 s for
+	// 3–15 MB test clips from a LAN server (measured 2026-10-28). A 6 s limit
+	// gave up on large films, and giving up revokes the URL under the TV.
+	playTimeout          = 30 * time.Second
 	descriptionMaxBytes  = 1 << 20
 	soapResponseMaxBytes = 1 << 20
 )
@@ -387,7 +391,11 @@ func (c *Client) send(ctx context.Context, controlURL, svc, action, inner string
 	l.Lock()
 	defer l.Unlock()
 
-	ctx, cancel := context.WithTimeout(ctx, soapTimeout)
+	timeout := soapTimeout
+	if action == "Play" {
+		timeout = playTimeout
+	}
+	ctx, cancel := context.WithTimeout(ctx, timeout)
 	defer cancel()
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, controlURL, strings.NewReader(body))
 	if err != nil {

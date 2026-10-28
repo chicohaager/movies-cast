@@ -8,11 +8,13 @@ package server
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"os"
 	"path/filepath"
 	"sort"
+	"sync"
 	"time"
 
 	"movies-cast/internal/movies"
@@ -112,8 +114,22 @@ func (s *Server) formatsFile() string {
 	return filepath.Join(filepath.Dir(s.cfg.StateFile), "formats.json")
 }
 
+func (s *Server) failedFile() string {
+	if s.cfg.StateFile == "" {
+		return ""
+	}
+	return filepath.Join(filepath.Dir(s.cfg.StateFile), "formats-failed.json")
+}
+
 func (s *Server) loadProven() error {
-	f := s.formatsFile()
+	if err := loadKeys(s.formatsFile(), &s.mu, s.proven); err != nil {
+		return err
+	}
+	return loadKeys(s.failedFile(), &s.mu, s.failed)
+}
+
+// loadKeys reads a JSON list of keys into set; a missing file is empty.
+func loadKeys(f string, mu *sync.Mutex, set map[string]bool) error {
 	if f == "" {
 		return nil
 	}
@@ -128,22 +144,27 @@ func (s *Server) loadProven() error {
 	if err := json.Unmarshal(b, &keys); err != nil {
 		return fmt.Errorf("%s: %w", f, err)
 	}
-	s.mu.Lock()
-	defer s.mu.Unlock()
+	mu.Lock()
+	defer mu.Unlock()
 	for _, k := range keys {
-		s.proven[k] = true
+		set[k] = true
 	}
 	return nil
 }
 
-// saveProvenLocked writes the proven formats atomically. Caller holds s.mu.
+// saveProvenLocked writes the proven and the failed formats. Caller holds s.mu.
 func (s *Server) saveProvenLocked() {
-	f := s.formatsFile()
+	saveKeys(s.formatsFile(), s.proven)
+	saveKeys(s.failedFile(), s.failed)
+}
+
+// saveKeys writes set as a sorted JSON list, atomically.
+func saveKeys(f string, set map[string]bool) {
 	if f == "" {
 		return
 	}
-	keys := make([]string, 0, len(s.proven))
-	for k := range s.proven {
+	keys := make([]string, 0, len(set))
+	for k := range set {
 		keys = append(keys, k)
 	}
 	sort.Strings(keys)
@@ -161,7 +182,7 @@ func (s *Server) saveProvenLocked() {
 	cerr := tmp.Close()
 	if werr != nil || cerr != nil {
 		_ = os.Remove(tmp.Name())
-		log.Printf("formats: write: %v %v", werr, cerr)
+		log.Printf("formats: write: %v", errors.Join(werr, cerr))
 		return
 	}
 	if err := os.Rename(tmp.Name(), f); err != nil {
