@@ -1,0 +1,481 @@
+{
+ "Items": [
+  {
+   "Id": "01000000000000000000000000000001",
+   "ServerId": "efcf9a7fde17e87f137323a675a7bed1",
+   "Name": "Avatar: Fire and Ash",
+   "SortName": "Avatar: Fire and Ash",
+   "OriginalTitle": "Avatar: Fire and Ash",
+   "Type": "Movie",
+   "IsFolder": false,
+   "MediaType": "Video",
+   "VideoType": "VideoFile",
+   "LocationType": "FileSystem",
+   "ParentId": "06000000000000000000000000000001",
+   "Overview": "Nach dem verheerenden Krieg gegen die RDA und dem Verlust ihres ältesten Sohnes sehen sich Jake Sully und Neytiri mit einer neuen Bedrohung auf Pandora konfrontiert: dem Aschvolk, einem gewalttätigen und machthungrigen Na'vi-Stamm unter der Führung des skrupellosen Varang. Jakes Familie muss in einem Konflikt, der sie an ihre emotionalen und physischen Grenzen bringt, um ihr Überleben und die Zukunft von Pandora kämpfen.",
+   "ProductionYear": 2025,
+   "PremiereDate": "2025-01-01T00:00:00Z",
+   "DateCreated": "2026-10-27T18:04:21.329122815+01:00",
+   "RunTimeTicks": 118439120000,
+   "Container": "mkv",
+   "CommunityRating": 7.645,
+   "OfficialRating": "PG-13",
+   "ProviderIds": {
+    "Imdb": "tt1757678",
+    "Tmdb": "83533"
+   },
+   "Genres": [
+    "Adventure",
+    "Fantasy",
+    "Science Fiction"
+   ],
+   "ImageTags": {
+    "Logo": "a83df24720eab25993b7f088d54392dd",
+    "Primary": "0075d5cee8b5c9d92c5aa8e7540d379b"
+   },
+   "BackdropImageTags": [
+    "549caece2444d1dd0fa20f4f6ee1393b"
+   ],
+   "UserData": {
+    "PlaybackPositionTicks": 2030000000,
+    "PlayedPercentage": 1.7139607251387887,
+    "PlayCount": 0,
+    "IsFavorite": false,
+    "Played": false,
+    "LastPlayedDate": "2026-10-28T11:29:50.376925935Z"
+   },
+   "MediaSources": [
+    {
+     "Type": "Default",
+     "Bitrate": 26797459,
+     "DefaultAudioStreamIndex": 1,
+     "DefaultSubtitleStreamIndex": -1,
+     "Id": "01000000000000000000000000000001",
+     "Name": "Avatar: Fire and Ash",
+     "Protocol": "Http",
+     "Container": "mkv",
+     "Size": 39673343629,
+     "RunTimeTicks": 118439120000,
+     "SupportsDirectPlay": true,
+     "SupportsDirectStream": true,
+     "SupportsTranscoding": false,
+     "MediaStreams": [
+      {
+       "IsTextSubtitleStream": false,
+       "SupportsExternalStream": false,
+       "Codec": "hevc",
+       "Type": "Video",
+       "Index": 0,
+       "IsDefault": true,
+       "IsExternal": false,
+       "Width": 3840,
+       "Height": 2160
+      },
+      {
+       "IsTextSubtitleStream": false,
+       "SupportsExternalStream": false,
+       "Codec": "eac3",
+       "Language": "de",
+       "DisplayTitle": "German",
+       "Type": "Audio",
+       "Index": 1,
+       "IsDefault": true,
+       "IsExternal": false,
+       "Channels": 8
+      },
+      {
+       "IsTextSubtitleStream": false,
+       "SupportsExternalStream": false,
+       "Codec": "eac3",
+       "Language": "de",
+       "DisplayTitle": "German",
+       "Type": "Audio",
+       "Index": 2,
+       "IsDefault": false,
+       "IsExternal": false,
+       "Channels": 6
+      },
+      {
+       "IsTextSubtitleStream": false,
+       "SupportsExternalStream": false,
+       "Codec": "eac3",
+       "Language": "en",
+       "DisplayTitle": "English",
+       "Type": "Audio",
+       "Index": 3,
+       "IsDefault": false,
+       "IsExternal": false,
+       "Channels": 6
+      },
+      {
+       "IsTextSubtitleStream": false,
+       "SupportsExternalStream": false,
+       "Codec": "srt",
+       "Language": "de",
+       "DisplayTitle": "German",
+       "Type": "Subtitle",
+       "Index": 4,
+       "IsDefault": false,
+       "IsExternal": false
+      },
+      {
+       "IsTextSubtitleStream": false,
+       "SupportsExternalStream": false,
+       "Codec": "srt",
+       "Language": "de",
+       "DisplayTitle": "German [SDH]",
+       "Type": "Subtitle",
+       "Index": 5,
+       "IsDefault": false,
+       "IsExternal": false
+      },
+      {
+       "IsTextSubtitleStream": false,
+       "SupportsExternalStream": false,
+       "Codec": "srt",
+       "Language": "en",
+       "DisplayTitle": "English [Forced]",
+       "Type": "Subtitle",
+       "Index": 6,
+       "IsDefault": false,
+       "IsExternal": false
+      },
+      {
+       "IsTextSubtitleStream": false,
+       "SupportsExternalStream": false,
+       "Codec": "srt",
+       "Language": "en",
+       "DisplayTitle": "English",
+       "Type": "Subtitle",
+       "Index": 7,
+       "IsDefault": false,
+       "IsExternal": false
+      },
+      {
+       "IsTextSubtitleStream": false,
+       "SupportsExternalStream": false,
+       "Codec": "srt",
+       "Language": "en",
+       "DisplayTitle": "English [SDH]",
+       "Type": "Subtitle",
+       "Index": 8,
+       "IsDefault": false,
+       "IsExternal": false
+      }
+     ],
+     "IsRemote": false
+    }
+   ],
+   "MediaStreams": [
+    {
+     "IsTextSubtitleStream": false,
+     "SupportsExternalStream": false,
+     "Codec": "hevc",
+     "Type": "Video",
+     "Index": 0,
+     "IsDefault": true,
+     "IsExternal": false,
+     "Width": 3840,
+     "Height": 2160
+    },
+    {
+     "IsTextSubtitleStream": false,
+     "SupportsExternalStream": false,
+     "Codec": "eac3",
+     "Language": "de",
+     "DisplayTitle": "German",
+     "Type": "Audio",
+     "Index": 1,
+     "IsDefault": true,
+     "IsExternal": false,
+     "Channels": 8
+    },
+    {
+     "IsTextSubtitleStream": false,
+     "SupportsExternalStream": false,
+     "Codec": "eac3",
+     "Language": "de",
+     "DisplayTitle": "German",
+     "Type": "Audio",
+     "Index": 2,
+     "IsDefault": false,
+     "IsExternal": false,
+     "Channels": 6
+    },
+    {
+     "IsTextSubtitleStream": false,
+     "SupportsExternalStream": false,
+     "Codec": "eac3",
+     "Language": "en",
+     "DisplayTitle": "English",
+     "Type": "Audio",
+     "Index": 3,
+     "IsDefault": false,
+     "IsExternal": false,
+     "Channels": 6
+    },
+    {
+     "IsTextSubtitleStream": false,
+     "SupportsExternalStream": false,
+     "Codec": "srt",
+     "Language": "de",
+     "DisplayTitle": "German",
+     "Type": "Subtitle",
+     "Index": 4,
+     "IsDefault": false,
+     "IsExternal": false
+    },
+    {
+     "IsTextSubtitleStream": false,
+     "SupportsExternalStream": false,
+     "Codec": "srt",
+     "Language": "de",
+     "DisplayTitle": "German [SDH]",
+     "Type": "Subtitle",
+     "Index": 5,
+     "IsDefault": false,
+     "IsExternal": false
+    },
+    {
+     "IsTextSubtitleStream": false,
+     "SupportsExternalStream": false,
+     "Codec": "srt",
+     "Language": "en",
+     "DisplayTitle": "English [Forced]",
+     "Type": "Subtitle",
+     "Index": 6,
+     "IsDefault": false,
+     "IsExternal": false
+    },
+    {
+     "IsTextSubtitleStream": false,
+     "SupportsExternalStream": false,
+     "Codec": "srt",
+     "Language": "en",
+     "DisplayTitle": "English",
+     "Type": "Subtitle",
+     "Index": 7,
+     "IsDefault": false,
+     "IsExternal": false
+    },
+    {
+     "IsTextSubtitleStream": false,
+     "SupportsExternalStream": false,
+     "Codec": "srt",
+     "Language": "en",
+     "DisplayTitle": "English [SDH]",
+     "Type": "Subtitle",
+     "Index": 8,
+     "IsDefault": false,
+     "IsExternal": false
+    }
+   ]
+  },
+  {
+   "Id": "01000000000000000000000000000003",
+   "ServerId": "efcf9a7fde17e87f137323a675a7bed1",
+   "Name": "Glennkill: Ein Schafskrimi",
+   "SortName": "Glennkill: Ein Schafskrimi",
+   "OriginalTitle": "The Sheep Detectives",
+   "Type": "Movie",
+   "IsFolder": false,
+   "MediaType": "Video",
+   "VideoType": "VideoFile",
+   "LocationType": "FileSystem",
+   "ParentId": "06000000000000000000000000000001",
+   "Overview": "Schäfer George liest seinen geliebten Schafen jeden Abend Krimis vor und nimmt an, dass sie kein Wort davon verstehen. Doch als ein mysteriöser Vorfall das friedliche Leben auf der Farm durchbricht, wird den Schafen bewusst, dass sie selbst nun die Ermittlungen übernehmen müssen. Also folgen sie der Spur der Beweise und machen menschliche Verdächtige ausfindig. Dabei beweisen sie, dass auch Schafe brillant darin sein können, Verbrechen aufzuklären.",
+   "ProductionYear": 2026,
+   "PremiereDate": "2026-01-01T00:00:00Z",
+   "DateCreated": "2026-10-27T18:04:21.329122815+01:00",
+   "RunTimeTicks": 68747520000,
+   "Container": "mkv",
+   "CommunityRating": 7.919,
+   "OfficialRating": "PG",
+   "ProviderIds": {
+    "Imdb": "tt32565993",
+    "Tmdb": "1301421"
+   },
+   "Genres": [
+    "Comedy",
+    "Family",
+    "Mystery"
+   ],
+   "ImageTags": {
+    "Logo": "a3d895b027c1fa19dd0c21de754dd86e",
+    "Primary": "ae3bd9238ed4b9a48ca6a464ed065344"
+   },
+   "BackdropImageTags": [
+    "aa293f46de03104aabcf54f2408fccd3"
+   ],
+   "UserData": {
+    "PlaybackPositionTicks": 200000000,
+    "PlayedPercentage": 0.2909195851719451,
+    "PlayCount": 0,
+    "IsFavorite": false,
+    "Played": false,
+    "LastPlayedDate": "2026-10-28T11:30:18.576411971Z"
+   },
+   "MediaSources": [
+    {
+     "Type": "Default",
+     "DefaultAudioStreamIndex": 1,
+     "DefaultSubtitleStreamIndex": -1,
+     "Id": "01000000000000000000000000000003",
+     "Name": "Glennkill: Ein Schafskrimi",
+     "Protocol": "Http",
+     "Container": "mkv",
+     "Size": 17284742140,
+     "RunTimeTicks": 68747520000,
+     "SupportsDirectPlay": true,
+     "SupportsDirectStream": true,
+     "SupportsTranscoding": false,
+     "MediaStreams": [
+      {
+       "IsTextSubtitleStream": false,
+       "SupportsExternalStream": false,
+       "Codec": "hevc",
+       "Type": "Video",
+       "Index": 0,
+       "IsDefault": true,
+       "IsExternal": false
+      },
+      {
+       "IsTextSubtitleStream": false,
+       "SupportsExternalStream": false,
+       "Codec": "eac3",
+       "Type": "Audio",
+       "Index": 1,
+       "IsDefault": true,
+       "IsExternal": false
+      }
+     ],
+     "IsRemote": false
+    }
+   ],
+   "MediaStreams": [
+    {
+     "IsTextSubtitleStream": false,
+     "SupportsExternalStream": false,
+     "Codec": "hevc",
+     "Type": "Video",
+     "Index": 0,
+     "IsDefault": true,
+     "IsExternal": false
+    },
+    {
+     "IsTextSubtitleStream": false,
+     "SupportsExternalStream": false,
+     "Codec": "eac3",
+     "Type": "Audio",
+     "Index": 1,
+     "IsDefault": true,
+     "IsExternal": false
+    }
+   ]
+  },
+  {
+   "Id": "01000000000000000000000000000006",
+   "ServerId": "efcf9a7fde17e87f137323a675a7bed1",
+   "Name": "Shelter",
+   "SortName": "Shelter",
+   "OriginalTitle": "Shelter",
+   "Type": "Movie",
+   "IsFolder": false,
+   "MediaType": "Video",
+   "VideoType": "VideoFile",
+   "LocationType": "FileSystem",
+   "ParentId": "06000000000000000000000000000001",
+   "Overview": "Der ehemalige Elite-Agent Michael Mason lebt auf einer schottischen Insel in völliger Isolation. Als eines Tages ein schwerer Sturm aufzieht und ein Boot kentert, rettet er ein Mädchen vor dem Ertrinken. Für den Bootsführer kommt jede Hilfe zu spät. Kurzerhand nimmt Michael Jessie bei sich auf und löst damit eine Kette unvorhergesehener Ereignisse aus: Sein Versteck wird entdeckt und von einem brutalen Squad-Team überfallen. Michael sieht sich gezwungen, seinen Zufluchtsort zu verlassen und in jene Welt zurückzukehren, der er für immer entkommen wollte. Um die Teenagerin in Sicherheit zu bringen, muss er sich den Dämonen seiner Vergangenheit stellen …",
+   "ProductionYear": 2026,
+   "PremiereDate": "2026-01-01T00:00:00Z",
+   "DateCreated": "2026-10-27T18:04:21.329122815+01:00",
+   "RunTimeTicks": 64502350000,
+   "Container": "mkv",
+   "CommunityRating": 7.7,
+   "OfficialRating": "R",
+   "ProviderIds": {
+    "Imdb": "tt32357218",
+    "Tmdb": "1290821"
+   },
+   "Genres": [
+    "Action",
+    "Crime",
+    "Thriller"
+   ],
+   "ImageTags": {
+    "Logo": "850e313df8752e8d45f6b9e6c25719bf",
+    "Primary": "e64944f78dabb402910816d89c985b0e"
+   },
+   "BackdropImageTags": [
+    "46faf53d175f413fca4b798965aa9b35"
+   ],
+   "UserData": {
+    "PlaybackPositionTicks": 330000000,
+    "PlayedPercentage": 0.5116092669491887,
+    "PlayCount": 0,
+    "IsFavorite": false,
+    "Played": false,
+    "LastPlayedDate": "2026-10-28T11:21:42.819180402Z"
+   },
+   "MediaSources": [
+    {
+     "Type": "Default",
+     "DefaultAudioStreamIndex": 1,
+     "DefaultSubtitleStreamIndex": -1,
+     "Id": "01000000000000000000000000000006",
+     "Name": "Shelter",
+     "Protocol": "Http",
+     "Container": "mkv",
+     "Size": 10228471838,
+     "RunTimeTicks": 64502350000,
+     "SupportsDirectPlay": true,
+     "SupportsDirectStream": true,
+     "SupportsTranscoding": false,
+     "MediaStreams": [
+      {
+       "IsTextSubtitleStream": false,
+       "SupportsExternalStream": false,
+       "Codec": "hevc",
+       "Type": "Video",
+       "Index": 0,
+       "IsDefault": true,
+       "IsExternal": false
+      },
+      {
+       "IsTextSubtitleStream": false,
+       "SupportsExternalStream": false,
+       "Codec": "ac3",
+       "Type": "Audio",
+       "Index": 1,
+       "IsDefault": true,
+       "IsExternal": false
+      }
+     ],
+     "IsRemote": false
+    }
+   ],
+   "MediaStreams": [
+    {
+     "IsTextSubtitleStream": false,
+     "SupportsExternalStream": false,
+     "Codec": "hevc",
+     "Type": "Video",
+     "Index": 0,
+     "IsDefault": true,
+     "IsExternal": false
+    },
+    {
+     "IsTextSubtitleStream": false,
+     "SupportsExternalStream": false,
+     "Codec": "ac3",
+     "Type": "Audio",
+     "Index": 1,
+     "IsDefault": true,
+     "IsExternal": false
+    }
+   ]
+  }
+ ],
+ "TotalRecordCount": 3,
+ "StartIndex": 0
+}

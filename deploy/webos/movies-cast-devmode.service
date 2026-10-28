@@ -1,0 +1,10 @@
+[Unit]
+Description=Renew the LG TV Developer Mode session (keeps the movies-cast TV app installed)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+User=Demo
+Environment=DEVMODE_DIR=/DATA/AppData/movies-cast-devmode
+ExecStart=/DATA/AppData/movies-cast-devmode/renew-devmode.sh
