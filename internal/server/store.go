@@ -12,6 +12,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"sort"
 	"time"
 
 	"movies-cast/internal/movies"
@@ -98,5 +99,73 @@ func (s *Server) saveSessionsLocked() {
 	if err := os.Rename(tmp.Name(), s.cfg.StateFile); err != nil {
 		_ = os.Remove(tmp.Name())
 		log.Printf("state: rename: %v", err)
+	}
+}
+
+// Proven formats (TV|container|codec, see provenAfter) live next to the
+// sessions in formats.json: without it the format hint came back for the LG
+// after every restart. Nothing secret in it; written 0600 like its neighbour.
+func (s *Server) formatsFile() string {
+	if s.cfg.StateFile == "" {
+		return ""
+	}
+	return filepath.Join(filepath.Dir(s.cfg.StateFile), "formats.json")
+}
+
+func (s *Server) loadProven() error {
+	f := s.formatsFile()
+	if f == "" {
+		return nil
+	}
+	b, err := os.ReadFile(f)
+	if os.IsNotExist(err) {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+	var keys []string
+	if err := json.Unmarshal(b, &keys); err != nil {
+		return fmt.Errorf("%s: %w", f, err)
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	for _, k := range keys {
+		s.proven[k] = true
+	}
+	return nil
+}
+
+// saveProvenLocked writes the proven formats atomically. Caller holds s.mu.
+func (s *Server) saveProvenLocked() {
+	f := s.formatsFile()
+	if f == "" {
+		return
+	}
+	keys := make([]string, 0, len(s.proven))
+	for k := range s.proven {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+	b, err := json.Marshal(keys)
+	if err != nil {
+		log.Printf("formats: %v", err)
+		return
+	}
+	tmp, err := os.CreateTemp(filepath.Dir(f), ".formats-*")
+	if err != nil {
+		log.Printf("formats: %v", err)
+		return
+	}
+	_, werr := tmp.Write(b)
+	cerr := tmp.Close()
+	if werr != nil || cerr != nil {
+		_ = os.Remove(tmp.Name())
+		log.Printf("formats: write: %v %v", werr, cerr)
+		return
+	}
+	if err := os.Rename(tmp.Name(), f); err != nil {
+		_ = os.Remove(tmp.Name())
+		log.Printf("formats: rename: %v", err)
 	}
 }

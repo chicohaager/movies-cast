@@ -62,6 +62,7 @@ type Transport interface {
 	Status(ctx context.Context, r dlna.Renderer) (dlna.Status, error)
 	Volume(ctx context.Context, r dlna.Renderer) (int, error)
 	SetVolume(ctx context.Context, r dlna.Renderer, v int) error
+	Sink(ctx context.Context, r dlna.Renderer) (string, error)
 }
 
 type Config struct {
@@ -88,6 +89,9 @@ type Server struct {
 	// probedSubs keeps what PlaybackInfo listed per film, so it is asked once
 	// per film and server start (each answer starts a transcode on the box).
 	probedSubs map[string]probedSubs
+	// proven holds TV|container|codec combinations a TV has played for
+	// provenAfter; their format hint is skipped until the server restarts.
+	proven map[string]bool
 
 	loginFails map[string][]time.Time // by client IP
 	pairings   map[string]*pairing    // TV-app pairings by secret ID
@@ -105,6 +109,7 @@ type play struct {
 	id        string
 	sess      *session
 	movie     movies.Movie
+	ext       string // container as sent to the TV
 	tv        dlna.Renderer
 	psID      string
 	created   time.Time
@@ -141,9 +146,13 @@ func New(cfg Config, mc *movies.Client, tv Transport, r Renderers) *Server {
 		plays:          map[string]*play{},
 		byTV:           map[string]*play{},
 		probedSubs:     map[string]probedSubs{},
+		proven:         map[string]bool{},
 	}
 	if err := srv.loadSessions(); err != nil {
 		log.Printf("state: %v (starting without stored sessions)", err)
+	}
+	if err := srv.loadProven(); err != nil {
+		log.Printf("formats: %v (starting without proven formats)", err)
 	}
 	return srv
 }
@@ -557,6 +566,7 @@ func (s *Server) startPlay(w http.ResponseWriter, r *http.Request, sid string, s
 		Renderer string `json:"renderer"`
 		Movie    string `json:"movie"`
 		Resume   bool   `json:"resume"`
+		Force    bool   `json:"force"` // send although the TV does not list the format
 	}
 	if err := readJSON(r, &in); err != nil || in.Renderer == "" || in.Movie == "" {
 		fail(w, http.StatusBadRequest, "Film und Fernseher angeben")
@@ -572,13 +582,35 @@ func (s *Server) startPlay(w http.ResponseWriter, r *http.Request, sid string, s
 		s.moviesErr(w, sid, err)
 		return
 	}
+	ext := m.Container
+	if ext == "" {
+		ext = "mkv"
+	}
+	s.mu.Lock()
+	proven := s.proven[formatKey(tv, ext, m.VideoCodec)]
+	s.mu.Unlock()
+	if !in.Force && !proven {
+		// A hint, not a block: the LG lists no HEVC and plays it (dlna.Unlisted).
+		sink, err := s.tv.Sink(r.Context(), tv)
+		if err != nil {
+			log.Printf("protocol info %s: %v", tv.Name, err)
+		} else if miss := dlna.Unlisted(sink, ext, m.VideoCodec); len(miss) > 0 {
+			list := strings.Join(miss, ", ")
+			writeJSON(w, http.StatusConflict, map[string]any{
+				"error":    "Dieser Fernseher nennt " + list + " nicht in seiner Formatliste, das Bild bleibt dann womöglich schwarz.",
+				"errorEn":  "This TV does not list " + list + " among its formats; the screen may stay black.",
+				"unlisted": miss,
+			})
+			return
+		}
+	}
 	base, err := s.streamBase(r.Context(), tv)
 	if err != nil {
 		fail(w, http.StatusBadGateway, "keine Netzverbindung zum Fernseher")
 		return
 	}
 
-	p := &play{id: randomID(), sess: sess, movie: m, tv: tv, psID: randomID(), created: s.now()}
+	p := &play{id: randomID(), sess: sess, movie: m, tv: tv, ext: ext, psID: randomID(), created: s.now()}
 	p.ctx, p.cancel = context.WithCancel(context.Background())
 	s.mu.Lock()
 	if old := s.byTV[tv.ID]; old != nil {
@@ -588,10 +620,6 @@ func (s *Server) startPlay(w http.ResponseWriter, r *http.Request, sid string, s
 	s.byTV[tv.ID] = p
 	s.mu.Unlock()
 
-	ext := m.Container
-	if ext == "" {
-		ext = "mkv"
-	}
 	media := dlna.Media{URL: base + "/s/" + p.id + "/movie." + url.PathEscape(ext), Title: m.Name, MimeType: mimeFor(ext),
 		Size: m.Size, Duration: time.Duration(m.Runtime) * time.Second}
 	ctx := r.Context()
@@ -622,6 +650,14 @@ func (s *Server) startPlay(w http.ResponseWriter, r *http.Request, sid string, s
 	}
 	go s.watch(p.ctx, p, resume)
 	writeJSON(w, http.StatusOK, map[string]any{"ok": true, "title": m.Name, "resumeSeconds": int64(resume / time.Second)})
+}
+
+// provenAfter is how long a TV must report PLAYING before its format counts
+// as playable on it.
+const provenAfter = 10 * time.Second
+
+func formatKey(tv dlna.Renderer, container, codec string) string {
+	return tv.ID + "|" + strings.ToLower(container) + "|" + strings.ToLower(codec)
 }
 
 func mimeFor(ext string) string {
@@ -722,6 +758,10 @@ func (s *Server) watch(ctx context.Context, p *play, resume time.Duration) {
 			}
 			if st.State == "PLAYING" {
 				p.sawPlay = true
+				if k := formatKey(p.tv, p.ext, p.movie.VideoCodec); st.Position >= provenAfter && !s.proven[k] {
+					s.proven[k] = true
+					s.saveProvenLocked()
+				}
 			}
 		}
 		sawPlay = p.sawPlay

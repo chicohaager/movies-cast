@@ -5,7 +5,8 @@
 //	LISTEN      address to listen on (default :8097)
 //	MOVIES_URL  Movies' Jellyfin-compatible API (default http://127.0.0.1/movies)
 //	PUBLIC_URL  URL the TV uses to reach this server (default: derived per TV)
-//	RENDERERS   comma-separated device description URLs, in addition to SSDP
+//	RENDERERS   comma-separated description URLs or hosts (URL found by SSDP), in addition to SSDP
+//	SSDP_PORT   local UDP port of the SSDP search (default 1901; 0 = any), so a firewall can allow the answers
 //	SSDP        "false" turns discovery off
 //	STATE_FILE  file that keeps sessions across restarts (holds Movies tokens, 0600)
 package main
@@ -96,7 +97,11 @@ func main() {
 	static := list("RENDERERS")
 	mc := movies.New(env("MOVIES_URL", "http://127.0.0.1/movies"), version)
 	tv := dlna.NewClient()
-	finder := dlna.NewFinder(static, env("SSDP", "true") != "false", tv)
+	ssdpPort, err := strconv.Atoi(env("SSDP_PORT", "1901"))
+	if err != nil || ssdpPort < 0 || ssdpPort > 65535 {
+		log.Fatalf("SSDP_PORT %q: not a port", os.Getenv("SSDP_PORT"))
+	}
+	finder := dlna.NewFinder(static, env("SSDP", "true") != "false", ssdpPort, tv)
 	srv := server.New(server.Config{PublicURL: os.Getenv("PUBLIC_URL"), Port: port, StateFile: os.Getenv("STATE_FILE")}, mc, tv, finder)
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)

@@ -63,3 +63,5 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
 .detail h2 { margin: 0 0 4px; font-size: 1.15rem; }
 .detail #d-overview { max-height: 30vh; overflow: auto; margin: 0; }
 @media (max-width: 420px) { .detail { grid-template-columns: 1fr; } .detail img { width: 45%; } }
+.error.force { padding-top: 0; }
+.error.force button { margin: 0; }
