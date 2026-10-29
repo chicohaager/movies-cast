@@ -120,7 +120,8 @@ the TV's description answers. Whether a TV wakes this way depends on the TV (LG:
 
 ```bash
 go vet ./... && go test -race ./...
-SSHPASS_FILE=/path/to/pw deploy/zimaos/build-on-host.sh <user>@<nas> 0.1.0
+SSHPASS_FILE=/path/to/pw deploy/zimaos/build-on-host.sh <user>@<nas> 0.20.2
+# builds only a committed tree; -version then prints 0.20.2+<commit>
 # first install:
 ZIMA_USER=… ZIMA_PASS=… python3 ~/dev/zimapp/zimapp.py install --host <nas> --ssh-user <user> deploy/zimaos/docker-compose.yml
 # update after a rebuild, on the host:
