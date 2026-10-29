@@ -3,6 +3,7 @@ package server
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net"
 	"net/http"
 	"strings"
@@ -122,5 +123,38 @@ func TestSystemStatus(t *testing.T) {
 	}
 	if !out.MoviesOK {
 		t.Fatalf("moviesOK false against the fake Movies: %s", body)
+	}
+}
+
+// Every renderer a search found went into tvs.json for good: a device on the
+// LAN answering with new UDNs filled the list with "off" TVs.
+func TestKnownTVsAreCapped(t *testing.T) {
+	r, _ := newRigWithState(t)
+	var rs []dlna.Renderer
+	for i := range maxKnownTVs + 20 {
+		rs = append(rs, dlna.Renderer{ID: fmt.Sprintf("uuid:fake-%d", i), Name: "fake", Location: fmt.Sprintf("http://10.0.0.%d:1795/", i%250+1)})
+	}
+	r.app.remember(rs)
+	r.app.mu.Lock()
+	n := len(r.app.prefs.Known)
+	r.app.mu.Unlock()
+	if n > maxKnownTVs {
+		t.Fatalf("%d known TVs kept, want at most %d", n, maxKnownTVs)
+	}
+}
+
+// Added hosts had no limit; each gets a unicast search on every search.
+func TestAddedHostsAreCapped(t *testing.T) {
+	r, _ := newRigWithState(t)
+	r.login()
+	last := 0
+	for i := range maxTVHosts + 5 {
+		last, _ = r.post("/api/tvs/hosts", map[string]any{"host": fmt.Sprintf("10.0.1.%d", i+1)})
+	}
+	r.app.mu.Lock()
+	n := len(r.app.prefs.Hosts)
+	r.app.mu.Unlock()
+	if n > maxTVHosts || last != 400 {
+		t.Fatalf("%d hosts kept, last answer %d; want at most %d and 400", n, last, maxTVHosts)
 	}
 }

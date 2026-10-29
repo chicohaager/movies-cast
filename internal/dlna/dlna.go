@@ -26,6 +26,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"unicode"
 )
 
 const (
@@ -34,6 +35,9 @@ const (
 	svcConnectionManager = "urn:schemas-upnp-org:service:ConnectionManager:1"
 	ssdpAddr             = "239.255.255.250:1900"
 	descriptionMaxBytes  = 1 << 20
+	// One host answering a search many times with other paths (each a
+	// description fetch) gets this many; a TV gives one or two.
+	maxLocationsPerHost  = 4
 	soapResponseMaxBytes = 1 << 20
 )
 
@@ -96,7 +100,7 @@ func ParseDescription(location string, body []byte) (Renderer, error) {
 	}
 	var walk func(device) (Renderer, bool)
 	walk = func(dv device) (Renderer, bool) {
-		r := Renderer{ID: strings.TrimSpace(dv.UDN), Name: strings.TrimSpace(dv.FriendlyName), Model: strings.TrimSpace(dv.ModelName), Location: location}
+		r := Renderer{ID: strings.TrimSpace(dv.UDN), Name: printable(dv.FriendlyName), Model: printable(dv.ModelName), Location: location}
 		for _, s := range dv.Services {
 			ref, err := url.Parse(strings.TrimSpace(s.ControlURL))
 			if err != nil {
@@ -240,6 +244,7 @@ func SearchOn(conn net.PacketConn, wait time.Duration, hosts []string) (locs []s
 	}
 	_ = conn.SetReadDeadline(time.Now().Add(wait))
 	seen := map[string]bool{}
+	perHost := map[string]int{}
 	buf := make([]byte, 4096)
 	for {
 		n, from, err := conn.ReadFrom(buf)
@@ -255,6 +260,11 @@ func SearchOn(conn net.PacketConn, wait time.Duration, hosts []string) (locs []s
 		if loc == "" || seen[loc] || !sameHost(from, loc) {
 			continue
 		}
+		h := hostOf(loc)
+		if perHost[h] >= maxLocationsPerHost {
+			continue
+		}
+		perHost[h]++
 		seen[loc] = true
 		locs = append(locs, loc)
 	}
@@ -369,6 +379,12 @@ func (c *Client) lock(controlURL string) *sync.Mutex {
 		c.locks[controlURL] = l
 	}
 	return l
+}
+
+// printable makes a device's own text (name, model) one line without control
+// characters: it goes into log lines, and a newline in it forged one.
+func printable(s string) string {
+	return strings.Join(strings.FieldsFunc(s, func(r rune) bool { return unicode.IsSpace(r) || unicode.IsControl(r) }), " ")
 }
 
 func xmlEscape(s string) string {
