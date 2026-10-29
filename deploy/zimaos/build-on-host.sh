@@ -5,7 +5,8 @@
 #   deploy/zimaos/build-on-host.sh <ssh-user>@<host> [version]   (-version prints <version>+<commit>)
 #
 # Steps, each with its witness:
-#   1. go vet + go test, then a static build here (CGO_ENABLED=0); sha256 printed
+#   1. check.sh (vet, tests, browser tests, public-data scan; CHECK_ARGS=--no-e2e
+#      skips the browser tests), then a static build here (CGO_ENABLED=0); sha256 printed
 #   2. binary + Dockerfile to <host>:/DATA/AppData/movies-cast-build/ — next to,
 #      never inside, /DATA/AppData/movies-cast (a ZimaOS uninstall deletes that)
 #   3. sha256 compared on the host before the build
@@ -46,8 +47,9 @@ if [[ -n "$dirty" ]]; then
 fi
 version="$version+$(cd "$repo" && git rev-parse --short=12 HEAD)"
 
-echo "== 1/4 test + static build ($version)"
-(cd "$repo" && go vet ./... && go test -count=1 ./... >/dev/null)
+echo "== 1/4 check.sh + static build ($version)"
+# shellcheck disable=SC2086 # CHECK_ARGS is empty or one flag
+"$repo/check.sh" ${CHECK_ARGS:-}
 (cd "$repo" && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -ldflags "-s -w -X main.version=$version" -o "$out/movies-cast" ./cmd/movies-cast)
 cp "$repo/Dockerfile" "$out/Dockerfile"
 chmod 0755 "$out/movies-cast"

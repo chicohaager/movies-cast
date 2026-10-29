@@ -17,6 +17,7 @@ day). Order approved on 2026-10-28.
 | 0.21 | colour mode on the phone: System, Light or Dark in the footer next to the language, remembered on the device, applied before the first paint; the browser bar colour follows | owner's request 2026-10-28; the phone page followed the system only; the TV page is always dark |
 | 0.22 | colour mode stored with the account (themes.json), not per address; "Log out" clears the device's copy; a dev server (`TestDevServer`) runs the real page against the test fakes for browser checks with a login | in 0.21 the LAN and the Tailscale address each had their own choice; status card and player could not be checked in a browser without a real login |
 | 0.23 | language stored with the account like the colour mode (langs.json); the dev server's TV plays (TRANSITIONING → PLAYING, position counts), a new URI starts at 0 | in 0.22 the language still lived per address; the player could not be clicked through in the dev server (the fake TV stayed in TRANSITIONING) |
+| 0.24 | the movies-cast logo on the ZimaOS tile (data: URI, was Jellyfin's); check.sh (vet, tests, browser tests incl. the TV page, public-data scan) before every build; a package for testers: public image on ghcr.io, compose for ZimaOS "Import", guides de/en with a test list | the owner wants testers; the installer of ZimaOS ≥ 1.7.1 pulls every image itself, so a docker-loaded image would need root over SSH |
 
 With 0.16 on .143 the search found both TVs with `RENDERERS` empty (3 of 3 searches, 0 drops).
 
