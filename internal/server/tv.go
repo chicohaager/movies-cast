@@ -347,16 +347,7 @@ func (s *Server) watchBrowser(p *play, resume time.Duration) {
 	if err := s.movies.ReportStart(bg, p.sess.ms, state(resume, false)); err != nil {
 		log.Printf("report start: %v", err)
 	}
-	defer func() {
-		s.mu.Lock()
-		pos := p.lastPos
-		s.mu.Unlock()
-		rctx, cancel := context.WithTimeout(bg, 10*time.Second)
-		defer cancel()
-		if err := s.movies.ReportStopped(rctx, p.sess.ms, state(pos, false)); err != nil {
-			log.Printf("report stopped: %v", err)
-		}
-	}()
+	defer s.reportStopped(bg, p, state)
 	tick := time.NewTicker(s.pollEvery)
 	defer tick.Stop()
 	lastReport := s.now()
