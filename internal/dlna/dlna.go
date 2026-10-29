@@ -4,7 +4,9 @@
 // Measured on an LG OLED55B97LA (webOS 4.x, 2026-10-28), and the reason for
 // the defensive parts below:
 //   - Seek while STOPPED gets no reply at all; every call needs a hard timeout.
-//   - GetVolume answers UPnP error 606 "Action not authorized"; volume is optional.
+//   - GetVolume answers UPnP error 606 "Action not authorized" while nothing
+//     plays; while a film plays (2026-10-29) it answers CurrentVolume 0, as
+//     GetMute answers 0. Volume is optional.
 //   - After Stop the TV still hands out the last TrackURI to anyone asking
 //     GetPositionInfo, so a URL given to a renderer must not carry a credential.
 package dlna
