@@ -15,6 +15,23 @@ I18N.apply();
     location.href = u.toString();
   });
 })();
+// Colour mode picker: System, Light or Dark; theme.js applies it before the first paint.
+(function () {
+  const sel = document.getElementById("theme");
+  const meta = document.querySelector('meta[name="theme-color"]');
+  const apply = (mode) => {
+    if (mode) document.documentElement.setAttribute("data-theme", mode);
+    else document.documentElement.removeAttribute("data-theme");
+    if (meta) meta.content = getComputedStyle(document.documentElement).getPropertyValue("--bg").trim() || meta.content;
+  };
+  sel.value = document.documentElement.getAttribute("data-theme") || "";
+  apply(sel.value);
+  sel.addEventListener("change", () => {
+    try { if (sel.value) localStorage.setItem("moviescast.theme", sel.value); else localStorage.removeItem("moviescast.theme"); } catch { /* private mode */ }
+    apply(sel.value);
+  });
+  matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => apply(sel.value));
+})();
 const state = { movies: [], resume: [], wasPlaying: false, tv: localGet("tv"), selected: null, polling: null, status: null, seeking: false };
 
 function localGet(k) { try { return localStorage.getItem(k) || ""; } catch { return ""; } }

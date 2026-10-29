@@ -3,10 +3,14 @@
   --accent: #c2410c; --accent-text: #ffffff; --danger: #b91c1c; --error-bg: #fde8e8;
   color-scheme: light;
 }
+/* Dark: by the system unless "Light" is chosen on the phone, or chosen as "Dark"
+   (theme.js sets data-theme). Both blocks carry the same values (TestThemeChosenOnThePhone). */
 @media (prefers-color-scheme: dark) {
-  :root { --bg: #111318; --card: #1b1e25; --text: #eceef3; --muted: #9aa0ad; --line: #2c303a;
+  :root:not([data-theme="light"]) { --bg: #111318; --card: #1b1e25; --text: #eceef3; --muted: #9aa0ad; --line: #2c303a;
     --accent: #fb923c; --accent-text: #111318; --danger: #f87171; --error-bg: #3b1416; color-scheme: dark; }
 }
+:root[data-theme="dark"] { --bg: #111318; --card: #1b1e25; --text: #eceef3; --muted: #9aa0ad; --line: #2c303a;
+  --accent: #fb923c; --accent-text: #111318; --danger: #f87171; --error-bg: #3b1416; color-scheme: dark; }
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--bg); color: var(--text);
   font: 16px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
@@ -79,6 +83,7 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
 .foot { padding: 16px; text-align: center; }
 .foot label { display: inline-flex; align-items: center; gap: 8px; margin: 0; }
 .foot select { width: auto; margin: 0; }
+.foot { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px 20px; }
 .notice { background: var(--card, #fff); color: var(--text); border-bottom: 1px solid var(--line); padding: 10px 16px; font-weight: 600; }
 .player .sound { margin: 10px 0 0; text-align: right; }
 button.link { background: none; border: none; padding: 4px 0; color: var(--muted, var(--text)); text-decoration: underline; font-weight: 500; width: auto; }

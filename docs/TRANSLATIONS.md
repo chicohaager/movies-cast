@@ -4,7 +4,7 @@ movies-cast speaks the 18 languages the ZimaOS web UI ships: en, de, fr, es, it,
 sv, tr, ru, ja, ko, zh_CN, zh_TW, pt_BR, pt_PT. English is the reference and the fallback.
 
 **No native speaker has read any of them yet.** English and German were written with the code; the
-other 16 were translated by AI agents (0.18) and, for the strings added in 0.19 and 0.20, by the
+other 16 were translated by AI agents (0.18) and, for the strings added in 0.19, 0.20 and 0.21, by the
 author's AI assistant. If you speak one of these languages, a review is the most useful contribution
 right now.
 

@@ -14,6 +14,7 @@ day). Order approved on 2026-10-28.
 | 0.18 | 18 languages (ZimaOS' set, English default, picker on the phone, every server message keyed); failed DLNA formats remembered; Play waits 30 s instead of 6 s; Play time and every stream request logged; "Open in the movies-cast app" offered only when DLNA fails and the app is open | owner: multilingual is a must, DLNA is the top feature |
 | 0.19 | Wake-on-LAN: a TV seen once is remembered with its MAC (ARP table) and listed as "off" when it answers no search; sending a film to it wakes it first (packet every 3 s, up to 60 s, until its description URL answers); an unreachable TV no longer counts as a failed format | a TV in standby vanished from the list; the owner's test with the LG in standby is open |
 | 0.20 | sound converted on request ("No sound?" in the player, remembered per TV and audio format; offered when a DLNA send fails): Movies' HLS segments joined into one MPEG-TS stream, picture copied, audio AAC; seek re-sends from the segment; known TVs asked at their description URL when a search misses them; Play no longer cut at 6 s | 0.18's 30 s Play limit never applied: the HTTP client's own 6 s timeout cut first (a converted Play on the LG ended at 6.2 s, 2026-10-28); the Samsung answered its URL while a search missed it |
+| 0.21 | colour mode on the phone: System, Light or Dark in the footer next to the language, remembered on the device, applied before the first paint; the browser bar colour follows | owner's request 2026-10-28; the phone page followed the system only; the TV page is always dark |
 
 With 0.16 on .143 the search found both TVs with `RENDERERS` empty (3 of 3 searches, 0 drops).
 
@@ -27,7 +28,6 @@ PLAYING. The two failures of 19:35 and 17:51 (no answer to Play within 6 s) were
 | # | What | Effort | Note |
 |---|---|---|---|
 | 4 | one-click install from an app store | 2–3 h | needs the repo public (owner's decision) and tests by the owner and by others before any store entry |
-| 12 | dark / light / system mode, chosen on the phone | — | owner's request 2026-10-28; today the pages follow the system only |
 | 11 | one login per person | — | the phone has it since 0.1 (each person logs in with their own ZimaOS account; library and resume points are theirs). The TV app runs with the account of the phone that approved its pairing (`tvPairApprove`), so on a shared TV everyone continues in that account. Open: switching the account on the TV — only if more than one person uses it |
 
 Sound (8): the LG lists no AC3, E-AC3, TrueHD or DTS (measured 2026-10-28) yet plays them with sound

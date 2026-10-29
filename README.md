@@ -180,6 +180,9 @@ with the server; the TV gets no Movies token.
   else English; a picker on the phone. Server errors carry a `key` for every language;
   `TestEveryFailMessageHasEnglish` and `TestStringsComplete` keep them complete. Review status:
   [docs/TRANSLATIONS.md](docs/TRANSLATIONS.md) — no native speaker has read them yet.
+- **Colour mode (phone):** System, Light or Dark in the footer (`web/theme.js` sets `data-theme` before
+  `style.css` paints; remembered in `localStorage`); `TestThemeChosenOnThePhone` keeps both dark blocks equal.
+  The TV page is always dark (`web/tv/tv.css`).
 - **Phone home screen:** `manifest.json` with 192/512 px icons and an `apple-touch-icon` (rendered from the logo by
   `deploy/webos/logo/render.py`; `TestManifestIconsExist`).
 - **Chrome 53:** no async/await, `?.`, `??`, object spread, padStart, CSS grid, flex `gap`,

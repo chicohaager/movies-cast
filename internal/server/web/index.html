@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#111318">
 <title>Movies auf dem Fernseher</title>
+<script src="theme.js"></script>
 <script src="strings.js"></script>
 <script src="i18n.js"></script>
 <link rel="icon" href="logo.svg" type="image/svg+xml">
@@ -114,7 +115,14 @@
   </form>
 </dialog>
 
-<footer class="foot"><label><span data-i18n="lang.label">Sprache</span> <select id="lang"></select></label></footer>
+<footer class="foot">
+  <label><span data-i18n="lang.label">Sprache</span> <select id="lang"></select></label>
+  <label><span data-i18n="theme.label">Darstellung</span> <select id="theme">
+    <option value="" data-i18n="theme.system">System</option>
+    <option value="light" data-i18n="theme.light">Hell</option>
+    <option value="dark" data-i18n="theme.dark">Dunkel</option>
+  </select></label>
+</footer>
 <script src="app.js"></script>
 </body>
 </html>
