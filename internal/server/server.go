@@ -988,6 +988,28 @@ func (s *Server) endPlayLocked(id string) {
 	}
 }
 
+// reportStopped tells Movies where the play ended (its resume point) and logs
+// the outcome either way: a report that reached Movies wrote no line, so
+// after a play nobody could tell whether Movies got the resume point.
+func (s *Server) reportStopped(bg context.Context, p *play, state func(time.Duration, bool) movies.PlayState) {
+	s.mu.Lock()
+	pos := p.lastPos
+	s.mu.Unlock()
+	rctx, cancel := context.WithTimeout(bg, 10*time.Second)
+	defer cancel()
+	if err := s.movies.ReportStopped(rctx, p.sess.ms, state(pos, false)); err != nil {
+		log.Printf("report stopped %s at %s: %v", p.movie.Name, clock(pos), err)
+		return
+	}
+	log.Printf("report stopped %s at %s: ok", p.movie.Name, clock(pos))
+}
+
+// clock writes d as h:mm:ss.
+func clock(d time.Duration) string {
+	t := int64(d / time.Second)
+	return fmt.Sprintf("%d:%02d:%02d", t/3600, t/60%60, t%60)
+}
+
 // watch seeks to the resume point once the TV plays, reports progress to
 // Movies, and ends the play when the TV stops or plays something else.
 func (s *Server) watch(ctx context.Context, p *play, resume time.Duration) {
@@ -1001,16 +1023,7 @@ func (s *Server) watch(ctx context.Context, p *play, resume time.Duration) {
 	if err := s.movies.ReportStart(bg, p.sess.ms, state(resume, false)); err != nil {
 		log.Printf("report start: %v", err)
 	}
-	defer func() {
-		s.mu.Lock()
-		pos := p.lastPos
-		s.mu.Unlock()
-		rctx, cancel := context.WithTimeout(bg, 10*time.Second)
-		defer cancel()
-		if err := s.movies.ReportStopped(rctx, p.sess.ms, state(pos, false)); err != nil {
-			log.Printf("report stopped: %v", err)
-		}
-	}()
+	defer s.reportStopped(bg, p, state)
 
 	tick := time.NewTicker(s.pollEvery)
 	defer tick.Stop()
