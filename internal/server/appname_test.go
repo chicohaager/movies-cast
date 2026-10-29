@@ -86,6 +86,28 @@ func TestAppNameIsMoviesCast(t *testing.T) {
 		}
 	}
 
+	// The TV app (webOS): its launcher title and the loader's texts.
+	var info struct{ Title string }
+	ib, err := os.ReadFile("../../deploy/webos/app/appinfo.json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := json.Unmarshal(ib, &info); err != nil {
+		t.Fatal(err)
+	}
+	if info.Title != appName {
+		t.Errorf("webOS appinfo title %q, want %q", info.Title, appName)
+	}
+	lb, err := os.ReadFile("../../deploy/webos/app/index.html")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, m := range regexp.MustCompile(`(open|fail): "([^"]*)"`).FindAllStringSubmatch(string(lb), -1) {
+		if !strings.Contains(m[2], appName) {
+			t.Errorf("webOS loader %s text %q does not name %q", m[1], m[2], appName)
+		}
+	}
+
 	for msg, en := range errorsEn {
 		if strings.Contains(msg+en, "movies-cast") {
 			t.Errorf("server message %q / %q names the app in lower case", msg, en)

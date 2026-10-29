@@ -15,9 +15,9 @@ body { margin: 0; background: #0d0f14; color: #eef0f5; font: 2vw sans-serif; tex
 <script>
 var SERVER = "http://nas.local:8097";
 var DE = (navigator.language || "").toLowerCase().indexOf("de") === 0;
-var T = DE ? { open: "Movies wird geöffnet …", fail: "movies-cast auf {s} ist nicht erreichbar ({w}).", retry: "Neuer Versuch in 10 Sekunden …",
+var T = DE ? { open: "Movies-Cast wird geöffnet …", fail: "Movies-Cast auf {s} ist nicht erreichbar ({w}).", retry: "Neuer Versuch in 10 Sekunden …",
                answer: "Antwort ", conn: "keine Verbindung", time: "keine Antwort" }
-           : { open: "Opening Movies …", fail: "movies-cast at {s} is not reachable ({w}).", retry: "Trying again in 10 seconds …",
+           : { open: "Opening Movies-Cast …", fail: "Movies-Cast at {s} is not reachable ({w}).", retry: "Trying again in 10 seconds …",
                answer: "answer ", conn: "no connection", time: "no answer" };
 document.getElementById("t").textContent = T.open;
 function probe() {
