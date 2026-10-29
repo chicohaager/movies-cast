@@ -130,3 +130,39 @@ test("player: play, pause, skip, resume, converted sound, stop", async ({ page }
   await expect(page.locator("#player")).toBeHidden();
   await expect(page.locator("#error")).toBeHidden();
 });
+
+// The film dialog's buttons ("Continue at 0:32:54", "Play from the start",
+// "Close") fit on a narrow phone in every language: at 390 px the English
+// labels were cut off (147 px of text in a 116 px button, 29.10.2026). Each
+// language is asked for with ?lang=, which goes into Demo's account; Demo is set
+// back to German at the end, as the language test leaves it.
+test("film dialog: every button label fits at 360 px, in all languages", async ({ browser }) => {
+  test.setTimeout(240_000); // 18 languages, a login each
+  const fs = require("fs");
+  const path = require("path");
+  const codes = fs.readdirSync(path.join(__dirname, "../internal/server/web/i18n")).filter((f) => f.endsWith(".json")).map((f) => f.slice(0, -5));
+  expect(codes.length).toBeGreaterThanOrEqual(18);
+  const cut = [];
+  for (const code of codes) {
+    const ctx = await browser.newContext({ ...test.info().project.use, viewport: { width: 360, height: 780 } });
+    const page = await ctx.newPage();
+    await login(page, "Demo", `/?lang=${code}`);
+    await expect(page.locator("html")).toHaveAttribute("lang", code.replace("_", "-"));
+    await page.locator("#resume-list button").first().click();
+    await expect(page.locator("#d-resume")).toBeVisible();
+    for (const b of await page.locator("#detail .controls button:visible").all()) {
+      const m = await b.evaluate((e) => ({ t: e.textContent.trim(), sw: e.scrollWidth, cw: e.clientWidth }));
+      if (m.sw > m.cw + 1) cut.push(`${code}: "${m.t}" needs ${m.sw} px, has ${m.cw}`);
+    }
+    await page.keyboard.press("Escape"); // the dialog is modal: close it before Log out
+    await expect(page.locator("#detail")).not.toBeVisible();
+    await page.locator("#logout").click();
+    await ctx.close();
+  }
+  const { ctx, page } = await device(browser);
+  const reset = page.waitForResponse((r) => r.url().endsWith("/api/lang") && r.status() === 200);
+  await login(page, "Demo", "/?lang=de");
+  await reset;
+  await ctx.close();
+  expect(cut).toEqual([]);
+});

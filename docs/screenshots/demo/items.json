@@ -1,0 +1,543 @@
+{
+ "Items": [
+  {
+   "Id": "01000000000000000000000000000001",
+   "ServerId": "efcf9a7fde17e87f137323a675a7bed1",
+   "Name": "Nosferatu",
+   "SortName": "Nosferatu",
+   "OriginalTitle": "Nosferatu",
+   "Type": "Movie",
+   "IsFolder": false,
+   "MediaType": "Video",
+   "VideoType": "VideoFile",
+   "LocationType": "FileSystem",
+   "ParentId": "06000000000000000000000000000001",
+   "Overview": "1922 film directed by F. W. Murnau.",
+   "ProductionYear": 1922,
+   "PremiereDate": "1922-01-01T00:00:00Z",
+   "DateCreated": "2026-10-27T18:04:21.329122815+01:00",
+   "RunTimeTicks": 56400000000,
+   "Container": "mkv",
+   "ImageTags": {
+    "Primary": "nosferatu"
+   },
+   "UserData": {
+    "Key": "01000000000000000000000000000001",
+    "PlaybackPositionTicks": 19740000000,
+    "PlayedPercentage": 35.0,
+    "PlayCount": 0,
+    "IsFavorite": false,
+    "Played": false,
+    "LastPlayedDate": "2026-10-29T08:00:00Z"
+   },
+   "MediaSources": [
+    {
+     "Type": "Default",
+     "DefaultAudioStreamIndex": 1,
+     "DefaultSubtitleStreamIndex": -1,
+     "Id": "01000000000000000000000000000001",
+     "Name": "Shelter",
+     "Protocol": "Http",
+     "Container": "mkv",
+     "Size": 10228471838,
+     "RunTimeTicks": 56400000000,
+     "SupportsDirectPlay": true,
+     "SupportsDirectStream": true,
+     "SupportsTranscoding": false,
+     "DirectStreamUrl": "/movies/Videos/01000000000000000000000000000006/stream?MediaSourceId=01000000000000000000000000000006&PlaySessionId=",
+     "MediaStreams": [
+      {
+       "IsTextSubtitleStream": false,
+       "SupportsExternalStream": false,
+       "Codec": "hevc",
+       "Type": "Video",
+       "Index": 0,
+       "IsDefault": true,
+       "IsExternal": false
+      },
+      {
+       "IsTextSubtitleStream": false,
+       "SupportsExternalStream": false,
+       "Codec": "ac3",
+       "Type": "Audio",
+       "Index": 1,
+       "IsDefault": true,
+       "IsExternal": false
+      }
+     ],
+     "IsRemote": false
+    }
+   ],
+   "MediaStreams": [
+    {
+     "IsTextSubtitleStream": false,
+     "SupportsExternalStream": false,
+     "Codec": "hevc",
+     "Type": "Video",
+     "Index": 0,
+     "IsDefault": true,
+     "IsExternal": false
+    },
+    {
+     "IsTextSubtitleStream": false,
+     "SupportsExternalStream": false,
+     "Codec": "ac3",
+     "Type": "Audio",
+     "Index": 1,
+     "IsDefault": true,
+     "IsExternal": false
+    }
+   ],
+   "DemoPoster": "nosferatu.jpg"
+  },
+  {
+   "Id": "01000000000000000000000000000002",
+   "ServerId": "efcf9a7fde17e87f137323a675a7bed1",
+   "Name": "The Cabinet of Dr. Caligari",
+   "SortName": "The Cabinet of Dr. Caligari",
+   "OriginalTitle": "The Cabinet of Dr. Caligari",
+   "Type": "Movie",
+   "IsFolder": false,
+   "MediaType": "Video",
+   "VideoType": "VideoFile",
+   "LocationType": "FileSystem",
+   "ParentId": "06000000000000000000000000000001",
+   "Overview": "1920 film by Robert Wiene.",
+   "ProductionYear": 1920,
+   "PremiereDate": "1920-01-01T00:00:00Z",
+   "DateCreated": "2026-10-27T18:04:21.329122815+01:00",
+   "RunTimeTicks": 46200000000,
+   "Container": "mkv",
+   "ImageTags": {
+    "Primary": "caligari"
+   },
+   "UserData": {
+    "Key": "01000000000000000000000000000002",
+    "PlaybackPositionTicks": 0,
+    "PlayedPercentage": 0,
+    "PlayCount": 0,
+    "IsFavorite": false,
+    "Played": false
+   },
+   "MediaSources": [
+    {
+     "Type": "Default",
+     "DefaultAudioStreamIndex": 1,
+     "DefaultSubtitleStreamIndex": -1,
+     "Id": "01000000000000000000000000000002",
+     "Name": "Shelter",
+     "Protocol": "Http",
+     "Container": "mkv",
+     "Size": 10228471838,
+     "RunTimeTicks": 46200000000,
+     "SupportsDirectPlay": true,
+     "SupportsDirectStream": true,
+     "SupportsTranscoding": false,
+     "DirectStreamUrl": "/movies/Videos/01000000000000000000000000000006/stream?MediaSourceId=01000000000000000000000000000006&PlaySessionId=",
+     "MediaStreams": [
+      {
+       "IsTextSubtitleStream": false,
+       "SupportsExternalStream": false,
+       "Codec": "hevc",
+       "Type": "Video",
+       "Index": 0,
+       "IsDefault": true,
+       "IsExternal": false
+      },
+      {
+       "IsTextSubtitleStream": false,
+       "SupportsExternalStream": false,
+       "Codec": "ac3",
+       "Type": "Audio",
+       "Index": 1,
+       "IsDefault": true,
+       "IsExternal": false
+      }
+     ],
+     "IsRemote": false
+    }
+   ],
+   "MediaStreams": [
+    {
+     "IsTextSubtitleStream": false,
+     "SupportsExternalStream": false,
+     "Codec": "hevc",
+     "Type": "Video",
+     "Index": 0,
+     "IsDefault": true,
+     "IsExternal": false
+    },
+    {
+     "IsTextSubtitleStream": false,
+     "SupportsExternalStream": false,
+     "Codec": "ac3",
+     "Type": "Audio",
+     "Index": 1,
+     "IsDefault": true,
+     "IsExternal": false
+    }
+   ],
+   "DemoPoster": "caligari.jpg"
+  },
+  {
+   "Id": "01000000000000000000000000000003",
+   "ServerId": "efcf9a7fde17e87f137323a675a7bed1",
+   "Name": "The General",
+   "SortName": "The General",
+   "OriginalTitle": "The General",
+   "Type": "Movie",
+   "IsFolder": false,
+   "MediaType": "Video",
+   "VideoType": "VideoFile",
+   "LocationType": "FileSystem",
+   "ParentId": "06000000000000000000000000000001",
+   "Overview": "1926 film directed by Clyde Bruckman and Buster Keaton.",
+   "ProductionYear": 1926,
+   "PremiereDate": "1926-01-01T00:00:00Z",
+   "DateCreated": "2026-10-27T18:04:21.329122815+01:00",
+   "RunTimeTicks": 45000000000,
+   "Container": "mkv",
+   "ImageTags": {
+    "Primary": "general"
+   },
+   "UserData": {
+    "Key": "01000000000000000000000000000003",
+    "PlaybackPositionTicks": 0,
+    "PlayedPercentage": 0,
+    "PlayCount": 0,
+    "IsFavorite": false,
+    "Played": false
+   },
+   "MediaSources": [
+    {
+     "Type": "Default",
+     "DefaultAudioStreamIndex": 1,
+     "DefaultSubtitleStreamIndex": -1,
+     "Id": "01000000000000000000000000000003",
+     "Name": "Shelter",
+     "Protocol": "Http",
+     "Container": "mkv",
+     "Size": 10228471838,
+     "RunTimeTicks": 45000000000,
+     "SupportsDirectPlay": true,
+     "SupportsDirectStream": true,
+     "SupportsTranscoding": false,
+     "DirectStreamUrl": "/movies/Videos/01000000000000000000000000000006/stream?MediaSourceId=01000000000000000000000000000006&PlaySessionId=",
+     "MediaStreams": [
+      {
+       "IsTextSubtitleStream": false,
+       "SupportsExternalStream": false,
+       "Codec": "hevc",
+       "Type": "Video",
+       "Index": 0,
+       "IsDefault": true,
+       "IsExternal": false
+      },
+      {
+       "IsTextSubtitleStream": false,
+       "SupportsExternalStream": false,
+       "Codec": "ac3",
+       "Type": "Audio",
+       "Index": 1,
+       "IsDefault": true,
+       "IsExternal": false
+      }
+     ],
+     "IsRemote": false
+    }
+   ],
+   "MediaStreams": [
+    {
+     "IsTextSubtitleStream": false,
+     "SupportsExternalStream": false,
+     "Codec": "hevc",
+     "Type": "Video",
+     "Index": 0,
+     "IsDefault": true,
+     "IsExternal": false
+    },
+    {
+     "IsTextSubtitleStream": false,
+     "SupportsExternalStream": false,
+     "Codec": "ac3",
+     "Type": "Audio",
+     "Index": 1,
+     "IsDefault": true,
+     "IsExternal": false
+    }
+   ],
+   "DemoPoster": "general.jpg"
+  },
+  {
+   "Id": "01000000000000000000000000000004",
+   "ServerId": "efcf9a7fde17e87f137323a675a7bed1",
+   "Name": "A Trip to the Moon",
+   "SortName": "A Trip to the Moon",
+   "OriginalTitle": "A Trip to the Moon",
+   "Type": "Movie",
+   "IsFolder": false,
+   "MediaType": "Video",
+   "VideoType": "VideoFile",
+   "LocationType": "FileSystem",
+   "ParentId": "06000000000000000000000000000001",
+   "Overview": "1902 French black-and-white silent science fiction film directed by Georges Méliès.",
+   "ProductionYear": 1902,
+   "PremiereDate": "1902-01-01T00:00:00Z",
+   "DateCreated": "2026-10-27T18:04:21.329122815+01:00",
+   "RunTimeTicks": 9600000000,
+   "Container": "mkv",
+   "ImageTags": {
+    "Primary": "moon"
+   },
+   "UserData": {
+    "Key": "01000000000000000000000000000004",
+    "PlaybackPositionTicks": 5760000000,
+    "PlayedPercentage": 60.0,
+    "PlayCount": 0,
+    "IsFavorite": false,
+    "Played": false,
+    "LastPlayedDate": "2026-10-29T08:00:00Z"
+   },
+   "MediaSources": [
+    {
+     "Type": "Default",
+     "DefaultAudioStreamIndex": 1,
+     "DefaultSubtitleStreamIndex": -1,
+     "Id": "01000000000000000000000000000004",
+     "Name": "Shelter",
+     "Protocol": "Http",
+     "Container": "mkv",
+     "Size": 10228471838,
+     "RunTimeTicks": 9600000000,
+     "SupportsDirectPlay": true,
+     "SupportsDirectStream": true,
+     "SupportsTranscoding": false,
+     "DirectStreamUrl": "/movies/Videos/01000000000000000000000000000006/stream?MediaSourceId=01000000000000000000000000000006&PlaySessionId=",
+     "MediaStreams": [
+      {
+       "IsTextSubtitleStream": false,
+       "SupportsExternalStream": false,
+       "Codec": "hevc",
+       "Type": "Video",
+       "Index": 0,
+       "IsDefault": true,
+       "IsExternal": false
+      },
+      {
+       "IsTextSubtitleStream": false,
+       "SupportsExternalStream": false,
+       "Codec": "ac3",
+       "Type": "Audio",
+       "Index": 1,
+       "IsDefault": true,
+       "IsExternal": false
+      }
+     ],
+     "IsRemote": false
+    }
+   ],
+   "MediaStreams": [
+    {
+     "IsTextSubtitleStream": false,
+     "SupportsExternalStream": false,
+     "Codec": "hevc",
+     "Type": "Video",
+     "Index": 0,
+     "IsDefault": true,
+     "IsExternal": false
+    },
+    {
+     "IsTextSubtitleStream": false,
+     "SupportsExternalStream": false,
+     "Codec": "ac3",
+     "Type": "Audio",
+     "Index": 1,
+     "IsDefault": true,
+     "IsExternal": false
+    }
+   ],
+   "DemoPoster": "moon.jpg"
+  },
+  {
+   "Id": "01000000000000000000000000000005",
+   "ServerId": "efcf9a7fde17e87f137323a675a7bed1",
+   "Name": "Sherlock, Jr.",
+   "SortName": "Sherlock, Jr.",
+   "OriginalTitle": "Sherlock, Jr.",
+   "Type": "Movie",
+   "IsFolder": false,
+   "MediaType": "Video",
+   "VideoType": "VideoFile",
+   "LocationType": "FileSystem",
+   "ParentId": "06000000000000000000000000000001",
+   "Overview": "1924 American silent comedy film.",
+   "ProductionYear": 1924,
+   "PremiereDate": "1924-01-01T00:00:00Z",
+   "DateCreated": "2026-10-27T18:04:21.329122815+01:00",
+   "RunTimeTicks": 26400000000,
+   "Container": "mkv",
+   "ImageTags": {
+    "Primary": "sherlock"
+   },
+   "UserData": {
+    "Key": "01000000000000000000000000000005",
+    "PlaybackPositionTicks": 5280000000,
+    "PlayedPercentage": 20.0,
+    "PlayCount": 0,
+    "IsFavorite": false,
+    "Played": false,
+    "LastPlayedDate": "2026-10-29T08:00:00Z"
+   },
+   "MediaSources": [
+    {
+     "Type": "Default",
+     "DefaultAudioStreamIndex": 1,
+     "DefaultSubtitleStreamIndex": -1,
+     "Id": "01000000000000000000000000000005",
+     "Name": "Shelter",
+     "Protocol": "Http",
+     "Container": "mkv",
+     "Size": 10228471838,
+     "RunTimeTicks": 26400000000,
+     "SupportsDirectPlay": true,
+     "SupportsDirectStream": true,
+     "SupportsTranscoding": false,
+     "DirectStreamUrl": "/movies/Videos/01000000000000000000000000000006/stream?MediaSourceId=01000000000000000000000000000006&PlaySessionId=",
+     "MediaStreams": [
+      {
+       "IsTextSubtitleStream": false,
+       "SupportsExternalStream": false,
+       "Codec": "hevc",
+       "Type": "Video",
+       "Index": 0,
+       "IsDefault": true,
+       "IsExternal": false
+      },
+      {
+       "IsTextSubtitleStream": false,
+       "SupportsExternalStream": false,
+       "Codec": "ac3",
+       "Type": "Audio",
+       "Index": 1,
+       "IsDefault": true,
+       "IsExternal": false
+      }
+     ],
+     "IsRemote": false
+    }
+   ],
+   "MediaStreams": [
+    {
+     "IsTextSubtitleStream": false,
+     "SupportsExternalStream": false,
+     "Codec": "hevc",
+     "Type": "Video",
+     "Index": 0,
+     "IsDefault": true,
+     "IsExternal": false
+    },
+    {
+     "IsTextSubtitleStream": false,
+     "SupportsExternalStream": false,
+     "Codec": "ac3",
+     "Type": "Audio",
+     "Index": 1,
+     "IsDefault": true,
+     "IsExternal": false
+    }
+   ],
+   "DemoPoster": "sherlock.jpg"
+  },
+  {
+   "Id": "01000000000000000000000000000006",
+   "ServerId": "efcf9a7fde17e87f137323a675a7bed1",
+   "Name": "Night of the Living Dead",
+   "SortName": "Night of the Living Dead",
+   "OriginalTitle": "Night of the Living Dead",
+   "Type": "Movie",
+   "IsFolder": false,
+   "MediaType": "Video",
+   "VideoType": "VideoFile",
+   "LocationType": "FileSystem",
+   "ParentId": "06000000000000000000000000000001",
+   "Overview": "1968 American independent zombie horror film by George A. Romero.",
+   "ProductionYear": 1968,
+   "PremiereDate": "1968-01-01T00:00:00Z",
+   "DateCreated": "2026-10-27T18:04:21.329122815+01:00",
+   "RunTimeTicks": 57600000000,
+   "Container": "mkv",
+   "ImageTags": {
+    "Primary": "notld"
+   },
+   "UserData": {
+    "Key": "01000000000000000000000000000006",
+    "PlaybackPositionTicks": 0,
+    "PlayedPercentage": 0,
+    "PlayCount": 0,
+    "IsFavorite": false,
+    "Played": false
+   },
+   "MediaSources": [
+    {
+     "Type": "Default",
+     "DefaultAudioStreamIndex": 1,
+     "DefaultSubtitleStreamIndex": -1,
+     "Id": "01000000000000000000000000000006",
+     "Name": "Shelter",
+     "Protocol": "Http",
+     "Container": "mkv",
+     "Size": 10228471838,
+     "RunTimeTicks": 57600000000,
+     "SupportsDirectPlay": true,
+     "SupportsDirectStream": true,
+     "SupportsTranscoding": false,
+     "DirectStreamUrl": "/movies/Videos/01000000000000000000000000000006/stream?MediaSourceId=01000000000000000000000000000006&PlaySessionId=",
+     "MediaStreams": [
+      {
+       "IsTextSubtitleStream": false,
+       "SupportsExternalStream": false,
+       "Codec": "hevc",
+       "Type": "Video",
+       "Index": 0,
+       "IsDefault": true,
+       "IsExternal": false
+      },
+      {
+       "IsTextSubtitleStream": false,
+       "SupportsExternalStream": false,
+       "Codec": "ac3",
+       "Type": "Audio",
+       "Index": 1,
+       "IsDefault": true,
+       "IsExternal": false
+      }
+     ],
+     "IsRemote": false
+    }
+   ],
+   "MediaStreams": [
+    {
+     "IsTextSubtitleStream": false,
+     "SupportsExternalStream": false,
+     "Codec": "hevc",
+     "Type": "Video",
+     "Index": 0,
+     "IsDefault": true,
+     "IsExternal": false
+    },
+    {
+     "IsTextSubtitleStream": false,
+     "SupportsExternalStream": false,
+     "Codec": "ac3",
+     "Type": "Audio",
+     "Index": 1,
+     "IsDefault": true,
+     "IsExternal": false
+    }
+   ],
+   "DemoPoster": "notld.jpg"
+  }
+ ],
+ "TotalRecordCount": 6,
+ "StartIndex": 0
+}

@@ -11,6 +11,39 @@ phone ──HTTP──> movies-cast :8097 ──Jellyfin API──> Movies (127.
                     TV ──GET /s/<play-id>/movie.mkv──> movies-cast
 ```
 
+## Screenshots
+
+The phone page and the TV page in English, from the dev server with a demo library of public-domain
+films (posters and facts: [docs/screenshots/demo/SOURCES.md](docs/screenshots/demo/SOURCES.md); the TV
+is the fake TV of the tests).
+
+<p>
+<img src="docs/screenshots/phone-login.webp" width="190" alt="Log in with the ZimaOS account">
+<img src="docs/screenshots/phone-library.webp" width="190" alt="TV picker and Continue watching">
+<img src="docs/screenshots/phone-film.webp" width="190" alt="Film dialog: continue or play from the start">
+<img src="docs/screenshots/phone-player.webp" width="190" alt="Player: pause, ±30 s, seek, stop">
+</p>
+<p>
+<img src="docs/screenshots/phone-player-dark.webp" width="190" alt="The same in dark mode">
+<img src="docs/screenshots/phone-status.webp" width="190" alt="Status card">
+</p>
+
+Log in · library with "Continue watching" · film · player · dark mode · status.
+
+<p>
+<img src="docs/screenshots/tv-pair.webp" width="390" alt="TV page: pair with a code">
+<img src="docs/screenshots/tv-library.webp" width="390" alt="TV page: library for the remote">
+</p>
+
+The TV page (TV app, not in the testers' package): pairing with a code from the phone, then the library.
+
+To take them again: start the dev server with the demo library and open `http://127.0.0.1:18097/?lang=en`
+(log in as Demo, password "richtig"):
+
+```bash
+MC_DEV_LIBRARY=../../docs/screenshots/demo MC_DEV_SERVER=127.0.0.1:18097 go test -count=1 ./internal/server/ -run TestDevServer -timeout 0 -v
+```
+
 ## Why it exists (measured 2026-10-28, .143, Movies 0.3.0, LG OLED55B97LA)
 
 - Movies imitates a Jellyfin server under `/movies` (`System/Info/Public` → `"ProductName":"Jellyfin Server"`),
@@ -139,7 +172,7 @@ go vet ./... && go test -race ./...
 # the phone page in a browser with a login, against the fake Movies and fake TV of the tests; the TV
 # goes from TRANSITIONING to PLAYING after a second and counts the position up
 # (log in as Demo or Anna, password "richtig"; Ctrl-C stops it):
-MC_DEV_SERVER=127.0.0.1:18097 go test ./internal/server/ -run TestDevServer -timeout 0 -v
+MC_DEV_SERVER=127.0.0.1:18097 go test -count=1 ./internal/server/ -run TestDevServer -timeout 0 -v
 # browser tests of the phone page (Playwright starts and stops the dev server on port 18098):
 # login, colour mode and language per account across two "devices", the player
 cd e2e && npm ci && npx playwright install chromium && npx playwright test
@@ -157,7 +190,7 @@ file on .143 was edited by hand (`RENDERERS`, `TZ: Europe/Berlin`); backups unde
 
 ## TV app (webOS, stage 2)
 
-`deploy/webos/app` is a hosted web app (title "Movies"): it checks `<SERVER_URL>/healthz` and then
+`deploy/webos/app` is a hosted web app (title "Movies-Cast"): it checks `<SERVER_URL>/healthz` and then
 opens `/tv/` on movies-cast. The UI is one code base
 with the server; the TV gets no Movies token.
 
