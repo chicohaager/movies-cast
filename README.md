@@ -124,6 +124,9 @@ go vet ./... && go test -race ./...
 # goes from TRANSITIONING to PLAYING after a second and counts the position up
 # (log in as Demo or Anna, password "richtig"; Ctrl-C stops it):
 MC_DEV_SERVER=127.0.0.1:18097 go test ./internal/server/ -run TestDevServer -timeout 0 -v
+# browser tests of the phone page (Playwright starts and stops the dev server on port 18098):
+# login, colour mode and language per account across two "devices", the player
+cd e2e && npm ci && npx playwright install chromium && npx playwright test
 SSHPASS_FILE=/path/to/pw deploy/zimaos/build-on-host.sh <user>@<nas> 0.22.0
 # builds only a committed tree; -version then prints 0.22.0+<commit>
 # first install:
