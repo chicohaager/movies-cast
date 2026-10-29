@@ -291,3 +291,7 @@ developer mode are removed after a reboot past expiry, and an expired session ca
 (LG docs). `deploy/webos/renew-devmode.sh` renews it daily from .143
 (`movies-cast-devmode.timer`, data in `/DATA/AppData/movies-cast-devmode`); check with
 `journalctl -u movies-cast-devmode.service -n 3` → `renewed: result=success`.
+
+## License
+
+MIT, see [LICENSE](LICENSE).
