@@ -8,8 +8,10 @@
 #
 # Out: deploy/testers/out/movies-cast-<version>/ and movies-cast-<version>.zip
 #
-# Only a committed tree is built (like build-on-host.sh); the image carries
-# <version>+<commit> in -version and the commit as an OCI label.
+# Only the committed tree is built: check.sh and go build run in a temporary
+# worktree of HEAD, so uncommitted files (another session's, say) are neither
+# tested nor shipped; they are listed. The image carries <version>+<commit> in
+# -version and the commit as an OCI label.
 set -euo pipefail
 
 version="${1:?usage: make-package.sh <version> [--push]}"
@@ -23,23 +25,25 @@ image="ghcr.io/chicohaager/movies-cast:$version"
 name="movies-cast-$version"
 out="$here/out/$name"
 
-dirty="$(cd "$repo" && git status --porcelain --untracked-files=normal -- cmd internal go.mod go.sum Dockerfile deploy/zimaos deploy/testers)"
+dirty="$(cd "$repo" && git status --porcelain --untracked-files=normal)"
 if [[ -n "$dirty" ]]; then
-  echo "uncommitted changes, commit first:" >&2
+  echo "not in this build (uncommitted):" >&2
   echo "$dirty" >&2
-  exit 1
 fi
 commit="$(cd "$repo" && git rev-parse --short=12 HEAD)"
+ctx="$(mktemp -d)"
+wt="$(mktemp -d)"
+trap 'rm -rf "$ctx"; git -C "$repo" worktree remove --force "$wt" >/dev/null 2>&1 || rm -rf "$wt"' EXIT
+git -C "$repo" worktree add --detach "$wt" HEAD >/dev/null
+[[ -d "$repo/e2e/node_modules" ]] && ln -s "$repo/e2e/node_modules" "$wt/e2e/node_modules"
 
-echo "== 1/5 check.sh"
+echo "== 1/5 check.sh (worktree of $commit)"
 # shellcheck disable=SC2086 # CHECK_ARGS is empty or one flag
-"$repo/check.sh" ${CHECK_ARGS:-}
+"$wt/check.sh" ${CHECK_ARGS:-}
 
 echo "== 2/5 static build ($version+$commit)"
-ctx="$(mktemp -d)"
-trap 'rm -rf "$ctx"' EXIT
-(cd "$repo" && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -ldflags "-s -w -X main.version=$version+$commit" -o "$ctx/movies-cast" ./cmd/movies-cast)
-cp "$repo/Dockerfile" "$ctx/Dockerfile"
+(cd "$wt" && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -ldflags "-s -w -X main.version=$version+$commit" -o "$ctx/movies-cast" ./cmd/movies-cast)
+cp "$wt/Dockerfile" "$ctx/Dockerfile"
 "$ctx/movies-cast" -version
 
 echo "== 3/5 image $image"
@@ -75,7 +79,7 @@ fi
 echo "== 5/5 package $out"
 rm -rf "${out:?}"
 mkdir -p "$out"
-python3 "$here/render.py" "$repo" "$out" "$version" "$image"
+python3 "$wt/deploy/testers/render.py" "$wt" "$out" "$version" "$image"
 (cd "$out" && sha256sum -- * > SHA256SUMS)
 (cd "$here/out" && rm -f "$name.zip" && zip -qr "$name.zip" "$name")
 # What leaves is the zip: scan an unpacked copy (deploy/testers/out is
