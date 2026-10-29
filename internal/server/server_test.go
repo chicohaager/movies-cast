@@ -32,6 +32,10 @@ type fakeMovies struct {
 	// posters/ that replaces the captured library (the dev server's
 	// MC_DEV_LIBRARY, for the README screenshots).
 	library string
+	// loginDelay holds every wrong-password answer that long; wrongLogins
+	// counts them (TestParallelLoginGuessesAreThrottled).
+	loginDelay  time.Duration
+	wrongLogins int
 }
 
 const movieID = "01000000000000000000000000000006"
@@ -64,6 +68,10 @@ func (f *fakeMovies) handler(t *testing.T) http.Handler {
 			var in map[string]string
 			_ = json.NewDecoder(r.Body).Decode(&in)
 			if in["Pw"] != "richtig" {
+				f.mu.Lock()
+				f.wrongLogins++
+				f.mu.Unlock()
+				time.Sleep(f.loginDelay)
 				w.WriteHeader(http.StatusUnauthorized)
 				return
 			}

@@ -84,25 +84,8 @@ func (s *Server) saveSessionsLocked() {
 		log.Printf("state: %v", err)
 		return
 	}
-	tmp, err := os.CreateTemp(filepath.Dir(s.cfg.StateFile), ".sessions-*")
-	if err != nil {
+	if err := writeFileAtomic(s.cfg.StateFile, b); err != nil {
 		log.Printf("state: %v", err)
-		return
-	}
-	_, werr := tmp.Write(b)
-	cerr := tmp.Close()
-	if werr != nil || cerr != nil {
-		_ = os.Remove(tmp.Name())
-		log.Printf("state: write: %v %v", werr, cerr)
-		return
-	}
-	// CreateTemp makes the file 0600 already; Chmod states it.
-	if err := os.Chmod(tmp.Name(), 0o600); err != nil {
-		log.Printf("state: chmod: %v", err)
-	}
-	if err := os.Rename(tmp.Name(), s.cfg.StateFile); err != nil {
-		_ = os.Remove(tmp.Name())
-		log.Printf("state: rename: %v", err)
 	}
 }
 
@@ -194,22 +177,43 @@ func saveKeys(f string, set map[string]bool) {
 // writeAtomic replaces f with b through a temporary file in the same
 // directory (0600, from CreateTemp); errors are logged under name.
 func writeAtomic(f string, b []byte, name string) {
-	tmp, err := os.CreateTemp(filepath.Dir(f), "."+name+"-*")
-	if err != nil {
+	if err := writeFileAtomic(f, b); err != nil {
 		log.Printf("%s: %v", name, err)
-		return
+	}
+}
+
+// writeFileAtomic replaces f with b, mode 0600: a temporary file next to it,
+// synced before the rename and the folder after it. Without the syncs a
+// power cut could leave the new name pointing at an empty file, and the
+// next start had no sessions, labels or proven formats.
+func writeFileAtomic(f string, b []byte) error {
+	dir := filepath.Dir(f)
+	tmp, err := os.CreateTemp(dir, "."+filepath.Base(f)+"-*")
+	if err != nil {
+		return err
 	}
 	_, werr := tmp.Write(b)
+	serr := tmp.Sync()
 	cerr := tmp.Close()
-	if werr != nil || cerr != nil {
+	if err := errors.Join(werr, serr, cerr); err != nil {
 		_ = os.Remove(tmp.Name())
-		log.Printf("%s: write: %v", name, errors.Join(werr, cerr))
-		return
+		return fmt.Errorf("write: %w", err)
+	}
+	// CreateTemp makes the file 0600 already; Chmod states it.
+	if err := os.Chmod(tmp.Name(), 0o600); err != nil {
+		_ = os.Remove(tmp.Name())
+		return fmt.Errorf("chmod: %w", err)
 	}
 	if err := os.Rename(tmp.Name(), f); err != nil {
 		_ = os.Remove(tmp.Name())
-		log.Printf("%s: rename: %v", name, err)
+		return fmt.Errorf("rename: %w", err)
 	}
+	d, err := os.Open(dir)
+	if err != nil {
+		return err
+	}
+	defer d.Close()
+	return d.Sync()
 }
 
 // Settings of the phone page per Movies account (userID -> value), one file
