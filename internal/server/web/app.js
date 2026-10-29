@@ -49,7 +49,7 @@ const theme = (function () {
     forget() { signedIn = false; apply(""); },
   };
 })();
-const state = { movies: [], resume: [], wasPlaying: false, tv: localGet("tv"), selected: null, polling: null, status: null, seeking: false };
+const state = { movies: [], resume: [], wasPlaying: false, tv: localGet("tv"), selected: null, polling: null, pollBusy: false, waking: false, status: null, seeking: false };
 
 function localGet(k) { try { return localStorage.getItem(k) || ""; } catch { return ""; } }
 function localSet(k, v) { try { localStorage.setItem(k, v); } catch { /* private mode */ } }
@@ -203,12 +203,19 @@ async function loadTVs(refresh) {
       // "off" before the address: a narrow select cuts the end of the text.
       sel.append(new Option(`${tv.off ? t("tv.off", tv.name) : tv.name} (${tv.host})`, tv.id));
     }
-    if (tvs.some((t) => t.id === state.tv)) sel.value = state.tv;
+    const want = state.tv || localGet("tv");
+    if (tvs.some((t) => t.id === want)) sel.value = want;
     state.tv = sel.value;
     localSet("tv", state.tv);
   } catch (err) {
+    // No TV listed (the server answers 502): the one chosen before must not
+    // get the next film. The stored choice stays for when the list is back.
     sel.innerHTML = "";
     sel.append(new Option(t("tv.none"), ""));
+    state.tv = "";
+    state.tvs = [];
+    state.status = null;
+    $("player").hidden = true;
     showError(err.message);
   }
 }
@@ -485,6 +492,7 @@ async function play(req) {
 // wake sends Wake-on-LAN and waits (up to a minute on the server) until the TV answers.
 async function wake(tv) {
   showNotice(t("wake.waking", tv.name));
+  state.waking = true;
   try {
     await api("/api/tvs/wake", { id: tv.id });
     showNotice("");
@@ -495,6 +503,8 @@ async function wake(tv) {
     showNotice("");
     showError(err.message);
     return false;
+  } finally {
+    state.waking = false;
   }
 }
 
@@ -557,11 +567,17 @@ $("pair-form").addEventListener("submit", async (ev) => {
 
 async function pollOnce() {
   if (!state.tv) return;
+  // One request at a time: against a slow TV the server takes up to 12 s,
+  // and answers piling up came back out of order.
+  if (state.pollBusy) return;
   // An off TV answers nothing; it is listed as off, not reported as an error.
   const sel = (state.tvs || []).find((x) => x.id === state.tv);
   if (sel && sel.off) { $("player").hidden = true; return; }
+  const tv = state.tv;
+  state.pollBusy = true;
   try {
-    const st = await api(`/api/status?renderer=${encodeURIComponent(state.tv)}`);
+    const st = await api(`/api/status?renderer=${encodeURIComponent(tv)}`);
+    if (tv !== state.tv) return; // another TV was chosen meanwhile
     state.status = st;
     if (state.tvError) { state.tvError = false; showError(""); }
     const active = st.ours && st.state !== "STOPPED" && st.state !== "NO_MEDIA_PRESENT";
@@ -584,9 +600,16 @@ async function pollOnce() {
     $("p-sound").textContent = state.converted ? t("p.original") : t("p.noSound");
     if (typeof st.volume === "number" && document.activeElement !== $("p-vol")) $("p-vol").value = st.volume;
   } catch (err) {
+    if (tv !== state.tv) return;
     // A TV that is switched off answers nothing; show it, keep polling.
     $("player").hidden = true;
-    if (err.status !== 401) { state.tvError = true; showError(t("tv.err", err.message)); }
+    // Not over a refusal's buttons or the wake notice: they say what to do next.
+    if (err.status !== 401 && $("force-row").hidden && !state.waking) {
+      state.tvError = true;
+      showError(t("tv.err", err.message));
+    }
+  } finally {
+    state.pollBusy = false;
   }
 }
 
