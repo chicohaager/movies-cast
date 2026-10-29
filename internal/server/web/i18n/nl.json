@@ -98,6 +98,7 @@
  "srv:enter user and password": "voer gebruiker en wachtwoord in",
  "srv:invalid ID": "ongeldige ID",
  "srv:invalid address (an IPv4 address on your own network)": "ongeldig adres (een IPv4-adres in je eigen netwerk)",
+ "srv:32 addresses at most": "maximaal 32 adressen",
  "srv:invalid request": "ongeldig verzoek",
  "srv:name too long (40 characters at most)": "naam te lang (maximaal 40 tekens)",
  "srv:no MAC address is known for this TV": "voor deze tv is geen MAC-adres bekend",

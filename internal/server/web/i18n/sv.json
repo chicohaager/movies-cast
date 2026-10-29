@@ -98,6 +98,7 @@
  "srv:enter user and password": "ange användare och lösenord",
  "srv:invalid ID": "ogiltigt ID",
  "srv:invalid address (an IPv4 address on your own network)": "ogiltig adress (en IPv4-adress i ditt eget nätverk)",
+ "srv:32 addresses at most": "högst 32 adresser",
  "srv:invalid request": "ogiltig begäran",
  "srv:name too long (40 characters at most)": "namnet är för långt (högst 40 tecken)",
  "srv:no MAC address is known for this TV": "ingen MAC-adress är känd för den här tv:n",

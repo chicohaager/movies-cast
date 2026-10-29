@@ -321,7 +321,12 @@ func newRig(t *testing.T) *rig {
 	srv := httptest.NewServer(app.Handler())
 	t.Cleanup(srv.Close)
 	t.Cleanup(func() { // stop watchers before the fake Movies goes away
-		app.mu.Lock()
+		// A handler that panicked under app.mu leaves it locked (net/http
+		// recovers the panic); waiting for it hung the test until -timeout.
+		if !lockWithin(&app.mu, 5*time.Second) {
+			t.Error("app.mu still held at cleanup: a handler panicked under the lock (see the http: panic line above)")
+			return
+		}
 		for id := range app.plays {
 			app.endPlayLocked(id)
 		}
@@ -329,6 +334,16 @@ func newRig(t *testing.T) *rig {
 	})
 	jar, _ := cookiejar.New(nil)
 	return &rig{t: t, srv: srv, app: app, movies: fm, tv: tv, client: &http.Client{Jar: jar}}
+}
+
+// lockWithin locks mu unless it stays held for d.
+func lockWithin(mu *sync.Mutex, d time.Duration) bool {
+	for end := time.Now().Add(d); time.Now().Before(end); time.Sleep(10 * time.Millisecond) {
+		if mu.TryLock() {
+			return true
+		}
+	}
+	return false
 }
 
 func (r *rig) post(path string, body any, hdr ...string) (int, map[string]any) {

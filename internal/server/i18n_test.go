@@ -6,6 +6,7 @@ import (
 	"io/fs"
 	"os"
 	"path"
+	"path/filepath"
 	"regexp"
 	"sort"
 	"strings"
@@ -15,21 +16,40 @@ import (
 // Every message the server sends to a page has an English text: the English
 // page shows errorEn, and a missing entry would leave German there.
 func TestEveryFailMessageHasEnglish(t *testing.T) {
-	re := regexp.MustCompile(`fail\(w, [^,]+, "([^"]+)"`)
+	// Every fail( call, in every source file: tvs.go and convert.go were not
+	// read, and a built message (Sprintf) has no entry to look up.
+	call := regexp.MustCompile(`fail\(w, [^,]+, (.*)\)\s*$`)
+	lit := regexp.MustCompile(`^"([^"]+)"(?:\+faultCode\(err\))?$`) // errorBody splits the suffix off
+	files, err := filepath.Glob("*.go")
+	if err != nil {
+		t.Fatal(err)
+	}
 	n := 0
-	for _, f := range []string{"server.go", "tv.go"} {
+	for _, f := range files {
+		if strings.HasSuffix(f, "_test.go") {
+			continue
+		}
 		src, err := os.ReadFile(f)
 		if err != nil {
 			t.Fatal(err)
 		}
-		for _, m := range re.FindAllStringSubmatch(string(src), -1) {
+		for i, line := range strings.Split(string(src), "\n") {
+			c := call.FindStringSubmatch(line)
+			if c == nil {
+				continue
+			}
 			n++
+			m := lit.FindStringSubmatch(c[1])
+			if m == nil {
+				t.Errorf("%s:%d: message is not a plain string, no English can be looked up: %s", f, i+1, c[1])
+				continue
+			}
 			if _, ok := errorsEn[m[1]]; !ok {
-				t.Errorf("%s: no English for %q", f, m[1])
+				t.Errorf("%s:%d: no English for %q", f, i+1, m[1])
 			}
 		}
 	}
-	if n < 30 { // 33 calls on 2026-10-28; fewer means the pattern stopped matching
+	if n < 45 { // 47 calls in 4 files on 2026-10-29; fewer means the pattern stopped matching
 		t.Fatalf("found only %d fail() messages", n)
 	}
 	if got := english("Fernseher startet nicht (UPnP-Fehler 701)"); got != "the TV does not start (UPnP error 701)" {

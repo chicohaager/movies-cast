@@ -98,6 +98,7 @@
  "srv:enter user and password": "введите имя пользователя и пароль",
  "srv:invalid ID": "неверный ID",
  "srv:invalid address (an IPv4 address on your own network)": "неверный адрес (нужен IPv4-адрес в вашей сети)",
+ "srv:32 addresses at most": "не больше 32 адресов",
  "srv:invalid request": "неверный запрос",
  "srv:name too long (40 characters at most)": "слишком длинное имя (не более 40 символов)",
  "srv:no MAC address is known for this TV": "для этого телевизора не известен MAC-адрес",

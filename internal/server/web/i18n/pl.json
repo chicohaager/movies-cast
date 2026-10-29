@@ -98,6 +98,7 @@
  "srv:enter user and password": "wpisz użytkownika i hasło",
  "srv:invalid ID": "nieprawidłowy identyfikator",
  "srv:invalid address (an IPv4 address on your own network)": "nieprawidłowy adres (wymagany adres IPv4 z własnej sieci)",
+ "srv:32 addresses at most": "najwyżej 32 adresy",
  "srv:invalid request": "nieprawidłowe żądanie",
  "srv:name too long (40 characters at most)": "nazwa jest za długa (maksymalnie 40 znaków)",
  "srv:no MAC address is known for this TV": "dla tego telewizora nie jest znany adres MAC",

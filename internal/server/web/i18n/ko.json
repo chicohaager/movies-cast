@@ -98,6 +98,7 @@
  "srv:enter user and password": "사용자와 비밀번호를 입력하세요",
  "srv:invalid ID": "잘못된 ID예요",
  "srv:invalid address (an IPv4 address on your own network)": "잘못된 주소예요 (내 네트워크의 IPv4 주소여야 해요)",
+ "srv:32 addresses at most": "주소는 최대 32개까지예요",
  "srv:invalid request": "잘못된 요청이에요",
  "srv:name too long (40 characters at most)": "이름이 너무 길어요 (최대 40자)",
  "srv:no MAC address is known for this TV": "이 TV의 MAC 주소를 알 수 없습니다",

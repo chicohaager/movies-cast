@@ -98,6 +98,7 @@
  "srv:enter user and password": "請輸入使用者名稱和密碼",
  "srv:invalid ID": "無效的 ID",
  "srv:invalid address (an IPv4 address on your own network)": "位址無效（須為你自己網路中的 IPv4 位址）",
+ "srv:32 addresses at most": "最多 32 個位址",
  "srv:invalid request": "無效的要求",
  "srv:name too long (40 characters at most)": "名稱過長（最多 40 個字元）",
  "srv:no MAC address is known for this TV": "不知道這台電視的 MAC 位址",
