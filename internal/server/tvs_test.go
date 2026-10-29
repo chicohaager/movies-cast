@@ -120,5 +120,7 @@ func TestSystemStatus(t *testing.T) {
 	if code != http.StatusOK || out.Search.Answers != 9 || !out.Search.PortHeld {
 		t.Fatalf("%d %s", code, body)
 	}
-	_ = out.MoviesOK // the fake Movies has no /System/Info/Public; checked in movies tests
+	if !out.MoviesOK {
+		t.Fatalf("moviesOK false against the fake Movies: %s", body)
+	}
 }

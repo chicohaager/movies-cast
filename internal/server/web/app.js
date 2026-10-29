@@ -15,22 +15,39 @@ I18N.apply();
     location.href = u.toString();
   });
 })();
-// Colour mode picker: System, Light or Dark; theme.js applies it before the first paint.
-(function () {
+// Colour mode picker: System, Light or Dark. The account's choice (/api/me,
+// POST /api/theme) wins; localStorage only lets theme.js paint the first frame
+// in it — on its own it was one choice per address (LAN, Tailscale).
+const theme = (function () {
   const sel = document.getElementById("theme");
   const meta = document.querySelector('meta[name="theme-color"]');
+  let signedIn = false;
   const apply = (mode) => {
+    sel.value = mode;
     if (mode) document.documentElement.setAttribute("data-theme", mode);
     else document.documentElement.removeAttribute("data-theme");
+    try { if (mode) localStorage.setItem("moviescast.theme", mode); else localStorage.removeItem("moviescast.theme"); } catch { /* private mode */ }
     if (meta) meta.content = getComputedStyle(document.documentElement).getPropertyValue("--bg").trim() || meta.content;
   };
-  sel.value = document.documentElement.getAttribute("data-theme") || "";
-  apply(sel.value);
+  apply(document.documentElement.getAttribute("data-theme") || "");
   sel.addEventListener("change", () => {
-    try { if (sel.value) localStorage.setItem("moviescast.theme", sel.value); else localStorage.removeItem("moviescast.theme"); } catch { /* private mode */ }
     apply(sel.value);
+    if (signedIn) api("/api/theme", { theme: sel.value }).catch((err) => showError(err.message));
   });
   matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => apply(sel.value));
+  return {
+    // fromAccount takes the mode stored with the account; an account without
+    // one adopts what this device shows, unless that is the system default.
+    fromAccount(me) {
+      signedIn = true;
+      if (typeof me.theme === "string") apply(me.theme);
+      else if (sel.value) api("/api/theme", { theme: sel.value }).catch((err) => showError(err.message));
+    },
+    signedOut() { signedIn = false; },
+    // forget clears this device's copy on "Log out": the next person on a
+    // shared phone would otherwise hand it to an account without a choice.
+    forget() { signedIn = false; apply(""); },
+  };
 })();
 const state = { movies: [], resume: [], wasPlaying: false, tv: localGet("tv"), selected: null, polling: null, status: null, seeking: false };
 
@@ -91,12 +108,12 @@ function showView(which) {
   $("login-view").hidden = which !== "login";
   $("app-view").hidden = which !== "app";
   $("logout").hidden = which !== "app";
-  if (which !== "app") stopPolling();
+  if (which !== "app") { stopPolling(); theme.signedOut(); }
 }
 
 async function boot() {
   try {
-    await api("/api/me");
+    theme.fromAccount(await api("/api/me"));
   } catch {
     showView("login");
     return;
@@ -139,6 +156,7 @@ $("login-form").addEventListener("submit", async (ev) => {
 
 $("logout").addEventListener("click", async () => {
   try { await api("/api/logout", {}); } catch (err) { showError(err.message); }
+  theme.forget();
   showView("login");
 });
 
