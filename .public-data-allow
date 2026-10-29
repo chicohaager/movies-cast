@@ -27,3 +27,5 @@ internal/server/server.go:10.0.0.143
 README.md:10.0.0.143
 README.md:10.0.0.252
 README.md:10.0.0.86
+# copyright holder in the MIT license (owner decision 2026-10-29)
+LICENSE:Kuehn
