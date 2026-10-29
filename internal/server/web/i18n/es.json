@@ -39,6 +39,7 @@
  "osd.hint": "OK pausa · ◀ −10 s · ▶ +30 s · ▲ audio · ▼ subtítulos · Atrás termina",
  "p.continue": "Reanudar",
  "p.noSound": "¿Sin sonido?",
+ "p.refused": "Un segundo dispositivo ({0}) pidió esta película y fue rechazado; solo va a {1}. Si el televisor sigue en negro, puede que fuera el propio televisor.",
  "p.original": "Sonido original",
  "p.pause": "Pausa",
  "p.stop": "Detener",

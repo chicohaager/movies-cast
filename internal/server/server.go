@@ -161,7 +161,8 @@ type play struct {
 	restartUntil time.Time // a converted seek re-sends the film; STOPPED until then is expected
 	// peer is the address that fetched /s/ first: the TV gives the URL to
 	// anyone who asks it (GetPositionInfo), so the URL alone is not enough.
-	peer string
+	peer    string
+	refused string // the last other address turned away; the phone shows it
 }
 
 func New(cfg Config, mc *movies.Client, tv Transport, r Renderers) *Server {
@@ -1167,6 +1168,9 @@ func (s *Server) status(w http.ResponseWriter, r *http.Request, _ string, _ *ses
 		out["title"] = p.movie.Name
 		out["movie"] = p.movie.ID
 		out["converted"] = p.conv != nil
+		if p.refused != "" {
+			out["refusedFrom"], out["streamTo"] = p.refused, p.peer
+		}
 		if p.conv != nil {
 			out["positionSeconds"] = int64((st.Position + p.offset) / time.Second)
 			out["durationSeconds"] = int64(p.conv.Total() / time.Second)
@@ -1199,6 +1203,7 @@ func (s *Server) serveStream(w http.ResponseWriter, r *http.Request) {
 		case ip:
 		default:
 			other, first = true, p.peer
+			p.refused = ip
 		}
 	}
 	s.mu.Unlock()

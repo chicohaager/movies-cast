@@ -39,6 +39,7 @@
  "osd.hint": "OK pausa · ◀ −10 s · ▶ +30 s · ▲ audio · ▼ sottotitoli · Indietro esce",
  "p.continue": "Riprendi",
  "p.noSound": "Niente audio?",
+ "p.refused": "Un secondo dispositivo ({0}) ha chiesto questo film ed è stato respinto; va solo a {1}. Se il televisore resta nero, potrebbe essere stato il televisore stesso.",
  "p.original": "Audio originale",
  "p.pause": "Pausa",
  "p.stop": "Stop",

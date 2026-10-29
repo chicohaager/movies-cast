@@ -39,6 +39,7 @@
  "osd.hint": "OK pause · ◀ −10 s · ▶ +30 s · ▲ audio · ▼ subtitles · Back ends",
  "p.continue": "Resume",
  "p.noSound": "No sound?",
+ "p.refused": "A second device ({0}) asked for this film and was turned away; it goes to {1} only. If the TV stays black, that device may have been the TV itself.",
  "p.original": "Original sound",
  "p.pause": "Pause",
  "p.stop": "Stop",

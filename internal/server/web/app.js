@@ -596,6 +596,8 @@ async function pollOnce() {
     }
     $("p-dur").textContent = hms(st.durationSeconds);
     $("p-volrow").hidden = typeof st.volume !== "number";
+    $("p-refused").hidden = !st.refusedFrom;
+    $("p-refused").textContent = st.refusedFrom ? t("p.refused", st.refusedFrom, st.streamTo) : "";
     state.converted = st.converted === true;
     $("p-sound").textContent = state.converted ? t("p.original") : t("p.noSound");
     if (typeof st.volume === "number" && document.activeElement !== $("p-vol")) $("p-vol").value = st.volume;

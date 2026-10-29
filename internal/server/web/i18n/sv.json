@@ -39,6 +39,7 @@
  "osd.hint": "OK paus · ◀ −10 s · ▶ +30 s · ▲ ljud · ▼ undertexter · Tillbaka avslutar",
  "p.continue": "Fortsätt",
  "p.noSound": "Inget ljud?",
+ "p.refused": "En andra enhet ({0}) bad om filmen och nekades; den går bara till {1}. Förblir tv:n svart kan det ha varit tv:n själv.",
  "p.original": "Originalljud",
  "p.pause": "Paus",
  "p.stop": "Stopp",

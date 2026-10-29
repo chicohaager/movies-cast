@@ -39,6 +39,7 @@
  "osd.hint": "OK pause · ◀ −10 s · ▶ +30 s · ▲ audio · ▼ sous-titres · Retour quitte",
  "p.continue": "Reprendre",
  "p.noSound": "Pas de son ?",
+ "p.refused": "Un second appareil ({0}) a demandé ce film et a été refusé ; il ne va qu'à {1}. Si le téléviseur reste noir, c'était peut-être le téléviseur lui-même.",
  "p.original": "Son d’origine",
  "p.pause": "Pause",
  "p.stop": "Arrêter",

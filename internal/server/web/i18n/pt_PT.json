@@ -39,6 +39,7 @@
  "osd.hint": "OK pausa · ◀ −10 s · ▶ +30 s · ▲ áudio · ▼ legendas · Voltar termina",
  "p.continue": "Retomar",
  "p.noSound": "Sem som?",
+ "p.refused": "Um segundo dispositivo ({0}) pediu este filme e foi recusado; ele vai só para {1}. Se a televisão continuar preta, pode ter sido a própria televisão.",
  "p.original": "Som original",
  "p.pause": "Pausar",
  "p.stop": "Parar",
