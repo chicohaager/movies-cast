@@ -118,13 +118,20 @@ func main() {
 	}
 	log.Printf("movies-cast %s listening on %s, movies=%s, ssdp=%v, static renderers=%v", version, ln.Addr(), mc.Base, finder.SSDP, static)
 
+	// Serve returns as soon as Shutdown starts; main waits for Shutdown, or
+	// the process ended before running requests had their 5 s.
+	done := make(chan struct{})
 	go func() {
+		defer close(done)
 		<-ctx.Done()
 		sctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
-		_ = hs.Shutdown(sctx)
+		if err := hs.Shutdown(sctx); err != nil {
+			log.Printf("shutdown: %v", err)
+		}
 	}()
 	if err := hs.Serve(ln); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		log.Fatal(err)
 	}
+	<-done
 }

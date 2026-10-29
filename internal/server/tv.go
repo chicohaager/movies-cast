@@ -71,15 +71,22 @@ func (s *Server) tvPairStart(w http.ResponseWriter, _ *http.Request) {
 		fail(w, http.StatusTooManyRequests, "zu viele offene Kopplungen, bitte in einigen Minuten erneut")
 		return
 	}
-	code := pairCode()
-	for _, p := range s.pairings { // codes must be unique among the open ones
-		if p.code == code {
-			code = pairCode()
-		}
+	code := s.newPairCode()
+	for s.pairCodeOpenLocked(code) { // unique among the open ones, or approve could pick either
+		code = s.newPairCode()
 	}
 	id := randomID()
 	s.pairings[id] = &pairing{code: code, created: s.now()}
 	writeJSON(w, http.StatusOK, map[string]any{"id": id, "code": code, "expiresSeconds": int(pairTTL / time.Second)})
+}
+
+func (s *Server) pairCodeOpenLocked(code string) bool {
+	for _, p := range s.pairings {
+		if p.code == code {
+			return true
+		}
+	}
+	return false
 }
 
 // tvPairQR draws the phone link with the code as a QR code for the pairing
@@ -126,7 +133,7 @@ func (s *Server) tvPairPoll(w http.ResponseWriter, r *http.Request) {
 		delete(s.pairings, id)
 		sid = randomID()
 		s.sweepSessionsLocked()
-		s.sessions[sid] = &session{ms: p.approved.ms, lastSeen: s.now()}
+		s.sessions[sid] = &session{ms: p.approved.ms, lastSeen: s.now(), cookieAt: s.now()}
 		name = p.approved.ms.UserName
 		s.saveSessionsLocked()
 	}
@@ -137,7 +144,7 @@ func (s *Server) tvPairPoll(w http.ResponseWriter, r *http.Request) {
 	case sid == "":
 		writeJSON(w, http.StatusOK, map[string]bool{"pending": true})
 	default:
-		http.SetCookie(w, &http.Cookie{Name: cookieName, Value: sid, Path: "/", HttpOnly: true, SameSite: http.SameSiteStrictMode, MaxAge: int(sessionMaxAge / time.Second)})
+		setSessionCookie(w, sid)
 		writeJSON(w, http.StatusOK, map[string]string{"name": name})
 	}
 }
@@ -152,11 +159,14 @@ func (s *Server) tvPairApprove(w http.ResponseWriter, r *http.Request, _ string,
 		return
 	}
 	ip := clientIP(r)
-	if s.loginBlocked(ip) {
+	// Check, lookup and the failure record under one lock: parallel guesses
+	// must not all pass the check before the first failure counts.
+	s.mu.Lock()
+	if len(s.recentFailsLocked(ip)) >= loginFailLimit {
+		s.mu.Unlock()
 		fail(w, http.StatusTooManyRequests, "Zu viele Fehlversuche, bitte in einigen Minuten erneut")
 		return
 	}
-	s.mu.Lock()
 	s.sweepPairingsLocked()
 	var found *pairing
 	for _, p := range s.pairings {
@@ -166,10 +176,11 @@ func (s *Server) tvPairApprove(w http.ResponseWriter, r *http.Request, _ string,
 	}
 	if found != nil {
 		found.approved = sess
+	} else {
+		s.loginFails[ip] = append(s.recentFailsLocked(ip), s.now())
 	}
 	s.mu.Unlock()
 	if found == nil {
-		s.loginFailed(ip)
 		fail(w, http.StatusNotFound, "Code unbekannt oder abgelaufen")
 		return
 	}
@@ -206,6 +217,11 @@ func (s *Server) tvPlay(w http.ResponseWriter, r *http.Request, sid string, sess
 	tv := dlna.Renderer{ID: "app:" + sid, Name: "TV-App"}
 	p := &play{id: randomID(), sess: sess, movie: m, tv: tv, psID: randomID(), created: s.now(), browser: true, lastBeat: s.now(), subs: subs, msID: msID, subsLater: !listed}
 	p.ctx, p.cancel = context.WithCancel(context.Background())
+	var resume time.Duration
+	if in.Resume && m.Resume > 0 {
+		resume = time.Duration(m.Resume) * time.Second
+		p.lastPos = resume // before p is published: others read it under s.mu
+	}
 	s.mu.Lock()
 	if old := s.byTV[tv.ID]; old != nil {
 		s.endPlayLocked(old.id)
@@ -213,11 +229,6 @@ func (s *Server) tvPlay(w http.ResponseWriter, r *http.Request, sid string, sess
 	s.plays[p.id] = p
 	s.byTV[tv.ID] = p
 	s.mu.Unlock()
-	var resume time.Duration
-	if in.Resume && m.Resume > 0 {
-		resume = time.Duration(m.Resume) * time.Second
-		p.lastPos = resume
-	}
 	go s.watchBrowser(p, resume)
 	ext := m.Container
 	if ext == "" {

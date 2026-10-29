@@ -106,8 +106,10 @@ type Server struct {
 	// strings is /strings.js, built once from web/i18n/*.json (strings.go).
 	strings []byte
 
-	loginFails map[string][]time.Time // by client IP
-	pairings   map[string]*pairing    // TV-app pairings by secret ID
+	loginFails   map[string][]time.Time // by client IP
+	loginPending map[string]int         // logins waiting for Movies, by client IP
+	newPairCode  func() string          // pairCode; a fixed sequence in tests
+	pairings     map[string]*pairing    // TV-app pairings by secret ID
 
 	browserSilence time.Duration
 
@@ -123,6 +125,7 @@ type session struct {
 	ms        *movies.Session
 	lastSeen  time.Time
 	savedSeen time.Time // lastSeen as last written to the state file
+	cookieAt  time.Time // when the cookie was last issued with a fresh Max-Age
 	// Set by the TV app's command poll (tvCmd): where it runs and when it last
 	// asked. A phone's play for a renderer on that address goes to the app.
 	appIP     string
@@ -168,7 +171,9 @@ func New(cfg Config, mc *movies.Client, tv Transport, r Renderers) *Server {
 			CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse },
 		},
 		loginFails:     map[string][]time.Time{},
+		loginPending:   map[string]int{},
 		pairings:       map[string]*pairing{},
+		newPairCode:    pairCode,
 		now:            time.Now,
 		pollEvery:      time.Second,
 		reportEvery:    reportInterval,
@@ -415,16 +420,25 @@ func (s *Server) withSession(h handlerWithSession) http.HandlerFunc {
 			s.dropSessionLocked(c.Value)
 			sess = nil
 		}
+		reissue := false
 		if sess != nil {
 			sess.lastSeen = s.now()
 			if sess.lastSeen.Sub(sess.savedSeen) > seenSaveEvery {
 				s.saveSessionsLocked()
+			}
+			// The session slides with use; the cookie must too, or the
+			// browser drops it sessionMaxAge after login however often used.
+			if sess.lastSeen.Sub(sess.cookieAt) > seenSaveEvery {
+				sess.cookieAt, reissue = sess.lastSeen, true
 			}
 		}
 		s.mu.Unlock()
 		if sess == nil {
 			fail(w, http.StatusUnauthorized, "nicht angemeldet")
 			return
+		}
+		if reissue {
+			setSessionCookie(w, c.Value)
 		}
 		h(w, r, c.Value, sess)
 	}
@@ -450,14 +464,14 @@ func (s *Server) login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	ip := clientIP(r)
-	if s.loginBlocked(ip) {
+	if !s.loginBegin(ip) {
 		fail(w, http.StatusTooManyRequests, "Zu viele Fehlversuche, bitte in einigen Minuten erneut")
 		return
 	}
 	sid := randomID()
 	ms, err := s.movies.Login(r.Context(), in.User, in.Password, "movies-cast-"+sid[:12])
+	s.loginDone(ip, errors.Is(err, movies.ErrUnauthorized))
 	if errors.Is(err, movies.ErrUnauthorized) {
-		s.loginFailed(ip)
 		fail(w, http.StatusUnauthorized, "Benutzer oder Passwort falsch")
 		return
 	}
@@ -468,11 +482,11 @@ func (s *Server) login(w http.ResponseWriter, r *http.Request) {
 	}
 	s.mu.Lock()
 	s.sweepSessionsLocked()
-	s.sessions[sid] = &session{ms: ms, lastSeen: s.now()}
+	s.sessions[sid] = &session{ms: ms, lastSeen: s.now(), cookieAt: s.now()}
 	delete(s.loginFails, ip)
 	s.saveSessionsLocked()
 	s.mu.Unlock()
-	http.SetCookie(w, &http.Cookie{Name: cookieName, Value: sid, Path: "/", HttpOnly: true, SameSite: http.SameSiteStrictMode, MaxAge: int(sessionMaxAge / time.Second)})
+	setSessionCookie(w, sid)
 	writeJSON(w, http.StatusOK, map[string]string{"name": ms.UserName})
 }
 
@@ -503,6 +517,9 @@ func (s *Server) logout(w http.ResponseWriter, r *http.Request, sid string, sess
 // least recently used ones. Without it every login (new phone, cleared
 // cookies) left a Movies token in memory for good. Caller holds s.mu.
 func (s *Server) sweepSessionsLocked() {
+	for ip := range s.loginFails {
+		s.recentFailsLocked(ip) // drops an IP whose failures are all old
+	}
 	for id, ss := range s.sessions {
 		if s.now().Sub(ss.lastSeen) > sessionMaxAge {
 			s.dropSessionLocked(id)
@@ -542,16 +559,33 @@ func (s *Server) recentFailsLocked(ip string) []time.Time {
 	return keep
 }
 
-func (s *Server) loginBlocked(ip string) bool {
+// loginBegin takes one of the attempts left to ip. Attempts still waiting
+// for Movies count: checked against failures alone, parallel guesses all
+// passed before the first failure was recorded. A true needs a loginDone.
+func (s *Server) loginBegin(ip string) bool {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	return len(s.recentFailsLocked(ip)) >= loginFailLimit
+	if len(s.recentFailsLocked(ip))+s.loginPending[ip] >= loginFailLimit {
+		return false
+	}
+	s.loginPending[ip]++
+	return true
 }
 
-func (s *Server) loginFailed(ip string) {
+func (s *Server) loginDone(ip string, failed bool) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
-	s.loginFails[ip] = append(s.recentFailsLocked(ip), s.now())
+	if s.loginPending[ip]--; s.loginPending[ip] <= 0 {
+		delete(s.loginPending, ip)
+	}
+	if failed {
+		s.loginFails[ip] = append(s.recentFailsLocked(ip), s.now())
+	}
+}
+
+// setSessionCookie issues the session cookie for sessionMaxAge from now.
+func setSessionCookie(w http.ResponseWriter, sid string) {
+	http.SetCookie(w, &http.Cookie{Name: cookieName, Value: sid, Path: "/", HttpOnly: true, SameSite: http.SameSiteStrictMode, MaxAge: int(sessionMaxAge / time.Second)})
 }
 
 // unreachable is a connection that never reached the TV (off, standby, gone),
@@ -701,7 +735,13 @@ func (s *Server) listRenderers(w http.ResponseWriter, r *http.Request, _ string,
 		out = append(out, rendererOut{ID: id, Name: name, Model: k.Model, Host: k.Host, Off: true})
 	}
 	s.mu.Unlock()
-	sort.SliceStable(out, func(i, j int) bool { return !out[i].Off && out[j].Off })
+	// Found TVs keep the finder's order; off ones come from a map, by name.
+	sort.SliceStable(out, func(i, j int) bool {
+		if out[i].Off != out[j].Off {
+			return !out[i].Off
+		}
+		return out[i].Off && out[i].Name < out[j].Name
+	})
 	if len(out) == 0 {
 		s.emptyTVList(w, len(rs))
 		return

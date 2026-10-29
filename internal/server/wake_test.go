@@ -119,3 +119,34 @@ func TestUnreachableTVIsNotAFailedFormat(t *testing.T) {
 		t.Fatalf("marked as failed format: %d %v", code, out)
 	}
 }
+
+// Off TVs came from ranging over a map: with two of them the list on the
+// phone changed its order from one call to the next.
+func TestOffTVsKeepTheirOrder(t *testing.T) {
+	r, _, ff, _ := wakeRig(t)
+	ff.rs = nil
+	r.login()
+	r.app.mu.Lock()
+	if r.app.prefs.Known == nil {
+		r.app.prefs.Known = map[string]knownTV{}
+	}
+	for _, n := range []string{"Kitchen", "Bedroom", "Attic", "Living room", "Office"} {
+		r.app.prefs.Known["uuid:"+n] = knownTV{Name: n, Host: "192.0.2.9", MAC: testMAC}
+	}
+	r.app.mu.Unlock()
+	var first string
+	for i := range 30 {
+		code, body := r.get("/api/renderers")
+		if code != 200 {
+			t.Fatalf("list: %d %s", code, body)
+		}
+		if i == 0 {
+			first = body
+		} else if body != first {
+			t.Fatalf("call %d gave another order:\n%s\nfirst:\n%s", i, body, first)
+		}
+	}
+	if a, b := strings.Index(first, "Attic"), strings.Index(first, "Office"); a < 0 || b < a {
+		t.Fatalf("off TVs not by name: %s", first)
+	}
+}

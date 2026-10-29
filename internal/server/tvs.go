@@ -8,7 +8,6 @@ package server
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"log"
 	"net"
@@ -116,21 +115,7 @@ func (s *Server) saveTVPrefsLocked() error {
 	if err != nil {
 		return err
 	}
-	tmp, err := os.CreateTemp(filepath.Dir(f), ".tvs-*")
-	if err != nil {
-		return err
-	}
-	_, werr := tmp.Write(b)
-	cerr := tmp.Close()
-	if werr != nil || cerr != nil {
-		_ = os.Remove(tmp.Name())
-		return fmt.Errorf("write: %w", errors.Join(werr, cerr))
-	}
-	if err := os.Rename(tmp.Name(), f); err != nil {
-		_ = os.Remove(tmp.Name())
-		return err
-	}
-	return nil
+	return writeFileAtomic(f, b)
 }
 
 type tvOut struct {
