@@ -110,7 +110,9 @@ func main() {
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
-	hs := &http.Server{Addr: listen, Handler: srv.Handler(), ReadHeaderTimeout: 10 * time.Second}
+	// No WriteTimeout: a stream runs for hours. IdleTimeout closes kept-alive
+	// connections nobody uses; without it a client could hold sockets forever.
+	hs := &http.Server{Addr: listen, Handler: srv.Handler(), ReadHeaderTimeout: 10 * time.Second, IdleTimeout: 2 * time.Minute}
 	var lc net.ListenConfig
 	ln, err := lc.Listen(ctx, "tcp", listen)
 	if err != nil {

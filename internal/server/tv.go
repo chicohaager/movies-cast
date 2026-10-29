@@ -35,6 +35,7 @@ const (
 	// room and stops a runaway answer.
 	maxSubtitleBytes = 10 << 20
 	maxPendingPair   = 20
+	maxPairPerIP     = 3 // open pairings one client may hold
 	// A TV app that stops sending progress (switched off, app closed) ends
 	// its play after this long.
 	browserSilence = 2 * time.Minute
@@ -44,6 +45,7 @@ type pairing struct {
 	code     string
 	created  time.Time
 	approved *session // set by the phone
+	ip       string   // client that asked (maxPairPerIP)
 }
 
 func pairCode() string {
@@ -63,11 +65,18 @@ func (s *Server) sweepPairingsLocked() {
 }
 
 // tvPairStart is called by the TV app without a session.
-func (s *Server) tvPairStart(w http.ResponseWriter, _ *http.Request) {
+func (s *Server) tvPairStart(w http.ResponseWriter, r *http.Request) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	s.sweepPairingsLocked()
-	if len(s.pairings) >= maxPendingPair {
+	ip := clientIP(r)
+	mine := 0
+	for _, p := range s.pairings {
+		if p.ip == ip {
+			mine++
+		}
+	}
+	if len(s.pairings) >= maxPendingPair || mine >= maxPairPerIP {
 		fail(w, http.StatusTooManyRequests, "zu viele offene Kopplungen, bitte in einigen Minuten erneut")
 		return
 	}
@@ -76,7 +85,7 @@ func (s *Server) tvPairStart(w http.ResponseWriter, _ *http.Request) {
 		code = s.newPairCode()
 	}
 	id := randomID()
-	s.pairings[id] = &pairing{code: code, created: s.now()}
+	s.pairings[id] = &pairing{code: code, created: s.now(), ip: ip}
 	writeJSON(w, http.StatusOK, map[string]any{"id": id, "code": code, "expiresSeconds": int(pairTTL / time.Second)})
 }
 

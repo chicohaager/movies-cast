@@ -96,3 +96,18 @@ func TestPairCodesAreUniqueAmongOpenPairings(t *testing.T) {
 		t.Fatalf("codes %v and %v, want 111111 and 222222", first["code"], second["code"])
 	}
 }
+
+// pair/start needs no login; one client could hold all open pairings, and
+// nobody else could pair a TV.
+func TestPairStartIsLimitedPerClient(t *testing.T) {
+	r := newRig(t)
+	tv := r.tvClient()
+	for i := range maxPairPerIP {
+		if code, out := tv.post("/api/tv/pair/start", map[string]any{}); code != 200 {
+			t.Fatalf("pairing %d: %d %v", i, code, out)
+		}
+	}
+	if code, _ := tv.post("/api/tv/pair/start", map[string]any{}); code != 429 {
+		t.Fatalf("pairing %d from the same client: %d, want 429", maxPairPerIP+1, code)
+	}
+}

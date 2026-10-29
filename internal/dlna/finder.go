@@ -167,6 +167,9 @@ func (f *Finder) Open(ctx context.Context) error {
 	return nil
 }
 
+// maxFetches bounds the description fetches running at once in Find.
+const maxFetches = 8
+
 // Find returns the cached list, or searches when it is stale or refresh is set.
 //
 // The search runs on its own context: the result is shared by every client,
@@ -232,6 +235,7 @@ func (f *Finder) Find(_ context.Context, refresh bool) ([]Renderer, error) {
 		}
 	}
 	results := make(chan result)
+	slots := make(chan struct{}, maxFetches)
 	n := 0
 	for i, loc := range append(locs, knownLocs...) {
 		if seen[loc] {
@@ -241,6 +245,8 @@ func (f *Finder) Find(_ context.Context, refresh bool) ([]Renderer, error) {
 		n++
 		known := i >= len(locs)
 		go func(loc string) {
+			slots <- struct{}{}
+			defer func() { <-slots }()
 			r, err := FetchRenderer(ctx, f.HTTP, loc)
 			if err != nil {
 				results <- result{err: err, known: known}

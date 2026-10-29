@@ -161,6 +161,12 @@ func (s *Server) emptyTVList(w http.ResponseWriter, found int) {
 	writeJSON(w, http.StatusBadGateway, map[string]any{"error": de, "errorEn": en, "key": key, "args": args})
 }
 
+// Bounds for what a device on the LAN or a user can make the server keep.
+const (
+	maxKnownTVs = 64 // TVs remembered in tvs.json
+	maxTVHosts  = 32 // added addresses, each asked on every search
+)
+
 // remember records the TVs found (name, address, MAC) in tvs.json, so a TV
 // that is off later can still be listed and woken. A TV whose MAC the ARP
 // table lacks this time keeps the one it had.
@@ -179,6 +185,11 @@ func (s *Server) remember(rs []dlna.Renderer) {
 		}
 		if s.prefs.Known == nil {
 			s.prefs.Known = map[string]knownTV{}
+		}
+		// Full: a new device is not kept (the ones known stay, so a device
+		// answering with ever new IDs cannot push a real TV out).
+		if !had && len(s.prefs.Known) >= maxKnownTVs {
+			continue
 		}
 		s.prefs.Known[x.ID] = k
 		changed = true
@@ -271,6 +282,11 @@ func (s *Server) setTVHost(w http.ResponseWriter, r *http.Request, _ string, _ *
 	}
 	s.mu.Lock()
 	hosts := slices.DeleteFunc(append([]string{}, s.prefs.Hosts...), func(x string) bool { return x == h })
+	if !in.Remove && len(hosts) >= maxTVHosts {
+		s.mu.Unlock()
+		fail(w, http.StatusBadRequest, fmt.Sprintf("höchstens %d Adressen", maxTVHosts))
+		return
+	}
 	if !in.Remove {
 		hosts = append(hosts, h)
 	}
