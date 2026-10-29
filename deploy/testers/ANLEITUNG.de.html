@@ -38,7 +38,7 @@ pre { white-space:pre-wrap; overflow-wrap:anywhere; margin:0; }
 <h2>1. Voraussetzungen</h2>
 <ul>
   <li><strong>ZimaOS</strong> auf einem Rechner mit <strong>x86-64</strong>-Prozessor (ZimaBoard, ZimaBlade, ZimaCube, PC). Ein ARM-Gerät geht mit diesem Paket nicht.</li>
-  <li>Die App <strong>Movies</strong> von IceWhale ist auf demselben ZimaOS installiert und hat Filme in der Bibliothek. movies-cast meldet dich mit deinem ZimaOS-Konto bei Movies an.</li>
+  <li>Die App <strong>Movies</strong> von IceWhale ist auf demselben ZimaOS installiert und hat mindestens eine Mediathek mit Filmen. movies-cast meldet dich mit deinem ZimaOS-Konto bei Movies an. <strong>Movies ist derzeit eine Beta</strong> (Modul <code>zimaos-movies</code>, Stand 0.3.0) und weder im App Store noch in der Modulliste von ZimaOS zu finden. Hast du Movies nicht, melde dich bei der Person, von der du dieses Paket hast.</li>
   <li>Ein <strong>Fernseher mit DLNA</strong> (bei vielen Herstellern „Media Renderer“, „DLNA“ oder „Medien teilen“) im selben Netz wie ZimaOS.</li>
   <li>Ein Handy oder Rechner mit Browser im selben Netz.</li>
   <li>Der ZimaOS-Rechner braucht Internet für die Installation: das Programm wird von <code>{{IMAGE}}</code> geladen.</li>
@@ -46,7 +46,7 @@ pre { white-space:pre-wrap; overflow-wrap:anywhere; margin:0; }
 
 <h2>2. Installieren</h2>
 <ol>
-  <li>Im ZimaOS-Dashboard neben <em>Apps</em> auf <strong>„+“</strong> klicken, dann <strong>„Benutzerdefinierte App installieren“</strong>.</li>
+  <li>Im ZimaOS-Dashboard neben <em>Apps</em> auf <strong>„+“</strong> klicken, dann <strong>„Benutzerdefinierte App installieren“</strong>. Denselben Knopf gibt es auch auf der Startseite des <em>App Store</em>.</li>
   <li>Oben im Dialog <strong>„Import“</strong> wählen und die Datei <code>docker-compose.yml</code> aus diesem Paket auswählen.</li>
   <li>Installieren bestätigen. ZimaOS lädt das Programm (etwa 9 MB) und legt die Kachel <strong>„Movies auf dem Fernseher“</strong> mit dem movies-cast-Logo an.</li>
 </ol>

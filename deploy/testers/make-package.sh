@@ -54,6 +54,16 @@ docker run --rm --user 65534:65534 --cap-drop ALL --security-opt no-new-privileg
 echo "== 4/5 push"
 if [[ "$push" == 1 ]]; then
   docker push -q "$image"
+  # A push can succeed into a private package (GitHub's default): testers then
+  # get 401. Ask the registry the way an anonymous client does.
+  anon_repo="${image#ghcr.io/}"; anon_repo="${anon_repo%%:*}"
+  anon="$(curl -s -o /dev/null -w '%{http_code}' "https://ghcr.io/token?scope=repository:$anon_repo:pull")"
+  if [[ "$anon" != 200 ]]; then
+    echo "the package is not public (anonymous pull token: HTTP $anon)." >&2
+    echo "GitHub: Package settings -> Change visibility -> Public, then run again." >&2
+    exit 1
+  fi
+  echo "anonymous pull allowed (token HTTP 200)"
   # The test of what a tester gets: drop the local copy and pull it back.
   docker rmi -f "$image" >/dev/null
   docker pull -q "$image"
@@ -68,4 +78,13 @@ mkdir -p "$out"
 python3 "$here/render.py" "$repo" "$out" "$version" "$image"
 (cd "$out" && sha256sum -- * > SHA256SUMS)
 (cd "$here/out" && rm -f "$name.zip" && zip -qr "$name.zip" "$name")
+# What leaves is the zip: scan an unpacked copy (deploy/testers/out is
+# git-ignored, so a scan of the tree does not see it).
+scanner="$HOME/.claude/bin/check-public-data.py"
+if [[ -f "$scanner" ]]; then
+  scan="$(mktemp -d)"
+  unzip -q "$here/out/$name.zip" -d "$scan"
+  python3 "$scanner" "$scan" || { rm -rf "$scan"; echo "private data in the package" >&2; exit 1; }
+  rm -rf "$scan"
+fi
 ls -l "$out" "$here/out/$name.zip"
