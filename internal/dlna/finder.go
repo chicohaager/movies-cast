@@ -37,6 +37,8 @@ type Finder struct {
 
 	mu      sync.Mutex
 	at      time.Time
+	now     func() time.Time     // time.Now; a test clock
+	seenAt  map[string]time.Time // renderer ID → when it last answered a search
 	cached  []Renderer
 	lastLoc map[string]string // host → last description URL SSDP gave for it
 	conn    net.PacketConn    // SSDP socket, open for good when Port is fixed
@@ -115,6 +117,8 @@ func NewFinder(entries []string, ssdp bool, port int, c *Client) *Finder {
 		video:   c.PlaysVideo,
 		allow:   func(loc string) bool { return LANLocation(loc, OwnIPs()) },
 		lastLoc: map[string]string{},
+		now:     time.Now,
+		seenAt:  map[string]time.Time{},
 	}
 	f.search = func(ctx context.Context, wait time.Duration) ([]string, int, error) {
 		// caller holds f.mu
@@ -172,7 +176,7 @@ func (f *Finder) Open(ctx context.Context) error {
 func (f *Finder) Find(_ context.Context, refresh bool) ([]Renderer, error) {
 	f.mu.Lock()
 	defer f.mu.Unlock()
-	if !refresh && len(f.cached) > 0 && time.Since(f.at) < f.TTL {
+	if !refresh && len(f.cached) > 0 && f.now().Sub(f.at) < f.TTL {
 		return f.cached, nil
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), f.Wait+15*time.Second)
@@ -261,14 +265,20 @@ func (f *Finder) Find(_ context.Context, refresh bool) ([]Renderer, error) {
 			errs = append(errs, res.err)
 		case res.ok:
 			byID[res.r.ID] = res.r
+			f.seenAt[res.r.ID] = f.now()
 		}
 	}
-	// A TV that missed this one search stays listed until its cache entry ages out.
-	if time.Since(f.at) < f.TTL {
-		for _, r := range f.cached {
-			if _, ok := byID[r.ID]; !ok {
-				byID[r.ID] = r
-			}
+	// A TV that missed this one search stays listed until TTL after it last
+	// answered. Not after the cache time: that moved on with every search,
+	// and a TV switched off stayed listed as long as someone kept asking.
+	for _, r := range f.cached {
+		if _, ok := byID[r.ID]; !ok && f.now().Sub(f.seenAt[r.ID]) < f.TTL {
+			byID[r.ID] = r
+		}
+	}
+	for id := range f.seenAt {
+		if _, ok := byID[id]; !ok {
+			delete(f.seenAt, id)
 		}
 	}
 	out := make([]Renderer, 0, len(byID))
@@ -277,7 +287,7 @@ func (f *Finder) Find(_ context.Context, refresh bool) ([]Renderer, error) {
 	}
 	sort.Slice(out, func(i, j int) bool { return out[i].Name < out[j].Name })
 	if len(out) > 0 {
-		f.cached, f.at = out, time.Now()
+		f.cached, f.at = out, f.now()
 	}
 	err := errors.Join(errs...)
 	f.last = SearchStats{At: time.Now(), Answers: answers, Renderers: len(out)}
