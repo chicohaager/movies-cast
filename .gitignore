@@ -3,3 +3,7 @@ deploy/webos/out/
 # values of one installation (APP_ID, VENDOR, SERVER_URL), read by deploy/webos/package.sh
 deploy/webos/local.env
 __pycache__/
+# browser tests (e2e/): dependencies and run output
+e2e/node_modules/
+e2e/test-results/
+e2e/playwright-report/

@@ -6,6 +6,7 @@ import (
 	"os"
 	"os/signal"
 	"path/filepath"
+	"syscall"
 	"testing"
 	"time"
 
@@ -19,7 +20,7 @@ import (
 //
 //	MC_DEV_SERVER=127.0.0.1:18097 go test ./internal/server/ -run TestDevServer -timeout 0 -v
 //
-// and stops on Ctrl-C (or SIGINT to the test binary). State files live in a
+// and stops on Ctrl-C, SIGINT or SIGTERM (e2e/ starts it that way). State files live in a
 // temporary directory and are gone afterwards.
 func TestDevServer(t *testing.T) {
 	addr := os.Getenv("MC_DEV_SERVER")
@@ -62,6 +63,6 @@ func TestDevServer(t *testing.T) {
 	t.Logf("dev server on http://%s — log in as Demo or Anna, password richtig; state in %s", ln.Addr(), filepath.Dir(state))
 
 	stop := make(chan os.Signal, 1)
-	signal.Notify(stop, os.Interrupt)
+	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
 	<-stop
 }
