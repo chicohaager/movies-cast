@@ -20,7 +20,7 @@
 
 <div id="error" class="error" role="alert" hidden></div>
 <div id="notice" class="notice" role="status" hidden></div>
-<div id="force-row" class="error force" hidden><button id="force" type="button" data-i18n="play.force">Trotzdem abspielen</button> <button id="inapp" type="button" class="ghost" data-i18n="play.inApp" hidden>In der movies-cast-App öffnen</button></div>
+<div id="force-row" class="error force" hidden><button id="force" type="button" data-i18n="play.force">Trotzdem abspielen</button> <button id="inapp" type="button" class="ghost" data-i18n="play.inApp" hidden>In der movies-cast-App öffnen</button> <button id="wake" type="button" data-i18n="wake.btn" hidden>Einschalten und abspielen</button> <button id="convert" type="button" class="ghost" data-i18n="play.convert" hidden>Mit umgewandeltem Ton abspielen</button></div>
 
 <main>
   <section id="login-view" hidden>
@@ -59,6 +59,7 @@
         <label for="p-vol" data-i18n="p.vol">Lautstärke</label>
         <input id="p-vol" type="range" min="0" max="100">
       </div>
+      <p class="sound"><button id="p-sound" type="button" class="link" data-i18n="p.noSound">Kein Ton?</button></p>
     </div>
 
     <details class="card pair">

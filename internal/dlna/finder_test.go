@@ -283,3 +283,20 @@ func TestFinderExtraHostsAndStats(t *testing.T) {
 		t.Fatalf("stats %+v, want 2 answers, 1 renderer", st)
 	}
 }
+
+// A TV seen before that misses the search is asked at its last description
+// URL; one that does not answer there (off) is no error.
+func TestFinderAsksKnownTVsTheSearchMissed(t *testing.T) {
+	lgSrv := fakeDevice(t, "lg-oled55b9-desc.xml", "lg-protocolinfo.xml")
+	off := httptest.NewServer(http.NotFoundHandler())
+	offURL := off.URL + "/dmr"
+	off.Close()
+	f := NewFinder(nil, true, 0, NewClient())
+	f.allow = func(string) bool { return true }
+	f.search = func(context.Context, time.Duration) ([]string, int, error) { return nil, 0, nil }
+	f.SetKnown([]string{lgSrv.URL + "/", offURL})
+	rs, err := f.Find(context.Background(), true)
+	if len(rs) != 1 || err != nil {
+		t.Fatalf("got %+v, %v", rs, err)
+	}
+}

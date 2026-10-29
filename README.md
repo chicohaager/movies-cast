@@ -59,13 +59,39 @@ only, not a unicast one (measured), so it needs the multicast answer to come thr
 
 ## Format hint before sending
 
-movies-cast sends the original file and never transcodes. Before a DLNA send it reads the TV's
+movies-cast sends the original file (converting only on request, see below). Before a DLNA send it reads the TV's
 format list (`GetProtocolInfo`) and, if the film's container or HEVC is not in it, answers 409 with
 the missing names; the phone shows the hint and a "Play anyway" button. It is a hint, not a block:
 the LG OLED55B9 lists no HEVC and plays 4K HEVC; the 2012 Samsung UE32EH5300 lists none either; the
 2017 Samsung UE50MU6179 lists `video/hevc` (lists captured in `internal/dlna/testdata`). Once a TV
 reports PLAYING past 10 s, its TV/container/codec combination counts as proven and the hint is skipped;
 with `STATE_FILE` set the proven list is kept in `formats.json` next to it (0600).
+
+## Converted sound (on request)
+
+For a TV that stays silent with a film's audio format, "No sound?" in the player restarts the film at
+the same place with the sound converted; the choice is kept per TV and audio format in `convert.json`
+next to `STATE_FILE` ("Original sound" undoes it). The same is offered when a DLNA send fails.
+
+Measured on Movies 0.3.0: `/Videos/{id}/stream?static=false&AudioCodec=aac` returns the original file;
+only `PlaybackInfo` converts, as HLS — 5 s MPEG-TS segments, the picture copied (HEVC 4K stays HEVC
+4K), the audio AAC. movies-cast joins the segments into one MPEG-TS stream for the TV (`video/mp2t`,
+or `video/mpeg` when the TV lists only that) with DLNA time seek (`TimeSeekRange.dlna.org`); a seek
+from the phone re-sends the film from the segment that holds the new time. After a jump Movies
+answers every segment with a 307 to the same path; redirects are followed only on the Movies server,
+because the segment URLs carry the token (never logged).
+
+The LG OLED55B9 lists no AC3, E-AC3, TrueHD or DTS but plays all of them with sound (the owner,
+2026-10-28), so nothing is converted unless asked for. The Samsung UE50MU6179 lists AC3
+(`audio/vnd.dolby.dd-raw`), no E-AC3, TrueHD or DTS.
+
+## Switching a TV on (Wake-on-LAN)
+
+Every TV seen is remembered in `tvs.json` with its MAC address (from the host's ARP table, read in
+`/proc/net/arp` — the container runs on the host network) and its description URL. A TV that misses a
+search is asked at that URL; if it does not answer, the phone lists it as "off". Sending a film to it
+first sends a magic packet (UDP 9, limited and directed broadcast) every 3 s for up to 60 s, until
+the TV's description answers. Whether a TV wakes this way depends on the TV (LG: "Mobile TV On").
 
 ## LG quirks the code handles (all measured)
 
@@ -148,10 +174,11 @@ with the server; the TV gets no Movies token.
   plays the original MKV (HEVC 4K, AC3/E-AC3) and seeks in < 1 s; `audioTracks` switches language;
   `canPlayType("video/x-matroska")` answers "" anyway, so the UI never asks it. The full flow
   (pair → library → detail → play → +30 s → audio → pause → Back) ran on the TV.
-- **Languages:** German and English (`internal/server/web/i18n.js`, both pages and the webOS start page). The device
-  language decides (`navigator.language`, the LG reports `de-DE`); `?lang=en` or `?lang=de` overrides it and is
-  remembered. Server errors carry `error` (German) and `errorEn`; `TestEveryFailMessageHasEnglish` and
-  `TestI18nKeysComplete` keep both complete.
+- **Languages:** the 18 of the ZimaOS UI, English the default (`internal/server/web/i18n/<lang>.json`, served
+  as `/strings.js` to both pages). `?lang=xx` (remembered), else the remembered one, else the device language,
+  else English; a picker on the phone. Server errors carry a `key` for every language;
+  `TestEveryFailMessageHasEnglish` and `TestStringsComplete` keep them complete. Review status:
+  [docs/TRANSLATIONS.md](docs/TRANSLATIONS.md) — no native speaker has read them yet.
 - **Phone home screen:** `manifest.json` with 192/512 px icons and an `apple-touch-icon` (rendered from the logo by
   `deploy/webos/logo/render.py`; `TestManifestIconsExist`).
 - **Chrome 53:** no async/await, `?.`, `??`, object spread, padStart, CSS grid, flex `gap`,
