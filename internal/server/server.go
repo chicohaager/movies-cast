@@ -159,6 +159,9 @@ type play struct {
 	offset       time.Duration
 	mime         string
 	restartUntil time.Time // a converted seek re-sends the film; STOPPED until then is expected
+	// peer is the address that fetched /s/ first: the TV gives the URL to
+	// anyone who asks it (GetPositionInfo), so the URL alone is not enough.
+	peer string
 }
 
 func New(cfg Config, mc *movies.Client, tv Transport, r Renderers) *Server {
@@ -1187,12 +1190,25 @@ func (s *Server) serveStream(w http.ResponseWriter, r *http.Request) {
 	var ms *movies.Session
 	var id string
 	var pctx context.Context
+	other, first := false, ""
 	if p != nil {
 		ms, id, pctx = p.sess.ms, p.movie.ID, p.ctx
+		switch ip := clientIP(r); p.peer {
+		case "":
+			p.peer = ip
+		case ip:
+		default:
+			other, first = true, p.peer
+		}
 	}
 	s.mu.Unlock()
 	if p == nil {
 		http.NotFound(w, r)
+		return
+	}
+	if other {
+		log.Printf("stream %s refused: fetched by %s first", clientIP(r), first)
+		http.Error(w, "forbidden", http.StatusForbidden)
 		return
 	}
 	if p.conv != nil {

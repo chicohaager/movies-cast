@@ -139,6 +139,8 @@ the TV's description answers. Whether a TV wakes this way depends on the TV (LG:
 - The TV never gets a Movies token. It gets `/s/<128-bit play id>/movie.<ext>`; this server forwards
   the bytes with the token in a header. The id dies on Stop, on a new play on the same TV, on logout,
   when the TV stops or is unreachable for 2 min, and after 24 h — and a running transfer is cut then.
+  The TV hands that URL to anyone who asks it over UPnP, so the first address that fetches a play
+  keeps it; another host with the same URL gets 403.
 - Tokens live only in memory; a restart logs everyone out.
 - POSTs need same-origin (`Origin`, `Sec-Fetch-Site`) and a JSON body. 5 wrong passwords per client
   IP in 10 min → 429. At most 200 sessions.
