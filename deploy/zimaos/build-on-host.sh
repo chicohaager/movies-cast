@@ -25,7 +25,8 @@ build_dir="/DATA/AppData/movies-cast-build"
 image="127.0.0.1:5000/movies-cast:local"
 repo="$(cd "$(dirname "$0")/../.." && pwd)"
 out="$(mktemp -d)"
-trap 'rm -rf "$out"' EXIT
+wt="$(mktemp -d)"
+trap 'rm -rf "$out"; git -C "$repo" worktree remove --force "$wt" >/dev/null 2>&1 || rm -rf "$wt"' EXIT
 
 ssh_cmd=(ssh -o BatchMode=no)
 scp_cmd=(scp -q)
@@ -39,19 +40,22 @@ remote_docker='export DOCKER_CONFIG=/tmp/dc-$USER; mkdir -p "$DOCKER_CONFIG";'
 
 # Only a committed state is built, and -version names its commit: 0.20.2 ran on
 # .143 from an uncommitted tree, and nothing said which code it was (2026-10-29).
-dirty="$(cd "$repo" && git status --porcelain --untracked-files=normal -- cmd internal go.mod go.sum Dockerfile)"
+# check.sh and go build run in a worktree of HEAD, so uncommitted files (another
+# session's, say) are neither tested nor shipped; they are listed.
+dirty="$(cd "$repo" && git status --porcelain --untracked-files=normal)"
 if [[ -n "$dirty" ]]; then
-  echo "uncommitted changes, commit first:" >&2
+  echo "not in this build (uncommitted):" >&2
   echo "$dirty" >&2
-  exit 1
 fi
 version="$version+$(cd "$repo" && git rev-parse --short=12 HEAD)"
+git -C "$repo" worktree add --detach "$wt" HEAD >/dev/null
+[[ -d "$repo/e2e/node_modules" ]] && ln -s "$repo/e2e/node_modules" "$wt/e2e/node_modules"
 
-echo "== 1/4 check.sh + static build ($version)"
+echo "== 1/4 check.sh + static build ($version, worktree of HEAD)"
 # shellcheck disable=SC2086 # CHECK_ARGS is empty or one flag
-"$repo/check.sh" ${CHECK_ARGS:-}
-(cd "$repo" && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -ldflags "-s -w -X main.version=$version" -o "$out/movies-cast" ./cmd/movies-cast)
-cp "$repo/Dockerfile" "$out/Dockerfile"
+"$wt/check.sh" ${CHECK_ARGS:-}
+(cd "$wt" && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -ldflags "-s -w -X main.version=$version" -o "$out/movies-cast" ./cmd/movies-cast)
+cp "$wt/Dockerfile" "$out/Dockerfile"
 chmod 0755 "$out/movies-cast"
 chmod 0644 "$out/Dockerfile"
 local_sum="$(sha256sum "$out/movies-cast" | cut -d' ' -f1)"
