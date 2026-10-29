@@ -132,6 +132,7 @@ Screenshot: yes/no</code></pre>
   <li>The <strong>TV app</strong> for LG webOS is not part of this package; this test is about the DLNA path.</li>
   <li>The <strong>translations</strong> other than German and English were made by an AI and have not been read by a native speaker yet – corrections are welcome.</li>
   <li>Playback has been checked with ZimaOS 1.8.0 and an LG OLED55B9. A Samsung UE50MU6179 was found; whether it plays is still open – reports about other TVs are especially valuable.</li>
+  <li><strong>Updating from 0.24.0 or 0.25.0:</strong> an update via "Tag" brings only the new program, no change to the compose file. Movies-Cast then writes its log in UTC instead of local time – this is harmless. To change it: in "Verwalten" open <strong>"YAML"</strong>, delete the line <code>- TZ=$TZ</code>, add the <code>/etc/localtime</code> entry under <code>volumes:</code> as in this package's <code>docker-compose.yml</code>, and save (measured on ZimaOS 1.8.0; logins are kept).</li>
 </ul>
 <p class="muted">Movies-Cast {{VERSION}} · image <code>{{IMAGE}}</code></p>
 </main>
