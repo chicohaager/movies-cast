@@ -147,9 +147,13 @@ func TestKnownTVsAreCapped(t *testing.T) {
 func TestAddedHostsAreCapped(t *testing.T) {
 	r, _ := newRigWithState(t)
 	r.login()
-	last := 0
+	last, msg := 0, map[string]any{}
 	for i := range maxTVHosts + 5 {
-		last, _ = r.post("/api/tvs/hosts", map[string]any{"host": fmt.Sprintf("10.0.1.%d", i+1)})
+		last, msg = r.post("/api/tvs/hosts", map[string]any{"host": fmt.Sprintf("10.0.1.%d", i+1)})
+	}
+	// The message is a plain string (errorsEn looks it up), so it repeats the number.
+	if want := fmt.Sprintf("höchstens %d Adressen", maxTVHosts); msg["error"] != want || msg["key"] == nil {
+		t.Errorf("answer %v, want %q with a key", msg, want)
 	}
 	r.app.mu.Lock()
 	n := len(r.app.prefs.Hosts)

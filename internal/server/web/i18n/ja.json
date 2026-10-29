@@ -98,6 +98,7 @@
  "srv:enter user and password": "ユーザー名とパスワードを入力してください",
  "srv:invalid ID": "無効な ID です",
  "srv:invalid address (an IPv4 address on your own network)": "無効なアドレスです（自宅ネットワーク内の IPv4 アドレスを指定）",
+ "srv:32 addresses at most": "アドレスは 32 件までです",
  "srv:invalid request": "無効なリクエストです",
  "srv:name too long (40 characters at most)": "名前が長すぎます（最大 40 文字）",
  "srv:no MAC address is known for this TV": "このテレビの MAC アドレスが不明です",

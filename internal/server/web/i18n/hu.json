@@ -98,6 +98,7 @@
  "srv:enter user and password": "add meg a felhasználónevet és a jelszót",
  "srv:invalid ID": "érvénytelen azonosító",
  "srv:invalid address (an IPv4 address on your own network)": "érvénytelen cím (IPv4-cím a saját hálózatodon)",
+ "srv:32 addresses at most": "legfeljebb 32 cím",
  "srv:invalid request": "érvénytelen kérés",
  "srv:name too long (40 characters at most)": "túl hosszú név (legfeljebb 40 karakter)",
  "srv:no MAC address is known for this TV": "ehhez a tévéhez nem ismert MAC-cím",

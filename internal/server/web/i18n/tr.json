@@ -98,6 +98,7 @@
  "srv:enter user and password": "kullanıcı adını ve parolayı girin",
  "srv:invalid ID": "geçersiz ID",
  "srv:invalid address (an IPv4 address on your own network)": "geçersiz adres (kendi ağınızda bir IPv4 adresi olmalı)",
+ "srv:32 addresses at most": "en fazla 32 adres",
  "srv:invalid request": "geçersiz istek",
  "srv:name too long (40 characters at most)": "ad çok uzun (en fazla 40 karakter)",
  "srv:no MAC address is known for this TV": "bu televizyon için bilinen bir MAC adresi yok",

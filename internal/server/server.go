@@ -378,6 +378,7 @@ var errorsEn = map[string]string{
 	"Name zu lang (höchstens 40 Zeichen)":                         "name too long (40 characters at most)",
 	"Speichern fehlgeschlagen":                                    "saving failed",
 	"Adresse ungültig (IPv4-Adresse im eigenen Netz)":             "invalid address (an IPv4 address on your own network)",
+	"höchstens 32 Adressen":                                       "32 addresses at most",
 	"Für diesen Fernseher ist keine MAC-Adresse bekannt":          "no MAC address is known for this TV",
 	"Weckpaket konnte nicht gesendet werden":                      "the wake-up packet could not be sent",
 	"Der Fernseher ist aus oder nicht erreichbar":                 "the TV is off or not reachable",

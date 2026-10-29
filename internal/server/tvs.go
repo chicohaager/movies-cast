@@ -284,7 +284,7 @@ func (s *Server) setTVHost(w http.ResponseWriter, r *http.Request, _ string, _ *
 	hosts := slices.DeleteFunc(append([]string{}, s.prefs.Hosts...), func(x string) bool { return x == h })
 	if !in.Remove && len(hosts) >= maxTVHosts {
 		s.mu.Unlock()
-		fail(w, http.StatusBadRequest, fmt.Sprintf("höchstens %d Adressen", maxTVHosts))
+		fail(w, http.StatusBadRequest, "höchstens 32 Adressen") // maxTVHosts; TestAddedHostsAreCapped compares
 		return
 	}
 	if !in.Remove {

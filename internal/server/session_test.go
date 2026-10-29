@@ -111,3 +111,24 @@ func TestPairStartIsLimitedPerClient(t *testing.T) {
 		t.Fatalf("pairing %d from the same client: %d, want 429", maxPairPerIP+1, code)
 	}
 }
+
+// A handler that panicked under app.mu left it locked, and the rig's cleanup
+// waited for it until go test's -timeout (600 s) instead of failing at once.
+func TestRigCleanupGivesUpOnAHeldLock(t *testing.T) {
+	var mu sync.Mutex
+	mu.Lock()
+	got := make(chan bool, 1)
+	go func() { got <- lockWithin(&mu, 50*time.Millisecond) }()
+	select {
+	case ok := <-got:
+		if ok {
+			t.Fatal("lockWithin took a lock that is held")
+		}
+	case <-time.After(2 * time.Second):
+		t.Fatal("lockWithin still waits for a held lock after 2 s")
+	}
+	mu.Unlock()
+	if !lockWithin(&mu, 50*time.Millisecond) {
+		t.Fatal("lockWithin did not take a free lock")
+	}
+}

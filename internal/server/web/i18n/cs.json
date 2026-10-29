@@ -98,6 +98,7 @@
  "srv:enter user and password": "zadejte uživatele a heslo",
  "srv:invalid ID": "neplatné ID",
  "srv:invalid address (an IPv4 address on your own network)": "neplatná adresa (je třeba IPv4 adresa ve vlastní síti)",
+ "srv:32 addresses at most": "nejvýše 32 adres",
  "srv:invalid request": "neplatný požadavek",
  "srv:name too long (40 characters at most)": "název je příliš dlouhý (nejvýše 40 znaků)",
  "srv:no MAC address is known for this TV": "pro tuto televizi není známa žádná MAC adresa",
