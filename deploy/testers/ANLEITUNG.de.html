@@ -132,6 +132,7 @@ Bildschirmfoto: ja/nein</code></pre>
   <li>Die <strong>TV-App</strong> für LG webOS ist nicht in diesem Paket; getestet wird der Weg über DLNA.</li>
   <li>Die <strong>Übersetzungen</strong> außer Deutsch und Englisch stammen von einer KI und wurden noch von niemandem mit Muttersprache gelesen – Korrekturen sind willkommen.</li>
   <li>Die Wiedergabe ist bisher mit ZimaOS 1.8.0 und einem LG OLED55B9 geprüft. Ein Samsung UE50MU6179 wurde gefunden; ob er abspielt, ist noch offen – Rückmeldungen zu anderen Fernsehern sind besonders wertvoll.</li>
+  <li><strong>Update von 0.24.0 oder 0.25.0:</strong> Ein Update über „Tag“ bringt nur das neue Programm, keine Änderung an der Compose-Datei. Movies-Cast schreibt sein Protokoll dann in UTC statt in Ortszeit – das ist harmlos. Wer es ändern will: in „Verwalten“ auf <strong>„YAML“</strong> die Zeile <code>- TZ=$TZ</code> löschen, unter <code>volumes:</code> den Eintrag <code>/etc/localtime</code> wie in der <code>docker-compose.yml</code> dieses Pakets ergänzen und speichern (so gemessen auf ZimaOS 1.8.0; Anmeldungen bleiben erhalten).</li>
 </ul>
 <p class="muted">Movies-Cast {{VERSION}} · Image <code>{{IMAGE}}</code></p>
 </main>
