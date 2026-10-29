@@ -35,6 +35,7 @@ PLAYING. The two failures of 19:35 and 17:51 (no answer to Play within 6 s) were
 |---|---|---|---|
 | 4 | one-click install from an app store | 2–3 h | needs the repo public (owner's decision) and tests by the owner and by others before any store entry |
 | 11 | one login per person | — | the phone has it since 0.1 (each person logs in with their own ZimaOS account; library and resume points are theirs). The TV app runs with the account of the phone that approved its pairing (`tvPairApprove`), so on a shared TV everyone continues in that account. Open: switching the account on the TV — only if more than one person uses it |
+| 12 | 0.25.3: build the tester package from what master has since 0.25.2 | 30 min | in master, not released: every stopped report to Movies is logged with film, position and outcome (af9447d); build-on-host.sh builds a worktree of HEAD (12efef0). Running on .143 as 0.25.2+12efef04a31d since 2026-10-29 |
 
 Sound (8): the LG lists no AC3, E-AC3, TrueHD or DTS (measured 2026-10-28) yet plays them with sound
 (the owner, 2026-10-28) — a hint from the format list would be wrong for every film here, so 8 became
