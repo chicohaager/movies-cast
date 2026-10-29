@@ -10,9 +10,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/fs"
 	"log"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
 	"sync"
 	"time"
@@ -210,55 +212,76 @@ func writeAtomic(f string, b []byte, name string) {
 	}
 }
 
-// The colour mode of the phone page per Movies account (userID -> "light",
-// "dark" or "" for the system), in themes.json next to the sessions: kept in
-// the browser alone, the LAN and the Tailscale address of the NAS each had
-// their own choice (2026-10-29).
-func (s *Server) themesFile() string {
+// Settings of the phone page per Movies account (userID -> value), one file
+// each next to the sessions: kept in the browser alone, the LAN and the
+// Tailscale address of the NAS each had their own (2026-10-29).
+//
+//	theme  themes.json  "light", "dark" or "" (follow the system)
+//	lang   langs.json   a language of web/i18n
+var accountPrefs = map[string]struct {
+	file  string
+	valid func(string) bool
+}{
+	"theme": {"themes.json", func(v string) bool { return v == "" || v == "light" || v == "dark" }},
+	"lang":  {"langs.json", knownLang},
+}
+
+var langCode = regexp.MustCompile(`^[a-z]{2}(_[A-Z]{2})?$`)
+
+// knownLang: a code movies-cast has texts for (web/i18n/<code>.json).
+func knownLang(code string) bool {
+	if !langCode.MatchString(code) {
+		return false
+	}
+	_, err := fs.Stat(webFS, "web/i18n/"+code+".json")
+	return err == nil
+}
+
+func (s *Server) accountFile(name string) string {
 	if s.cfg.StateFile == "" {
 		return ""
 	}
-	return filepath.Join(filepath.Dir(s.cfg.StateFile), "themes.json")
+	return filepath.Join(filepath.Dir(s.cfg.StateFile), accountPrefs[name].file)
 }
 
-func (s *Server) loadThemes() error {
-	f := s.themesFile()
-	if f == "" {
-		return nil
-	}
-	b, err := os.ReadFile(f)
-	if os.IsNotExist(err) {
-		return nil
-	}
-	if err != nil {
-		return err
-	}
-	m := map[string]string{}
-	if err := json.Unmarshal(b, &m); err != nil {
-		return fmt.Errorf("%s: %w", f, err)
-	}
-	s.mu.Lock()
-	defer s.mu.Unlock()
-	for id, mode := range m {
-		if validTheme(mode) {
-			s.themes[id] = mode
+func (s *Server) loadAccountPrefs() error {
+	var errs []error
+	for name, p := range accountPrefs {
+		m := map[string]string{}
+		if f := s.accountFile(name); f != "" {
+			b, err := os.ReadFile(f)
+			switch {
+			case os.IsNotExist(err):
+			case err != nil:
+				errs = append(errs, err)
+			default:
+				if err := json.Unmarshal(b, &m); err != nil {
+					errs = append(errs, fmt.Errorf("%s: %w", f, err))
+				}
+			}
 		}
+		s.mu.Lock()
+		s.account[name] = map[string]string{}
+		for id, v := range m {
+			if p.valid(v) {
+				s.account[name][id] = v
+			}
+		}
+		s.mu.Unlock()
 	}
-	return nil
+	return errors.Join(errs...)
 }
 
-// saveThemesLocked writes themes.json. Caller holds s.mu.
-func (s *Server) saveThemesLocked() {
-	f := s.themesFile()
+// saveAccountPrefLocked writes one setting's file. Caller holds s.mu.
+func (s *Server) saveAccountPrefLocked(name string) {
+	f := s.accountFile(name)
 	if f == "" {
 		return
 	}
-	b, err := json.Marshal(s.themes)
+	b, err := json.Marshal(s.account[name])
 	if err != nil {
-		log.Printf("themes: %v", err)
+		log.Printf("%s: %v", name, err)
 		return
 	}
-	writeAtomic(f, b, "themes")
+	writeAtomic(f, b, name)
 }
-
-func validTheme(mode string) bool { return mode == "" || mode == "light" || mode == "dark" }
