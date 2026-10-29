@@ -351,9 +351,13 @@ var (
 
 // NewClient has no overall client timeout: it would cut every call at its
 // value, Play's 30 s included (0.18 set http.Client.Timeout to 6 s, and a
-// converted Play was cut after 6.2 s on the LG, 2026-10-28).
+// converted Play was cut after 6.2 s on the LG, 2026-10-28). Redirects are
+// not followed: ParseDescription keeps control URLs on the device, and a
+// redirect would send the POST on to any address.
 func NewClient() *Client {
-	return &Client{HTTP: &http.Client{}, locks: map[string]*sync.Mutex{}}
+	return &Client{HTTP: &http.Client{
+		CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse },
+	}, locks: map[string]*sync.Mutex{}}
 }
 
 func (c *Client) lock(controlURL string) *sync.Mutex {
@@ -689,15 +693,46 @@ func FormatHMS(d time.Duration) string {
 // ParseHMS reads H+:MM:SS[.fff]; "NOT_IMPLEMENTED" and empty give an error.
 func ParseHMS(s string) (time.Duration, error) {
 	s = strings.TrimSpace(s)
+	bad := fmt.Errorf("not H:MM:SS: %q", s)
 	parts := strings.Split(s, ":")
 	if len(parts) != 3 {
-		return 0, fmt.Errorf("not H:MM:SS: %q", s)
+		return 0, bad
 	}
-	h, err1 := strconv.Atoi(parts[0])
-	m, err2 := strconv.Atoi(parts[1])
-	sec, err3 := strconv.ParseFloat(parts[2], 64)
-	if err := errors.Join(err1, err2, err3); err != nil {
-		return 0, fmt.Errorf("not H:MM:SS: %q", s)
+	// UPnP: H+:MM:SS[.F+] or H+:MM:SS.F0/F1 — digits only (ParseFloat took
+	// "NaN", "Inf" and "1e9").
+	secs, frac, _ := strings.Cut(parts[2], ".")
+	var n [3]int64
+	for i, p := range []string{parts[0], parts[1], secs} {
+		v, err := strconv.ParseUint(p, 10, 31)
+		if err != nil {
+			return 0, bad
+		}
+		n[i] = int64(v)
 	}
-	return time.Duration(h)*time.Hour + time.Duration(m)*time.Minute + time.Duration(sec*float64(time.Second)), nil
+	d := time.Duration(n[0])*time.Hour + time.Duration(n[1])*time.Minute + time.Duration(n[2])*time.Second
+	if frac == "" {
+		if strings.Contains(parts[2], ".") {
+			return 0, bad
+		}
+		return d, nil
+	}
+	if f0, f1, ok := strings.Cut(frac, "/"); ok {
+		a, err1 := strconv.ParseUint(f0, 10, 31)
+		b, err2 := strconv.ParseUint(f1, 10, 31)
+		if err1 != nil || err2 != nil || b == 0 || a >= b {
+			return 0, bad
+		}
+		return d + time.Duration(a)*time.Second/time.Duration(b), nil
+	}
+	if len(frac) > 9 {
+		frac = frac[:9]
+	}
+	f, err := strconv.ParseUint(frac, 10, 31)
+	if err != nil {
+		return 0, bad
+	}
+	for range 9 - len(frac) {
+		f *= 10
+	}
+	return d + time.Duration(f), nil
 }
