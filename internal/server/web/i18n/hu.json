@@ -39,6 +39,7 @@
  "osd.hint": "OK szünet · ◀ −10 s · ▶ +30 s · ▲ hang · ▼ felirat · Vissza: kilépés",
  "p.continue": "Folytatás",
  "p.noSound": "Nincs hang?",
+ "p.refused": "Egy második eszköz ({0}) kérte ezt a filmet, és elutasítást kapott; a film csak ide megy: {1}. Ha a tévé fekete marad, az akár maga a tévé is lehetett.",
  "p.original": "Eredeti hang",
  "p.pause": "Szünet",
  "p.stop": "Leállítás",

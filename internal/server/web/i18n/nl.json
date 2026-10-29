@@ -39,6 +39,7 @@
  "osd.hint": "OK pauze · ◀ −10 s · ▶ +30 s · ▲ audio · ▼ ondertitels · Terug stopt",
  "p.continue": "Hervatten",
  "p.noSound": "Geen geluid?",
+ "p.refused": "Een tweede apparaat ({0}) vroeg deze film op en werd geweigerd; hij gaat alleen naar {1}. Blijft de tv zwart, dan kan het de tv zelf zijn geweest.",
  "p.original": "Origineel geluid",
  "p.pause": "Pauze",
  "p.stop": "Stoppen",

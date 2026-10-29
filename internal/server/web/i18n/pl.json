@@ -39,6 +39,7 @@
  "osd.hint": "OK pauza · ◀ −10 s · ▶ +30 s · ▲ dźwięk · ▼ napisy · Wstecz kończy",
  "p.continue": "Wznów",
  "p.noSound": "Brak dźwięku?",
+ "p.refused": "Drugie urządzenie ({0}) zażądało tego filmu i zostało odrzucone; film trafia tylko do {1}. Jeśli telewizor pozostaje czarny, mógł to być on sam.",
  "p.original": "Oryginalny dźwięk",
  "p.pause": "Pauza",
  "p.stop": "Zatrzymaj",

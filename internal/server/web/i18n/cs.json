@@ -39,6 +39,7 @@
  "osd.hint": "OK pauza · ◀ −10 s · ▶ +30 s · ▲ zvuk · ▼ titulky · Zpět ukončí",
  "p.continue": "Pokračovat",
  "p.noSound": "Žádný zvuk?",
+ "p.refused": "Druhé zařízení ({0}) chtělo tento film a bylo odmítnuto; film jde jen na {1}. Pokud televizor zůstane černý, mohl to být on sám.",
  "p.original": "Původní zvuk",
  "p.pause": "Pozastavit",
  "p.stop": "Zastavit",

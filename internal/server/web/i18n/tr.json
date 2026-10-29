@@ -39,6 +39,7 @@
  "osd.hint": "OK duraklat · ◀ −10 s · ▶ +30 s · ▲ ses · ▼ altyazı · Geri bitirir",
  "p.continue": "Devam",
  "p.noSound": "Ses yok mu?",
+ "p.refused": "İkinci bir cihaz ({0}) bu filmi istedi ve reddedildi; film yalnızca {1} adresine gider. TV siyah kalırsa, o cihaz TV'nin kendisi olabilir.",
  "p.original": "Orijinal ses",
  "p.pause": "Duraklat",
  "p.stop": "Durdur",

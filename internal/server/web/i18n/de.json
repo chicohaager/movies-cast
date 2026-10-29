@@ -39,6 +39,7 @@
  "osd.hint": "OK Pause · ◀ −10 s · ▶ +30 s · ▲ Ton · ▼ Untertitel · Zurück beendet",
  "p.continue": "Weiter",
  "p.noSound": "Kein Ton?",
+ "p.refused": "Ein zweites Gerät ({0}) wollte diesen Film abrufen und wurde abgewiesen; er geht nur an {1}. Bleibt der Fernseher schwarz, kann das Gerät der Fernseher selbst gewesen sein.",
  "p.original": "Originalton",
  "p.pause": "Pause",
  "p.stop": "Stopp",

@@ -96,3 +96,22 @@ test("refusal buttons stay while the status poll fails", async ({ page }) => {
   await page.unroute("**/api/play");
   await page.unroute("**/api/status?*");
 });
+
+// A fetch from a second address gets 403; the phone showed a black TV and no
+// reason. The status names both addresses, the player shows them.
+test("a refused stream fetch is shown in the player", async ({ page }) => {
+  await login(page);
+  let refused = true;
+  await page.route("**/api/status?*", (route) => route.fulfill({
+    status: 200, contentType: "application/json",
+    body: JSON.stringify(Object.assign({ state: "PLAYING", ours: true, title: "Nosferatu", positionSeconds: 10, durationSeconds: 100 },
+      refused ? { refusedFrom: "192.0.2.66", streamTo: "192.0.2.10" } : {})),
+  }));
+  await expect(page.locator("#player")).toBeVisible();
+  await expect(page.locator("#p-refused")).toBeVisible();
+  await expect(page.locator("#p-refused")).toContainText("192.0.2.66");
+  await expect(page.locator("#p-refused")).toContainText("192.0.2.10");
+  refused = false;
+  await expect(page.locator("#p-refused")).toBeHidden({ timeout: 5_000 });
+  await page.unroute("**/api/status?*");
+});
