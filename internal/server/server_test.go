@@ -28,6 +28,10 @@ type fakeMovies struct {
 	streams []string
 	// redirectAway sends segment 3 to another server (must not be followed).
 	redirectAway string
+	// library, when set, is a folder with items.json, resume.json and
+	// posters/ that replaces the captured library (the dev server's
+	// MC_DEV_LIBRARY, for the README screenshots).
+	library string
 }
 
 const movieID = "01000000000000000000000000000006"
@@ -42,7 +46,11 @@ func (f *fakeMovies) convertAsked(r *http.Request) bool {
 }
 
 func (f *fakeMovies) handler(t *testing.T) http.Handler {
-	items, err := os.ReadFile("../movies/testdata/items.json")
+	dir := "../movies/testdata"
+	if f.library != "" {
+		dir = f.library
+	}
+	items, err := os.ReadFile(filepath.Join(dir, "items.json"))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -77,6 +85,19 @@ func (f *fakeMovies) handler(t *testing.T) http.Handler {
 		}
 		// Anna (the second account) sees the same library.
 		r.URL.Path = strings.Replace(r.URL.Path, "USERID0001", "USERID0000", 1)
+		if strings.HasPrefix(r.URL.Path, "/movies/Items/") && strings.HasSuffix(r.URL.Path, "/Images/Primary") && f.library != "" {
+			id := strings.TrimSuffix(strings.TrimPrefix(r.URL.Path, "/movies/Items/"), "/Images/Primary")
+			for _, raw := range all.Items {
+				var it struct{ Id, DemoPoster string }
+				if json.Unmarshal(raw, &it) == nil && it.Id == id && it.DemoPoster != "" {
+					w.Header().Set("Content-Type", "image/jpeg")
+					http.ServeFile(w, r, filepath.Join(f.library, "posters", filepath.Base(it.DemoPoster)))
+					return
+				}
+			}
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
 		if strings.HasPrefix(r.URL.Path, "/movies/Items/") && strings.HasSuffix(r.URL.Path, "/Images/Primary") {
 			w.Header().Set("Content-Type", "image/png")
 			b, _ := webFS.ReadFile("web/icon-512.png") // any picture; a poster for the dev server
@@ -89,7 +110,7 @@ func (f *fakeMovies) handler(t *testing.T) http.Handler {
 		case r.URL.Path == "/movies/Users/USERID0000/Items/Resume":
 			// Reversed, so that "keeps Movies' order" differs from "sorted by name"
 			// (the captured answer happens to be alphabetical).
-			b, _ := os.ReadFile("../movies/testdata/resume.json")
+			b, _ := os.ReadFile(filepath.Join(dir, "resume.json"))
 			var res struct{ Items []json.RawMessage }
 			_ = json.Unmarshal(b, &res)
 			for i, j := 0, len(res.Items)-1; i < j; i, j = i+1, j-1 {
@@ -241,7 +262,11 @@ func (f *fakeTV) Status(context.Context, dlna.Renderer) (dlna.Status, error) {
 	if f.down {
 		return dlna.Status{}, context.DeadlineExceeded
 	}
-	return dlna.Status{State: f.state, Position: f.pos, Duration: 2 * time.Hour, TrackURI: f.uri}, nil
+	d := 2 * time.Hour
+	if f.media.Duration > 0 {
+		d = f.media.Duration // a TV reports the file's length
+	}
+	return dlna.Status{State: f.state, Position: f.pos, Duration: d, TrackURI: f.uri}, nil
 }
 func (f *fakeTV) Volume(context.Context, dlna.Renderer) (int, error) {
 	return 0, &dlna.Fault{Code: 606, Description: "Action not authorized"}

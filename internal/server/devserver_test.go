@@ -18,7 +18,7 @@ import (
 // login (Demo or Anna, password "richtig") — without a NAS, a Movies account
 // or a TV. It runs only when asked:
 //
-//	MC_DEV_SERVER=127.0.0.1:18097 go test ./internal/server/ -run TestDevServer -timeout 0 -v
+//	MC_DEV_SERVER=127.0.0.1:18097 go test -count=1 ./internal/server/ -run TestDevServer -timeout 0 -v
 //
 // and stops on Ctrl-C, SIGINT or SIGTERM (e2e/ starts it that way). State files live in a
 // temporary directory and are gone afterwards.
@@ -27,7 +27,9 @@ func TestDevServer(t *testing.T) {
 	if addr == "" {
 		t.Skip("MC_DEV_SERVER not set")
 	}
-	fm := &fakeMovies{}
+	// MC_DEV_LIBRARY=../../docs/screenshots/demo shows public-domain films with
+	// their posters instead of the captured library (README screenshots).
+	fm := &fakeMovies{library: os.Getenv("MC_DEV_LIBRARY")}
 	ms := &http.Server{Handler: fm.handler(t)}
 	mln, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
