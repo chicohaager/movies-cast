@@ -118,6 +118,22 @@ the TV's description answers. Whether a TV wakes this way depends on the TV (LG:
 
 ## Build, test, deploy
 
+`./check.sh` runs everything that must pass: gofmt + vet, the Go tests, the browser tests (`e2e/`) and the
+public-data scan; `build-on-host.sh` and the testers' package run it first (`CHECK_ARGS=--no-e2e` without Node).
+
+### Package for testers
+
+```bash
+deploy/testers/make-package.sh 0.24.0 --push   # image to ghcr.io/chicohaager/movies-cast:0.24.0 (public)
+# -> deploy/testers/out/movies-cast-0.24.0.zip: docker-compose.yml (ZimaOS "Import"), ANLEITUNG.de.html,
+#    GUIDE.en.html (install, test list of 12, report template, removal), SHA256SUMS
+```
+
+Testers import the compose in the ZimaOS dashboard; ZimaOS pulls the image itself, which is why it lives in a
+public registry (a `docker load`ed image is not used by the installer since ZimaOS 1.7.1). The tile shows the
+movies-cast logo as a `data:` URI in the compose (`TestComposeIconIsTheLogo`). The TV app is not in the package.
+
+
 ```bash
 go vet ./... && go test -race ./...
 # the phone page in a browser with a login, against the fake Movies and fake TV of the tests; the TV

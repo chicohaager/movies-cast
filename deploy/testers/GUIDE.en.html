@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="movies-cast {{VERSION}}: installing on ZimaOS, test list and report template for testers">
+<title>movies-cast {{VERSION}} – guide for testers</title>
+<style>
+:root { --bg:#f6f6f8; --card:#fff; --text:#16181d; --muted:#5d6270; --line:#d9dbe1; --accent:#c2410c; --code:#eef0f4; }
+@media (prefers-color-scheme: dark) {
+  :root { --bg:#111318; --card:#1b1e25; --text:#eceef3; --muted:#9aa0ad; --line:#2c303a; --accent:#fb923c; --code:#232733; }
+}
+* { box-sizing: border-box; }
+body { margin:0; background:var(--bg); color:var(--text); font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; }
+main { max-width:860px; margin:0 auto; padding:24px 16px 48px; }
+h1 { font-size:1.6rem; margin:0 0 4px; } h1 small { color:var(--muted); font-weight:400; font-size:1rem; }
+h2 { font-size:1.2rem; margin:32px 0 8px; border-bottom:1px solid var(--line); padding-bottom:4px; }
+.card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px 16px; margin:12px 0; }
+.note { border-left:4px solid var(--accent); }
+code, kbd { background:var(--code); border-radius:4px; padding:1px 5px; font-size:.92em; overflow-wrap:anywhere; }
+table { width:100%; border-collapse:collapse; } th, td { text-align:left; vertical-align:top; padding:8px 6px; border-bottom:1px solid var(--line); }
+th { color:var(--muted); font-weight:600; } td:first-child { width:2.2em; color:var(--muted); }
+ol li, ul li { margin:4px 0; }
+.muted { color:var(--muted); }
+@media print { body { background:#fff; color:#000; } .card { border-color:#999; break-inside:avoid; } a { color:#000; } }
+</style>
+</head>
+<body>
+<main>
+<h1>movies-cast {{VERSION}} <small>Guide for testers</small></h1>
+<p class="muted">Play the films of IceWhale Movies on a DLNA TV, controlled from your phone. The TV plays the original file itself; only if it stays silent is the sound converted, on request.</p>
+
+<div class="card note">
+<strong>Thank you for testing!</strong> This version is a test build. Please report anything that fails or surprises you, using the template at the end. Your report goes to the person who gave you this package.
+</div>
+
+<h2>1. Requirements</h2>
+<ul>
+  <li><strong>ZimaOS</strong> on a machine with an <strong>x86-64</strong> processor (ZimaBoard, ZimaBlade, ZimaCube, PC). ARM devices do not work with this package.</li>
+  <li>IceWhale's <strong>Movies</strong> app installed on the same ZimaOS, with films in its library. movies-cast logs you in to Movies with your ZimaOS account.</li>
+  <li>A <strong>TV with DLNA</strong> (often called "Media Renderer", "DLNA" or "media sharing") on the same network as ZimaOS.</li>
+  <li>A phone or computer with a browser on the same network.</li>
+  <li>Internet on the ZimaOS machine for the installation: the program is downloaded from <code>{{IMAGE}}</code>.</li>
+</ul>
+
+<h2>2. Install</h2>
+<ol>
+  <li>In the ZimaOS dashboard, click <strong>"+"</strong> next to <em>Apps</em>, then the entry for installing a <strong>custom app</strong>.</li>
+  <li>At the top of the dialog choose <strong>"Import"</strong> and select the file <code>docker-compose.yml</code> from this package.</li>
+  <li>Confirm the installation. ZimaOS downloads the program (about 9 MB) and adds the tile <strong>"Movies Cast"</strong> with the movies-cast logo.</li>
+</ol>
+<p class="muted">The app keeps its data in <code>/DATA/AppData/movies-cast/state</code> (logins, TV names, proven formats, your settings).</p>
+
+<h2>3. First steps</h2>
+<ol>
+  <li>Open the tile – or on your phone <code>http://&lt;address-of-your-ZimaOS&gt;:8097</code>. Tip: bookmark it or "Add to Home Screen".</li>
+  <li>Log in with your <strong>ZimaOS account</strong>.</li>
+  <li>Pick the <strong>TV</strong> at the top. The TV has to be switched on.</li>
+  <li>Tap a film → <strong>"Play from the start"</strong> (or "Continue at …").</li>
+  <li>In the footer you can choose the <strong>language</strong> and the <strong>appearance</strong> (System, Light, Dark); both apply to your account on every device.</li>
+</ol>
+
+<div class="card">
+<strong>No TV in the list?</strong>
+<ul>
+  <li>The text below the list says why: no answer to the search, answers without a video device, or all hidden.</li>
+  <li>Under <strong>"Manage TVs"</strong> you can add the TV by its IP address.</li>
+  <li>If ZimaOS runs a firewall, it has to allow <strong>UDP port 1901</strong> from the home network (the TVs' answers to the search).</li>
+  <li>The <strong>"Status"</strong> card shows whether Movies is reachable, when the last search ran and what it found.</li>
+</ul>
+</div>
+
+<div class="card">
+<strong>What else you may see</strong>
+<ul>
+  <li><strong>Format hint</strong>: if the TV does not list the film's format, movies-cast asks first. "Play anyway" tries it – many TVs play more than they list.</li>
+  <li><strong>"No sound?"</strong> in the player restarts the film at the same place with converted sound. This is remembered per TV and audio format; "Original sound" undoes it.</li>
+  <li><strong>"– off"</strong> after a TV's name: it was seen before but does not answer now. "Switch on and play" tries to wake it by Wake-on-LAN (an LG needs "Mobile TV On" enabled).</li>
+</ul>
+</div>
+
+<h2>4. Test list</h2>
+<p>Please go through it in order; for each item "works" or a short description of what happened is enough.</p>
+<table>
+<tr><th>#</th><th>What</th><th>Expected</th></tr>
+<tr><td>1</td><td>Install via "Import"</td><td>tile with the movies-cast logo, a click opens the page</td></tr>
+<tr><td>2</td><td>Log in with the ZimaOS account</td><td>the film list from Movies appears, with posters</td></tr>
+<tr><td>3</td><td>TV in the list</td><td>your TV appears (otherwise note the text below the list)</td></tr>
+<tr><td>4</td><td>Play a film from the start</td><td>it plays on the TV <strong>with sound</strong>, the phone shows "playing" and the time</td></tr>
+<tr><td>5</td><td>Pause and resume</td><td>the TV stops and continues</td></tr>
+<tr><td>6</td><td>+30 s and −30 s, the slider</td><td>the TV jumps to that point</td></tr>
+<tr><td>7</td><td>Stop, then open the film again</td><td>"Continue at …" starts at the remembered point</td></tr>
+<tr><td>8</td><td>A second film in another format (see the line below the title)</td><td>it plays, or a clear hint</td></tr>
+<tr><td>9</td><td>Only if there is no sound: "No sound?"</td><td>the film continues at the same point with sound</td></tr>
+<tr><td>10</td><td>Put the TV in standby, then send a film</td><td>"off" and "Switch on and play"; does it wake up?</td></tr>
+<tr><td>11</td><td>Change language and appearance, log in on a second device</td><td>the same choice there</td></tr>
+<tr><td>12</td><td>Restart ZimaOS</td><td>movies-cast runs again, you are still logged in</td></tr>
+</table>
+
+<h2>5. Report</h2>
+<div class="card">
+<p>Please copy and fill in:</p>
+<pre><code>movies-cast version ("Status" card): 
+ZimaOS version: 
+Device (ZimaBoard/Cube/PC …): 
+TV (make, model): 
+Phone/browser: 
+Test list: 1 … 12 (works / fails + what happened)
+Film where it failed (line below the title, e.g. "HEVC · AC3"): 
+What I expected / what happened: 
+Screenshot: yes/no</code></pre>
+<p class="muted">Please do not send passwords. Screenshots of the "Status" card help a lot.</p>
+</div>
+
+<h2>6. Remove</h2>
+<p>Uninstall the tile in the ZimaOS dashboard. <strong>Note:</strong> ZimaOS then also deletes <code>/DATA/AppData/movies-cast</code> – all logins and settings of movies-cast. Your films and Movies itself are not touched.</p>
+
+<h2>7. Known limits of this version</h2>
+<ul>
+  <li>The <strong>TV app</strong> for LG webOS is not part of this package; this test is about the DLNA path.</li>
+  <li>The <strong>translations</strong> other than German and English were made by an AI and have not been read by a native speaker yet – corrections are welcome.</li>
+  <li>Playback has been checked with ZimaOS 1.8.0 and an LG OLED55B9. A Samsung UE50MU6179 was found; whether it plays is still open – reports about other TVs are especially valuable.</li>
+</ul>
+<p class="muted">movies-cast {{VERSION}} · image <code>{{IMAGE}}</code></p>
+</main>
+</body>
+</html>
