@@ -38,7 +38,7 @@ pre { white-space:pre-wrap; overflow-wrap:anywhere; margin:0; }
 <h2>1. Requirements</h2>
 <ul>
   <li><strong>ZimaOS</strong> on a machine with an <strong>x86-64</strong> processor (ZimaBoard, ZimaBlade, ZimaCube, PC). ARM devices do not work with this package.</li>
-  <li>IceWhale's <strong>Movies</strong> app installed on the same ZimaOS, with films in its library. movies-cast logs you in to Movies with your ZimaOS account.</li>
+  <li>IceWhale's <strong>Movies</strong> app installed on the same ZimaOS, with at least one library of films. movies-cast logs you in to Movies with your ZimaOS account. <strong>Movies is a beta for now</strong> (module <code>zimaos-movies</code>, version 0.3.0) and is neither in the App Store nor in ZimaOS' module list. If you do not have Movies, contact the person who gave you this package.</li>
   <li>A <strong>TV with DLNA</strong> (often called "Media Renderer", "DLNA" or "media sharing") on the same network as ZimaOS.</li>
   <li>A phone or computer with a browser on the same network.</li>
   <li>Internet on the ZimaOS machine for the installation: the program is downloaded from <code>{{IMAGE}}</code>.</li>
@@ -46,7 +46,7 @@ pre { white-space:pre-wrap; overflow-wrap:anywhere; margin:0; }
 
 <h2>2. Install</h2>
 <ol>
-  <li>In the ZimaOS dashboard, click <strong>"+"</strong> next to <em>Apps</em>, then the entry for installing a <strong>custom app</strong>.</li>
+  <li>In the ZimaOS dashboard, click <strong>"+"</strong> next to <em>Apps</em>, then the entry for installing a <strong>custom app</strong>. The same button is also on the start page of the <em>App Store</em>.</li>
   <li>At the top of the dialog choose <strong>"Import"</strong> and select the file <code>docker-compose.yml</code> from this package.</li>
   <li>Confirm the installation. ZimaOS downloads the program (about 9 MB) and adds the tile <strong>"Movies Cast"</strong> with the movies-cast logo.</li>
 </ol>
