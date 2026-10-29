@@ -1,6 +1,6 @@
 {
-  "name": "Movies Cast",
-  "short_name": "Movies",
+  "name": "Movies-Cast",
+  "short_name": "Movies-Cast",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#111318",

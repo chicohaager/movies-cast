@@ -54,8 +54,8 @@ x-casaos:
   developer: movies-cast
   category: Media
   title:
-    en_us: Movies Cast
-    de_de: Movies auf dem Fernseher
+    en_us: Movies-Cast
+    de_de: Movies-Cast
   tagline:
     en_us: Play IceWhale Movies on your DLNA TV, controlled from the phone
     de_de: IceWhale-Movies auf dem DLNA-Fernseher abspielen, vom Handy aus
