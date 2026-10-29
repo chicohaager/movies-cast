@@ -80,3 +80,5 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
 .foot label { display: inline-flex; align-items: center; gap: 8px; margin: 0; }
 .foot select { width: auto; margin: 0; }
 .notice { background: var(--card, #fff); color: var(--text); border-bottom: 1px solid var(--line); padding: 10px 16px; font-weight: 600; }
+.player .sound { margin: 10px 0 0; text-align: right; }
+button.link { background: none; border: none; padding: 4px 0; color: var(--muted, var(--text)); text-decoration: underline; font-weight: 500; width: auto; }

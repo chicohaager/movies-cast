@@ -41,6 +41,7 @@ type Finder struct {
 	lastLoc map[string]string // host → last description URL SSDP gave for it
 	conn    net.PacketConn    // SSDP socket, open for good when Port is fixed
 	extra   []string          // hosts added in the app (SetExtraHosts)
+	known   []string          // description URLs of TVs seen before (SetKnown)
 	last    SearchStats
 }
 
@@ -71,6 +72,17 @@ func (f *Finder) SetExtraHosts(hosts []string) {
 	defer f.mu.Unlock()
 	f.extra = append([]string(nil), hosts...)
 	f.at = time.Time{}
+}
+
+// SetKnown sets the description URLs of TVs seen before. A TV that misses
+// the search is asked there directly: the Samsung UE50MU6179 answered its
+// description URL in 0.2–0.5 s while a search a minute before had not found
+// it (measured 2026-10-28). A known URL that does not answer is no error —
+// that TV is off.
+func (f *Finder) SetKnown(locs []string) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.known = append([]string(nil), locs...)
 }
 
 // hosts is RENDERERS hosts plus app hosts. Caller holds f.mu.
@@ -199,23 +211,35 @@ func (f *Finder) Find(_ context.Context, refresh bool) ([]Renderer, error) {
 		}
 	}
 	type result struct {
-		r   Renderer
-		ok  bool
-		err error
+		r     Renderer
+		ok    bool
+		err   error
+		known bool
 	}
 	seen := map[string]bool{}
+	fromSearch := map[string]bool{}
+	for _, loc := range locs {
+		fromSearch[hostOf(loc)] = true
+	}
+	var knownLocs []string
+	for _, loc := range f.known {
+		if !fromSearch[hostOf(loc)] {
+			knownLocs = append(knownLocs, loc)
+		}
+	}
 	results := make(chan result)
 	n := 0
-	for _, loc := range locs {
+	for i, loc := range append(locs, knownLocs...) {
 		if seen[loc] {
 			continue
 		}
 		seen[loc] = true
 		n++
+		known := i >= len(locs)
 		go func(loc string) {
 			r, err := FetchRenderer(ctx, f.HTTP, loc)
 			if err != nil {
-				results <- result{err: err}
+				results <- result{err: err, known: known}
 				return
 			}
 			video, verr := f.video(ctx, r)
@@ -232,6 +256,7 @@ func (f *Finder) Find(_ context.Context, refresh bool) ([]Renderer, error) {
 	for range n {
 		res := <-results
 		switch {
+		case res.err != nil && res.known: // off
 		case res.err != nil:
 			errs = append(errs, res.err)
 		case res.ok:

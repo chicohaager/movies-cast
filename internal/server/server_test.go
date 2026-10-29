@@ -26,10 +26,20 @@ type fakeMovies struct {
 	mu      sync.Mutex
 	reports []string
 	streams []string
+	// redirectAway sends segment 3 to another server (must not be followed).
+	redirectAway string
 }
 
 const movieID = "01000000000000000000000000000006"
 const fileBytes = "0123456789abcdefghij"
+
+// convertAsked tells a conversion request (AllowAudioStreamCopy false) from
+// the subtitle probe; the body is put back for the other branches.
+func (f *fakeMovies) convertAsked(r *http.Request) bool {
+	b, _ := io.ReadAll(r.Body)
+	r.Body = io.NopCloser(strings.NewReader(string(b)))
+	return strings.Contains(string(b), `"AllowAudioStreamCopy":false`)
+}
 
 func (f *fakeMovies) handler(t *testing.T) http.Handler {
 	items, err := os.ReadFile("../movies/testdata/items.json")
@@ -104,6 +114,25 @@ func (f *fakeMovies) handler(t *testing.T) http.Handler {
 			f.streams = append(f.streams, r.Method+" "+r.URL.RequestURI()+" range="+r.Header.Get("Range"))
 			f.mu.Unlock()
 			http.ServeContent(w, r, "movie.mkv", time.Time{}, strings.NewReader(fileBytes))
+		case strings.HasSuffix(r.URL.Path, "/PlaybackInfo") && r.Method == http.MethodPost && f.convertAsked(r):
+			// A conversion (convert.go): HLS like Movies 0.3.0, the token in the URL.
+			_, _ = io.WriteString(w, `{"PlaySessionId":"ps-conv","MediaSources":[{"TranscodingUrl":"/movies/Videos/`+movieID+`/master.m3u8?MediaSourceId=x&PlaySessionId=ps-conv&api_key=tok-geheim"}]}`)
+		case r.URL.Path == "/movies/Videos/"+movieID+"/master.m3u8":
+			_, _ = io.WriteString(w, "#EXTM3U\n#EXT-X-STREAM-INF:BANDWIDTH=1\nmain.m3u8?api_key=tok-geheim\n")
+		case r.URL.Path == "/movies/Videos/"+movieID+"/main.m3u8":
+			_, _ = io.WriteString(w, "#EXTM3U\n#EXT-X-TARGETDURATION:5\n#EXTINF:5.000000, nodesc\nhls1/main/0.ts?api_key=tok-geheim\n#EXTINF:5.000000, nodesc\nhls1/main/1.ts?api_key=tok-geheim\n#EXTINF:5.000000, nodesc\nhls1/main/2.ts?api_key=tok-geheim\n#EXTINF:3.5, nodesc\nhls1/main/3.ts?api_key=tok-geheim\n#EXT-X-ENDLIST\n")
+		case strings.HasPrefix(r.URL.Path, "/movies/Videos/"+movieID+"/hls1/main/"):
+			n := strings.TrimSuffix(strings.TrimPrefix(r.URL.Path, "/movies/Videos/"+movieID+"/hls1/main/"), ".ts")
+			if n >= "2" && r.URL.Query().Get("gen") == "" {
+				// Like Movies 0.3.0 after a jump: 307 to the same path with more parameters.
+				http.Redirect(w, r, r.URL.Path+"?"+r.URL.RawQuery+"&gen=1", http.StatusTemporaryRedirect)
+				return
+			}
+			if n == "3" && r.URL.Query().Get("evil") == "" && f.redirectAway != "" {
+				http.Redirect(w, r, f.redirectAway, http.StatusTemporaryRedirect)
+				return
+			}
+			_, _ = io.WriteString(w, "SEG"+n)
 		case strings.HasSuffix(r.URL.Path, "/PlaybackInfo"):
 			// Movies starts a transcode on every PlaybackInfo; movies-cast must not ask.
 			f.mu.Lock()
@@ -131,6 +160,8 @@ type fakeTV struct {
 	down    bool
 	sink    string // GetProtocolInfo sink; empty = accepts everything
 	playErr error  // returned by Play (the LG did not answer Play, 2026-10-28)
+	setErr  error  // returned by SetURI (a TV that is off: a dial error)
+	media   dlna.Media
 	mu      sync.Mutex
 	uri     string
 	state   string
@@ -142,7 +173,12 @@ type fakeTV struct {
 func (f *fakeTV) rec(c string) { f.mu.Lock(); f.calls = append(f.calls, c); f.mu.Unlock() }
 func (f *fakeTV) SetURI(_ context.Context, _ dlna.Renderer, m dlna.Media) error {
 	f.mu.Lock()
-	f.uri, f.state = m.URL, "STOPPED"
+	if f.setErr != nil {
+		err := f.setErr
+		f.mu.Unlock()
+		return err
+	}
+	f.uri, f.state, f.media = m.URL, "STOPPED", m
 	f.mu.Unlock()
 	f.rec("SetURI")
 	return nil

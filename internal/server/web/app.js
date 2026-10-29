@@ -135,7 +135,11 @@ async function loadTVs(refresh) {
       showError(t("tv.noneHint"));
       return;
     }
-    for (const tv of tvs) sel.append(new Option(`${tv.name} (${tv.host})`, tv.id));
+    state.tvs = tvs;
+    for (const tv of tvs) {
+      // "off" before the address: a narrow select cuts the end of the text.
+      sel.append(new Option(`${tv.off ? t("tv.off", tv.name) : tv.name} (${tv.host})`, tv.id));
+    }
     if (tvs.some((t) => t.id === state.tv)) sel.value = state.tv;
     state.tv = sel.value;
     localSet("tv", state.tv);
@@ -366,8 +370,20 @@ $("detail").addEventListener("close", async () => {
 // film's container or HEVC; the TV may still play it (the LG lists no HEVC
 // and plays it), so the user decides.
 async function play(req) {
+  // A TV that answered no search but was seen before is woken first (Wake-on-LAN).
+  const tv = (state.tvs || []).find((x) => x.id === req.renderer);
+  if (tv && tv.off && !req.woke) {
+    if (!(await wake(tv))) return;
+    req = { ...req, woke: true };
+  }
   try {
     const r = await api("/api/play", req);
+    if (r && r.converted) {
+      // Remembered for this TV and sound format; "Original sound" in the player undoes it.
+      showNotice(t("conv.on"));
+      pollOnce();
+      return;
+    }
     if (r && r.viaApp) {
       // The TV's movies-cast app opens the film itself; the TV's remote controls it.
       showNotice(t("play.viaApp", r.title));
@@ -381,13 +397,41 @@ async function play(req) {
     const canForce = Array.isArray(d.unlisted) && !req.force && !req.app;
     // DLNA stays the way; the TV's movies-cast app is offered only when it is open there.
     const canApp = d.appAvailable === true && !req.app;
-    if (canForce || canApp) {
+    // Off or in standby: switch it on by Wake-on-LAN and send the film again.
+    const canWake = d.wake === true && !req.woke;
+    // Any other refusal: Movies can convert the sound (the picture stays as it is).
+    const canConvert = !canWake && !req.convert && !req.app && err.status !== 401;
+    if (canForce || canApp || canWake || canConvert) {
       $("force-row").hidden = false;
       $("force").hidden = !canForce;
       $("force").onclick = () => { showError(""); play({ ...req, force: true }); };
       $("inapp").hidden = !canApp;
       $("inapp").onclick = () => { showError(""); play({ ...req, app: true }); };
+      $("convert").hidden = !canConvert;
+      $("convert").onclick = () => { showError(""); play({ ...req, convert: true, remember: true }); };
+      $("wake").hidden = !canWake;
+      $("wake").onclick = async () => {
+        showError("");
+        const name = (tv && tv.name) || $("tv").selectedOptions[0]?.textContent || "";
+        if (await wake({ id: req.renderer, name })) play({ ...req, woke: true });
+      };
     }
+  }
+}
+
+// wake sends Wake-on-LAN and waits (up to a minute on the server) until the TV answers.
+async function wake(tv) {
+  showNotice(t("wake.waking", tv.name));
+  try {
+    await api("/api/tvs/wake", { id: tv.id });
+    showNotice("");
+    tv.off = false;
+    loadTVs(false);
+    return true;
+  } catch (err) {
+    showNotice("");
+    showError(err.message);
+    return false;
   }
 }
 
@@ -405,6 +449,16 @@ $("p-toggle").addEventListener("click", () => {
   control(state.status && state.status.state === "PLAYING" ? "pause" : "play");
 });
 $("p-stop").addEventListener("click", () => control("stop"));
+// "No sound?" restarts the film here with converted sound; "Original sound"
+// goes back. Either choice is remembered for this TV and sound format.
+$("p-sound").addEventListener("click", () => {
+  if (!state.status || !state.status.movie) return;
+  const at = state.status.positionSeconds || 0;
+  const req = { renderer: state.tv, movie: state.status.movie, at, remember: true };
+  if (state.converted) req.original = true, req.force = true; else req.convert = true;
+  showError("");
+  play(req);
+});
 for (const b of document.querySelectorAll("[data-skip]")) {
   b.addEventListener("click", () => {
     if (!state.status) return;
@@ -440,6 +494,9 @@ $("pair-form").addEventListener("submit", async (ev) => {
 
 async function pollOnce() {
   if (!state.tv) return;
+  // An off TV answers nothing; it is listed as off, not reported as an error.
+  const sel = (state.tvs || []).find((x) => x.id === state.tv);
+  if (sel && sel.off) { $("player").hidden = true; return; }
   try {
     const st = await api(`/api/status?renderer=${encodeURIComponent(state.tv)}`);
     state.status = st;
@@ -460,6 +517,8 @@ async function pollOnce() {
     }
     $("p-dur").textContent = hms(st.durationSeconds);
     $("p-volrow").hidden = typeof st.volume !== "number";
+    state.converted = st.converted === true;
+    $("p-sound").textContent = state.converted ? t("p.original") : t("p.noSound");
     if (typeof st.volume === "number" && document.activeElement !== $("p-vol")) $("p-vol").value = st.volume;
   } catch (err) {
     // A TV that is switched off answers nothing; show it, keep polling.

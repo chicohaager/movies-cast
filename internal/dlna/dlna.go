@@ -31,11 +31,6 @@ const (
 	svcRenderingControl  = "urn:schemas-upnp-org:service:RenderingControl:1"
 	svcConnectionManager = "urn:schemas-upnp-org:service:ConnectionManager:1"
 	ssdpAddr             = "239.255.255.250:1900"
-	soapTimeout          = 6 * time.Second
-	// The LG answers Play only once it has opened the file: 1.7–4.0 s for
-	// 3–15 MB test clips from a LAN server (measured 2026-10-28). A 6 s limit
-	// gave up on large films, and giving up revokes the URL under the TV.
-	playTimeout          = 30 * time.Second
 	descriptionMaxBytes  = 1 << 20
 	soapResponseMaxBytes = 1 << 20
 )
@@ -343,8 +338,20 @@ type Client struct {
 	locks map[string]*sync.Mutex
 }
 
+// Timeouts per SOAP call, set in send by context. Variables for the tests.
+var (
+	soapTimeout = 6 * time.Second
+	// The LG answers Play only once it has opened the file: 1.7–4.0 s for
+	// 3–15 MB test clips from a LAN server (measured 2026-10-28). A 6 s limit
+	// gave up on large films, and giving up revokes the URL under the TV.
+	playTimeout = 30 * time.Second
+)
+
+// NewClient has no overall client timeout: it would cut every call at its
+// value, Play's 30 s included (0.18 set http.Client.Timeout to 6 s, and a
+// converted Play was cut after 6.2 s on the LG, 2026-10-28).
 func NewClient() *Client {
-	return &Client{HTTP: &http.Client{Timeout: soapTimeout}, locks: map[string]*sync.Mutex{}}
+	return &Client{HTTP: &http.Client{}, locks: map[string]*sync.Mutex{}}
 }
 
 func (c *Client) lock(controlURL string) *sync.Mutex {
@@ -455,6 +462,20 @@ type Media struct {
 	MimeType string // e.g. video/x-matroska
 	Size     int64
 	Duration time.Duration
+	// Converted is a stream joined from Movies' conversion segments: no size,
+	// no byte ranges; the TV may ask for a start time (TimeSeekRange).
+	Converted bool
+}
+
+// convFlags marks a converted stream: time-seekable (OP=10), converted (CI=1).
+const convFlags = "DLNA.ORG_OP=10;DLNA.ORG_CI=1;DLNA.ORG_FLAGS=01700000000000000000000000000000"
+
+// Flags returns the DLNA flags for m, for the DIDL and the stream's contentFeatures.
+func (m Media) Flags() string {
+	if m.Converted {
+		return convFlags
+	}
+	return dlnaFlags
 }
 
 // dlnaFlags marks the resource as byte-seekable (OP=01). Measured on the LG
@@ -472,7 +493,7 @@ func DIDL(m Media) string {
 	return `<DIDL-Lite xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/">` +
 		`<item id="0" parentID="-1" restricted="1"><dc:title>` + xmlEscape(m.Title) + `</dc:title>` +
 		`<upnp:class>object.item.videoItem.movie</upnp:class>` +
-		`<res protocolInfo="http-get:*:` + xmlEscape(mime) + `:` + dlnaFlags + `"` + resAttrs(m) + `>` + xmlEscape(m.URL) + `</res></item></DIDL-Lite>`
+		`<res protocolInfo="http-get:*:` + xmlEscape(mime) + `:` + m.Flags() + `"` + resAttrs(m) + `>` + xmlEscape(m.URL) + `</res></item></DIDL-Lite>`
 }
 
 func resAttrs(m Media) string {

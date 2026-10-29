@@ -21,6 +21,7 @@ import (
 	"net"
 	"net/http"
 	"net/url"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -96,7 +97,9 @@ type Server struct {
 	// LG: no answer to Play, "file not recognised" on screen, twice on
 	// 2026-10-28); a later proven play clears the entry.
 	failed map[string]bool
-	prefs  tvPrefs // names, hidden TVs, TVs added by address (tvs.go)
+	// convert holds TV|audio|codec keys whose sound is converted (convert.go).
+	convert map[string]bool
+	prefs   tvPrefs // names, hidden TVs, TVs added by address (tvs.go)
 	// strings is /strings.js, built once from web/i18n/*.json (strings.go).
 	strings []byte
 
@@ -104,6 +107,13 @@ type Server struct {
 	pairings   map[string]*pairing    // TV-app pairings by secret ID
 
 	browserSilence time.Duration
+
+	// Wake-on-LAN (tvs.go); replaced in tests.
+	macOf     func(host string) string
+	wake      func(ctx context.Context, mac, host string) error
+	alive     func(ctx context.Context, x dlna.Renderer) bool
+	wakeWait  time.Duration
+	wakeEvery time.Duration
 }
 
 type session struct {
@@ -136,6 +146,13 @@ type play struct {
 	subsLater bool      // the item listed none; ask PlaybackInfo when subtitles are wanted
 	lastBeat  time.Time // last progress from the TV app
 	paused    bool
+	// A converted play (convert.go): the stream starts at segment segIdx,
+	// offset is the film time there; the TV counts from 0 at that point.
+	conv         *movies.Conversion
+	segIdx       int
+	offset       time.Duration
+	mime         string
+	restartUntil time.Time // a converted seek re-sends the film; STOPPED until then is expected
 }
 
 func New(cfg Config, mc *movies.Client, tv Transport, r Renderers) *Server {
@@ -160,8 +177,16 @@ func New(cfg Config, mc *movies.Client, tv Transport, r Renderers) *Server {
 		probedSubs:     map[string]probedSubs{},
 		proven:         map[string]bool{},
 		failed:         map[string]bool{},
+		convert:        map[string]bool{},
 		prefs:          tvPrefs{Labels: map[string]string{}, Hidden: map[string]bool{}},
+		macOf:          dlna.MACOf,
+		wake: func(ctx context.Context, mac, host string) error {
+			return dlna.Wake(ctx, mac, dlna.WakeTargets(host))
+		},
+		wakeWait:  60 * time.Second,
+		wakeEvery: 3 * time.Second,
 	}
+	srv.alive = descAlive(&http.Client{CheckRedirect: func(*http.Request, []*http.Request) error { return http.ErrUseLastResponse }})
 	if err := srv.loadSessions(); err != nil {
 		log.Printf("state: %v (starting without stored sessions)", err)
 	}
@@ -207,6 +232,7 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /api/tvs", s.withSession(s.listTVs))
 	mux.HandleFunc("POST /api/tvs", s.withSession(s.setTV))
 	mux.HandleFunc("POST /api/tvs/hosts", s.withSession(s.setTVHost))
+	mux.HandleFunc("POST /api/tvs/wake", s.withSession(s.wakeTV))
 	mux.HandleFunc("GET /api/system", s.withSession(s.system))
 	mux.HandleFunc("POST /api/play", s.withSession(s.startPlay))
 	mux.HandleFunc("POST /api/control", s.withSession(s.control))
@@ -338,6 +364,10 @@ var errorsEn = map[string]string{
 	"Name zu lang (höchstens 40 Zeichen)":                         "name too long (40 characters at most)",
 	"Speichern fehlgeschlagen":                                    "saving failed",
 	"Adresse ungültig (IPv4-Adresse im eigenen Netz)":             "invalid address (an IPv4 address on your own network)",
+	"Für diesen Fernseher ist keine MAC-Adresse bekannt":          "no MAC address is known for this TV",
+	"Weckpaket konnte nicht gesendet werden":                      "the wake-up packet could not be sent",
+	"Der Fernseher ist aus oder nicht erreichbar":                 "the TV is off or not reachable",
+	"Movies konnte den Film nicht umwandeln":                      "Movies could not convert the film",
 }
 
 // english translates msg; a renderer suffix " (UPnP-Fehler N)" from faultCode
@@ -515,6 +545,19 @@ func (s *Server) loginFailed(ip string) {
 	s.loginFails[ip] = append(s.recentFailsLocked(ip), s.now())
 }
 
+// unreachable is a connection that never reached the TV (off, standby, gone),
+// as opposed to a TV that answered with an error or did not answer in time.
+func unreachable(err error) bool {
+	var op *net.OpError
+	return errors.As(err, &op) && op.Op == "dial"
+}
+
+func (s *Server) canWake(id string) bool {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	return s.prefs.Known[id].MAC != ""
+}
+
 // faultCode turns a renderer error into a short suffix for the user. The
 // renderer's own text stays in the log: it comes from whatever device
 // answered SSDP and is not shown to the browser.
@@ -584,6 +627,7 @@ type rendererOut struct {
 	Name  string `json:"name"`
 	Model string `json:"model"`
 	Host  string `json:"host"`
+	Off   bool   `json:"off,omitempty"` // did not answer; known, can be woken
 }
 
 func (s *Server) listRenderers(w http.ResponseWriter, r *http.Request, _ string, _ *session) {
@@ -591,9 +635,12 @@ func (s *Server) listRenderers(w http.ResponseWriter, r *http.Request, _ string,
 	if err != nil {
 		log.Printf("renderers: %v", err)
 	}
+	s.remember(rs)
 	s.mu.Lock()
 	out := make([]rendererOut, 0, len(rs))
+	found := map[string]bool{}
 	for _, x := range rs {
+		found[x.ID] = true
 		if s.prefs.Hidden[x.ID] {
 			continue
 		}
@@ -603,7 +650,19 @@ func (s *Server) listRenderers(w http.ResponseWriter, r *http.Request, _ string,
 		}
 		out = append(out, rendererOut{ID: x.ID, Name: name, Model: x.Model, Host: x.Host()})
 	}
+	// TVs seen before that did not answer now: offered when they can be woken.
+	for id, k := range s.prefs.Known {
+		if found[id] || s.prefs.Hidden[id] || k.MAC == "" {
+			continue
+		}
+		name := k.Name
+		if l := s.prefs.Labels[id]; l != "" {
+			name = l
+		}
+		out = append(out, rendererOut{ID: id, Name: name, Model: k.Model, Host: k.Host, Off: true})
+	}
 	s.mu.Unlock()
+	sort.SliceStable(out, func(i, j int) bool { return !out[i].Off && out[j].Off })
 	if len(out) == 0 {
 		s.emptyTVList(w, len(rs))
 		return
@@ -647,6 +706,12 @@ func (s *Server) startPlay(w http.ResponseWriter, r *http.Request, sid string, s
 		Resume   bool   `json:"resume"`
 		Force    bool   `json:"force"` // send although the TV does not list the format
 		App      bool   `json:"app"`   // open the film in the TV's movies-cast app instead of DLNA
+		// Convert sends the sound converted (convert.go), Original the file as
+		// it is; Remember stores the choice for this TV and audio format.
+		Convert  bool    `json:"convert"`
+		Original bool    `json:"original"`
+		Remember bool    `json:"remember"`
+		At       float64 `json:"at"` // start here (seconds), for "No sound?" during a play
 	}
 	if err := readJSON(r, &in); err != nil || in.Renderer == "" || in.Movie == "" {
 		fail(w, http.StatusBadRequest, "Film und Fernseher angeben")
@@ -654,7 +719,9 @@ func (s *Server) startPlay(w http.ResponseWriter, r *http.Request, sid string, s
 	}
 	tv, ok := s.renderer(r.Context(), in.Renderer)
 	if !ok {
-		fail(w, http.StatusNotFound, "Fernseher nicht gefunden")
+		b := errorBody("Fernseher nicht gefunden")
+		b["wake"] = s.canWake(in.Renderer)
+		writeJSON(w, http.StatusNotFound, b)
 		return
 	}
 	m, err := s.movies.Movie(r.Context(), sess.ms, in.Movie)
@@ -670,6 +737,14 @@ func (s *Server) startPlay(w http.ResponseWriter, r *http.Request, sid string, s
 			return
 		}
 		fail(w, http.StatusConflict, "Die movies-cast-App auf diesem Fernseher ist nicht geöffnet")
+		return
+	}
+	if s.wantConvert(tv, m, in.Convert, in.Original, in.Remember) {
+		start := time.Duration(in.At * float64(time.Second))
+		if start == 0 && in.Resume {
+			start = time.Duration(m.Resume) * time.Second
+		}
+		s.startConverted(w, r, sess, tv, m, start)
 		return
 	}
 	appOpen := s.appOpen(tv)
@@ -732,6 +807,13 @@ func (s *Server) startPlay(w http.ResponseWriter, r *http.Request, sid string, s
 	if err := s.tv.SetURI(ctx, tv, media); err != nil {
 		s.abortPlay(p.id)
 		log.Printf("SetURI %s: %v", tv.Name, err)
+		if unreachable(err) {
+			// Off or in standby: says nothing about the format.
+			b := errorBody("Der Fernseher ist aus oder nicht erreichbar")
+			b["wake"] = s.canWake(tv.ID)
+			writeJSON(w, http.StatusBadGateway, b)
+			return
+		}
 		s.markFailed(key)
 		b := errorBody("Fernseher hat den Film abgelehnt" + faultCode(err))
 		b["appAvailable"] = appOpen
@@ -751,6 +833,9 @@ func (s *Server) startPlay(w http.ResponseWriter, r *http.Request, sid string, s
 	var resume time.Duration
 	if in.Resume && m.Resume > 0 {
 		resume = time.Duration(m.Resume) * time.Second
+	}
+	if in.At > 0 { // back from converted sound, at the same place
+		resume = time.Duration(in.At * float64(time.Second))
 	}
 	// Stop, logout or another play on this TV may have revoked p while
 	// SetURI and Play were on the wire; then no watcher for a dead play.
@@ -825,6 +910,9 @@ func (s *Server) watch(ctx context.Context, p *play, resume time.Duration) {
 	state := func(pos time.Duration, paused bool) movies.PlayState {
 		return movies.PlayState{ItemID: p.movie.ID, PlaySessionID: p.psID, Position: pos, Paused: paused}
 	}
+	if p.conv != nil {
+		resume = p.offset // the stream starts there; no seek
+	}
 	bg := context.WithoutCancel(ctx)
 	if err := s.movies.ReportStart(bg, p.sess.ms, state(resume, false)); err != nil {
 		log.Printf("report start: %v", err)
@@ -874,14 +962,17 @@ func (s *Server) watch(ctx context.Context, p *play, resume time.Duration) {
 		lastOK = s.now()
 		mine := strings.Contains(st.TrackURI, "/s/"+p.id+"/")
 		s.mu.Lock()
+		restarting := s.now().Before(p.restartUntil)
+		raw := st.Position // the TV counts from the start of the stream it got
+		st.Position += p.offset
 		if mine {
 			p.lastState = st.State
-			if st.Position > 0 {
+			if st.Position > p.offset {
 				p.lastPos = st.Position
 			}
 			if st.State == "PLAYING" {
 				p.sawPlay = true
-				if k := formatKey(p.tv, p.ext, p.movie.VideoCodec); st.Position >= provenAfter && !s.proven[k] {
+				if k := formatKey(p.tv, p.ext, p.movie.VideoCodec); raw >= provenAfter && !s.proven[k] {
 					s.proven[k] = true
 					delete(s.failed, k)
 					s.saveProvenLocked()
@@ -893,11 +984,14 @@ func (s *Server) watch(ctx context.Context, p *play, resume time.Duration) {
 
 		switch {
 		case !mine && sawPlay, // the TV plays something else now
-			mine && sawPlay && (st.State == "STOPPED" || st.State == "NO_MEDIA_PRESENT"):
+			mine && sawPlay && !restarting && (st.State == "STOPPED" || st.State == "NO_MEDIA_PRESENT"):
 			s.abortPlay(p.id)
 			return
 		}
 		// The LG ignores Seek until it plays; seek once, right after PLAYING.
+		if !seeked && p.conv != nil {
+			seeked = true
+		}
 		if !seeked && mine && st.State == "PLAYING" {
 			seeked = true
 			if err := s.tv.Seek(ctx, p.tv, resume); err != nil {
@@ -937,7 +1031,15 @@ func (s *Server) control(w http.ResponseWriter, r *http.Request, _ string, sess 
 	case "play":
 		err = s.tv.Play(ctx, tv)
 	case "seek":
-		err = s.tv.Seek(ctx, tv, time.Duration(in.Seconds*float64(time.Second)))
+		to := time.Duration(in.Seconds * float64(time.Second))
+		s.mu.Lock()
+		p := s.byTV[tv.ID]
+		s.mu.Unlock()
+		if p != nil && p.conv != nil {
+			err = s.seekConverted(ctx, p, to)
+		} else {
+			err = s.tv.Seek(ctx, tv, to)
+		}
 	case "volume":
 		err = s.tv.SetVolume(ctx, tv, in.Volume)
 	case "stop":
@@ -981,6 +1083,11 @@ func (s *Server) status(w http.ResponseWriter, r *http.Request, _ string, _ *ses
 		out["ours"] = true
 		out["title"] = p.movie.Name
 		out["movie"] = p.movie.ID
+		out["converted"] = p.conv != nil
+		if p.conv != nil {
+			out["positionSeconds"] = int64((st.Position + p.offset) / time.Second)
+			out["durationSeconds"] = int64(p.conv.Total() / time.Second)
+		}
 	}
 	s.mu.Unlock()
 	if v, err := s.tv.Volume(r.Context(), tv); err == nil {
@@ -1006,6 +1113,10 @@ func (s *Server) serveStream(w http.ResponseWriter, r *http.Request) {
 	s.mu.Unlock()
 	if p == nil {
 		http.NotFound(w, r)
+		return
+	}
+	if p.conv != nil {
+		s.serveConverted(w, r, p)
 		return
 	}
 	// A revoked play also cuts a transfer that is already running.

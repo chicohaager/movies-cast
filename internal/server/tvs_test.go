@@ -17,11 +17,13 @@ type fakeFinder struct {
 	rs    []dlna.Renderer
 	stats dlna.SearchStats
 	extra []string
+	known []string
 }
 
 func (f *fakeFinder) Find(context.Context, bool) ([]dlna.Renderer, error) { return f.rs, nil }
 func (f *fakeFinder) LastSearch() dlna.SearchStats                        { return f.stats }
 func (f *fakeFinder) SetExtraHosts(h []string)                            { f.extra = h }
+func (f *fakeFinder) SetKnown(l []string)                                 { f.known = l }
 
 var samsung = dlna.Renderer{ID: "uuid:samsung", Name: "[TV] Samsung 6 Series (50)", Location: "http://127.0.0.2:9197/dmr"}
 

@@ -30,12 +30,36 @@ type tvPrefs struct {
 	Labels map[string]string `json:"labels"` // renderer ID → name shown
 	Hidden map[string]bool   `json:"hidden"`
 	Hosts  []string          `json:"hosts"` // added by address in the app
+	// Known holds every TV seen while it was on, with the MAC address the
+	// ARP table had for it: an off TV answers no search, so this is how the
+	// list can still offer it and wake it (Wake-on-LAN).
+	Known map[string]knownTV `json:"known,omitempty"`
+}
+
+type knownTV struct {
+	Name     string `json:"name"`
+	Model    string `json:"model,omitempty"`
+	Host     string `json:"host"`
+	MAC      string `json:"mac,omitempty"`
+	Location string `json:"location,omitempty"` // description URL, asked when a search misses the TV
 }
 
 // finderInfo is what the real dlna.Finder offers beyond Find.
 type finderInfo interface {
 	LastSearch() dlna.SearchStats
 	SetExtraHosts([]string)
+	SetKnown([]string)
+}
+
+// knownLocationsLocked lists the description URLs of the known TVs. Caller holds s.mu.
+func (s *Server) knownLocationsLocked() []string {
+	var out []string
+	for _, k := range s.prefs.Known {
+		if k.Location != "" {
+			out = append(out, k.Location)
+		}
+	}
+	return out
 }
 
 func (s *Server) tvsFile() string {
@@ -69,9 +93,15 @@ func (s *Server) loadTVPrefs() error {
 		s.prefs.Hidden = p.Hidden
 	}
 	s.prefs.Hosts = p.Hosts
+	if p.Known != nil {
+		s.prefs.Known = p.Known
+	}
 	s.mu.Unlock()
 	if fi, ok := s.renderers.(finderInfo); ok {
 		fi.SetExtraHosts(p.Hosts)
+		s.mu.Lock()
+		fi.SetKnown(s.knownLocationsLocked())
+		s.mu.Unlock()
 	}
 	return nil
 }
@@ -146,11 +176,44 @@ func (s *Server) emptyTVList(w http.ResponseWriter, found int) {
 	writeJSON(w, http.StatusBadGateway, map[string]any{"error": de, "errorEn": en, "key": key, "args": args})
 }
 
+// remember records the TVs found (name, address, MAC) in tvs.json, so a TV
+// that is off later can still be listed and woken. A TV whose MAC the ARP
+// table lacks this time keeps the one it had.
+func (s *Server) remember(rs []dlna.Renderer) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	changed := false
+	for _, x := range rs {
+		k := knownTV{Name: x.Name, Model: x.Model, Host: x.Host(), MAC: s.macOf(x.Host()), Location: x.Location}
+		old, had := s.prefs.Known[x.ID]
+		if k.MAC == "" {
+			k.MAC = old.MAC
+		}
+		if had && old == k {
+			continue
+		}
+		if s.prefs.Known == nil {
+			s.prefs.Known = map[string]knownTV{}
+		}
+		s.prefs.Known[x.ID] = k
+		changed = true
+	}
+	if changed {
+		if err := s.saveTVPrefsLocked(); err != nil {
+			log.Printf("tvs: %v", err)
+		}
+		if fi, ok := s.renderers.(finderInfo); ok {
+			fi.SetKnown(s.knownLocationsLocked())
+		}
+	}
+}
+
 func (s *Server) listTVs(w http.ResponseWriter, r *http.Request, _ string, _ *session) {
 	rs, err := s.renderers.Find(r.Context(), r.URL.Query().Get("refresh") == "1")
 	if err != nil {
 		log.Printf("renderers: %v", err)
 	}
+	s.remember(rs)
 	s.mu.Lock()
 	out := make([]tvOut, 0, len(rs))
 	for _, x := range rs {
@@ -263,4 +326,81 @@ func (s *Server) system(w http.ResponseWriter, r *http.Request, _ string, _ *ses
 	}
 	s.mu.Unlock()
 	writeJSON(w, http.StatusOK, out)
+}
+
+// wakeTV sends a Wake-on-LAN packet to a known TV and searches until it
+// answers again (its description URL, not just the cached list: a TV that
+// went off stays in the Finder's cache for its TTL). The packet is sent
+// again every round; a TV on Wi-Fi can miss one.
+func (s *Server) wakeTV(w http.ResponseWriter, r *http.Request, _ string, _ *session) {
+	var in struct {
+		ID string `json:"id"`
+	}
+	if err := readJSON(r, &in); err != nil || in.ID == "" {
+		fail(w, http.StatusBadRequest, "ungültige Anfrage")
+		return
+	}
+	s.mu.Lock()
+	k, ok := s.prefs.Known[in.ID]
+	s.mu.Unlock()
+	if !ok || k.MAC == "" {
+		fail(w, http.StatusNotFound, "Für diesen Fernseher ist keine MAC-Adresse bekannt")
+		return
+	}
+	ctx := r.Context()
+	t0 := s.now()
+	for round := 0; ; round++ {
+		if err := s.wake(ctx, k.MAC, k.Host); err != nil {
+			log.Printf("wake %s: %v", k.Name, err)
+			fail(w, http.StatusBadGateway, "Weckpaket konnte nicht gesendet werden")
+			return
+		}
+		if round == 0 {
+			log.Printf("wake %s (%s): magic packet sent", k.Name, k.Host)
+		}
+		rs, _ := s.renderers.Find(ctx, true)
+		for _, x := range rs {
+			if x.ID == in.ID && s.alive(ctx, x) {
+				d := s.now().Sub(t0).Round(time.Second)
+				log.Printf("wake %s: answers after %v", k.Name, d)
+				s.remember(rs)
+				writeJSON(w, http.StatusOK, map[string]any{"ok": true, "seconds": int(d / time.Second)})
+				return
+			}
+		}
+		if s.now().Sub(t0) >= s.wakeWait {
+			break
+		}
+		select {
+		case <-ctx.Done():
+			return
+		case <-time.After(s.wakeEvery):
+		}
+	}
+	secs := strconv.Itoa(int(s.wakeWait / time.Second))
+	log.Printf("wake %s: no answer within %ss", k.Name, secs)
+	writeJSON(w, http.StatusGatewayTimeout, map[string]any{
+		"error":   "Der Fernseher antwortet " + secs + " s nach dem Weckpaket nicht. Ist am Fernseher das Einschalten über das Netzwerk an (LG: „Mobile TV On“)?",
+		"errorEn": "The TV did not answer within " + secs + " s of the wake-up packet. Is switching on via the network enabled on the TV (LG: \"Mobile TV On\")?",
+		"key":     "wake.noAnswer",
+		"args":    []string{secs},
+	})
+}
+
+// descAlive asks the TV's description URL: a TV in standby does not answer it.
+func descAlive(c *http.Client) func(context.Context, dlna.Renderer) bool {
+	return func(ctx context.Context, x dlna.Renderer) bool {
+		ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+		defer cancel()
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, x.Location, nil)
+		if err != nil {
+			return false
+		}
+		resp, err := c.Do(req)
+		if err != nil {
+			return false
+		}
+		resp.Body.Close()
+		return resp.StatusCode == http.StatusOK
+	}
 }

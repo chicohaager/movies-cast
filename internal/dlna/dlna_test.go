@@ -219,3 +219,28 @@ func TestUnlistedRealTVs(t *testing.T) {
 		t.Errorf("wildcard sink: Unlisted = %v, want nothing", got)
 	}
 }
+
+// Play may take longer than other calls (the LG opens the file first), and
+// nothing else may cut it shorter: 0.18 had a 6 s client timeout that cut
+// Play at 6.2 s on the LG although send gave it 30 s.
+func TestPlayGetsItsOwnLongerTimeout(t *testing.T) {
+	oldSOAP, oldPlay := soapTimeout, playTimeout
+	soapTimeout, playTimeout = 50*time.Millisecond, 2*time.Second
+	t.Cleanup(func() { soapTimeout, playTimeout = oldSOAP, oldPlay })
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		time.Sleep(300 * time.Millisecond) // longer than soapTimeout, shorter than playTimeout
+		_, _ = w.Write([]byte(`<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/"><s:Body><u:R/></s:Body></s:Envelope>`))
+	}))
+	t.Cleanup(srv.Close)
+	c := NewClient()
+	r := Renderer{AVTransport: srv.URL + "/av"}
+	if err := c.Play(context.Background(), r); err != nil {
+		t.Fatalf("Play after 300 ms: %v", err)
+	}
+	if err := c.Pause(context.Background(), r); err == nil {
+		t.Fatal("Pause after 300 ms with a 50 ms limit: no error")
+	}
+	if NewClient().HTTP.Timeout != 0 {
+		t.Fatal("NewClient sets an overall timeout; it would cut Play")
+	}
+}

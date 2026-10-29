@@ -121,8 +121,20 @@ func (s *Server) failedFile() string {
 	return filepath.Join(filepath.Dir(s.cfg.StateFile), "formats-failed.json")
 }
 
+// convertFile holds TV|audio|codec keys whose sound the owner asked to be
+// converted ("No sound?" on the phone).
+func (s *Server) convertFile() string {
+	if s.cfg.StateFile == "" {
+		return ""
+	}
+	return filepath.Join(filepath.Dir(s.cfg.StateFile), "convert.json")
+}
+
 func (s *Server) loadProven() error {
 	if err := loadKeys(s.formatsFile(), &s.mu, s.proven); err != nil {
+		return err
+	}
+	if err := loadKeys(s.convertFile(), &s.mu, s.convert); err != nil {
 		return err
 	}
 	return loadKeys(s.failedFile(), &s.mu, s.failed)
@@ -156,6 +168,7 @@ func loadKeys(f string, mu *sync.Mutex, set map[string]bool) error {
 func (s *Server) saveProvenLocked() {
 	saveKeys(s.formatsFile(), s.proven)
 	saveKeys(s.failedFile(), s.failed)
+	saveKeys(s.convertFile(), s.convert)
 }
 
 // saveKeys writes set as a sorted JSON list, atomically.
