@@ -1,6 +1,10 @@
 package server
 
 import (
+	"net/http"
+	"net/http/cookiejar"
+	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"testing"
@@ -50,5 +54,56 @@ func TestThemeChosenOnThePhone(t *testing.T) {
 	}
 	if !strings.Contains(chosen, "--bg:") || !strings.Contains(chosen, "color-scheme: dark") {
 		t.Errorf("dark block incomplete: %s", chosen)
+	}
+}
+
+// The mode belongs to the account, not to the address: the phone reaches the
+// NAS by its LAN address and by its Tailscale address, and each is its own
+// localStorage (seen 2026-10-29). /api/me says the stored mode, POST
+// /api/theme sets it, and it survives a restart in themes.json (0600).
+func TestThemeFollowsTheAccount(t *testing.T) {
+	r, f := newRigWithState(t)
+	r.login()
+	if code, me := r.getJSON("/api/me"); code != 200 || me["theme"] != nil {
+		t.Fatalf("fresh account: %d %v (want no theme)", code, me)
+	}
+	if code, out := r.post("/api/theme", map[string]string{"theme": "blue"}); code != 400 {
+		t.Fatalf("theme blue: %d %v", code, out)
+	}
+	if code, out := r.post("/api/theme", map[string]string{"theme": "dark"}); code != 200 {
+		t.Fatalf("theme dark: %d %v", code, out)
+	}
+
+	// Another device of the same account, after a restart.
+	other := r.restart(f)
+	other.login()
+	if code, me := other.getJSON("/api/me"); code != 200 || me["theme"] != "dark" {
+		t.Fatalf("other device after restart: %d %v", code, me)
+	}
+	st, err := os.Stat(filepath.Join(filepath.Dir(f), "themes.json"))
+	if err != nil || st.Mode().Perm() != 0o600 {
+		t.Fatalf("themes.json: %v %v", st, err)
+	}
+	// Another account keeps its own mode.
+	anna := r.restart(f)
+	jar, _ := cookiejar.New(nil) // restart shares the jar, and cookies are per host, not per port
+	anna.client = &http.Client{Jar: jar}
+	if code, out := anna.post("/api/login", map[string]string{"user": "Anna", "password": "richtig"}); code != 200 {
+		t.Fatalf("login Anna: %d %v", code, out)
+	}
+	if _, me := anna.getJSON("/api/me"); me["name"] != "Anna" || me["theme"] != nil {
+		t.Fatalf("Anna sees %v (want her own, unset mode)", me)
+	}
+	// "" is a choice too (follow the system), not a missing one.
+	if code, _ := other.post("/api/theme", map[string]string{"theme": ""}); code != 200 {
+		t.Fatalf("theme system: %d", code)
+	}
+	if _, me := other.getJSON("/api/me"); me["theme"] != "" {
+		t.Fatalf("after System: %v", me)
+	}
+	// Without a login nothing is stored.
+	anon := newRig(t)
+	if code, _ := anon.post("/api/theme", map[string]string{"theme": "dark"}); code != 401 {
+		t.Fatalf("anonymous: %d", code)
 	}
 }

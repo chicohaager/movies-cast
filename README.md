@@ -120,8 +120,11 @@ the TV's description answers. Whether a TV wakes this way depends on the TV (LG:
 
 ```bash
 go vet ./... && go test -race ./...
-SSHPASS_FILE=/path/to/pw deploy/zimaos/build-on-host.sh <user>@<nas> 0.20.2
-# builds only a committed tree; -version then prints 0.20.2+<commit>
+# the phone page in a browser with a login, against the fake Movies and fake TV of the tests
+# (log in as Demo or Anna, password "richtig"; Ctrl-C stops it):
+MC_DEV_SERVER=127.0.0.1:18097 go test ./internal/server/ -run TestDevServer -timeout 0 -v
+SSHPASS_FILE=/path/to/pw deploy/zimaos/build-on-host.sh <user>@<nas> 0.22.0
+# builds only a committed tree; -version then prints 0.22.0+<commit>
 # first install:
 ZIMA_USER=… ZIMA_PASS=… python3 ~/dev/zimapp/zimapp.py install --host <nas> --ssh-user <user> deploy/zimaos/docker-compose.yml
 # update after a rebuild, on the host:
@@ -180,8 +183,11 @@ with the server; the TV gets no Movies token.
   else English; a picker on the phone. Server errors carry a `key` for every language;
   `TestEveryFailMessageHasEnglish` and `TestStringsComplete` keep them complete. Review status:
   [docs/TRANSLATIONS.md](docs/TRANSLATIONS.md) — no native speaker has read them yet.
-- **Colour mode (phone):** System, Light or Dark in the footer (`web/theme.js` sets `data-theme` before
-  `style.css` paints; remembered in `localStorage`); `TestThemeChosenOnThePhone` keeps both dark blocks equal.
+- **Colour mode (phone):** System, Light or Dark in the footer, stored with the Movies account in `themes.json`
+  next to `STATE_FILE` (`GET /api/me` → `theme`, `POST /api/theme`), so the LAN and the Tailscale address show
+  the same. `localStorage` keeps a copy only so `web/theme.js` can set `data-theme` before `style.css` paints; an
+  account without a choice takes the one this device shows, and "Log out" clears the copy (a shared phone).
+  `TestThemeChosenOnThePhone` keeps both dark blocks equal, `TestThemeFollowsTheAccount` the per-account store.
   The TV page is always dark (`web/tv/tv.css`).
 - **Phone home screen:** `manifest.json` with 192/512 px icons and an `apple-touch-icon` (rendered from the logo by
   `deploy/webos/logo/render.py`; `TestManifestIconsExist`).

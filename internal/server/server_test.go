@@ -59,11 +59,28 @@ func (f *fakeMovies) handler(t *testing.T) http.Handler {
 				w.WriteHeader(http.StatusUnauthorized)
 				return
 			}
+			if in["Username"] == "Anna" { // a second account (TestThemeFollowsTheAccount)
+				_, _ = io.WriteString(w, `{"AccessToken":"tok-geheim","User":{"Id":"USERID0001","Name":"Anna"}}`)
+				return
+			}
 			_, _ = io.WriteString(w, `{"AccessToken":"tok-geheim","User":{"Id":"USERID0000","Name":"Demo"}}`)
+			return
+		}
+		// Like Movies 0.3.0, the public info needs no token (movies.go Ping).
+		if r.URL.Path == "/movies/System/Info/Public" {
+			_, _ = io.WriteString(w, `{"ServerName":"fake","Version":"0.3.0"}`)
 			return
 		}
 		if !strings.Contains(auth, `Token="tok-geheim"`) {
 			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+		// Anna (the second account) sees the same library.
+		r.URL.Path = strings.Replace(r.URL.Path, "USERID0001", "USERID0000", 1)
+		if strings.HasPrefix(r.URL.Path, "/movies/Items/") && strings.HasSuffix(r.URL.Path, "/Images/Primary") {
+			w.Header().Set("Content-Type", "image/png")
+			b, _ := webFS.ReadFile("web/icon-512.png") // any picture; a poster for the dev server
+			_, _ = w.Write(b)
 			return
 		}
 		switch {

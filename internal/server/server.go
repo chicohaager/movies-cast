@@ -99,7 +99,9 @@ type Server struct {
 	failed map[string]bool
 	// convert holds TV|audio|codec keys whose sound is converted (convert.go).
 	convert map[string]bool
-	prefs   tvPrefs // names, hidden TVs, TVs added by address (tvs.go)
+	// themes: colour mode of the phone page per Movies user ID (themes.json).
+	themes map[string]string
+	prefs  tvPrefs // names, hidden TVs, TVs added by address (tvs.go)
 	// strings is /strings.js, built once from web/i18n/*.json (strings.go).
 	strings []byte
 
@@ -178,6 +180,7 @@ func New(cfg Config, mc *movies.Client, tv Transport, r Renderers) *Server {
 		proven:         map[string]bool{},
 		failed:         map[string]bool{},
 		convert:        map[string]bool{},
+		themes:         map[string]string{},
 		prefs:          tvPrefs{Labels: map[string]string{}, Hidden: map[string]bool{}},
 		macOf:          dlna.MACOf,
 		wake: func(ctx context.Context, mac, host string) error {
@@ -200,6 +203,9 @@ func New(cfg Config, mc *movies.Client, tv Transport, r Renderers) *Server {
 	srv.strings = b
 	if err := srv.loadTVPrefs(); err != nil {
 		log.Printf("tvs: %v (starting without TV settings)", err)
+	}
+	if err := srv.loadThemes(); err != nil {
+		log.Printf("themes: %v (starting without stored colour modes)", err)
 	}
 	return srv
 }
@@ -226,6 +232,7 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("POST /api/login", s.login)
 	mux.HandleFunc("POST /api/logout", s.withSession(s.logout))
 	mux.HandleFunc("GET /api/me", s.withSession(s.me))
+	mux.HandleFunc("POST /api/theme", s.withSession(s.setTheme))
 	mux.HandleFunc("GET /api/movies", s.withSession(s.listMovies))
 	mux.HandleFunc("GET /api/poster/{id}", s.withSession(s.poster))
 	mux.HandleFunc("GET /api/renderers", s.withSession(s.listRenderers))
@@ -584,8 +591,28 @@ func (s *Server) dropSessionLocked(sid string) {
 	}
 }
 
+// me names the account and, once one was chosen, its colour mode ("" = system).
 func (s *Server) me(w http.ResponseWriter, _ *http.Request, _ string, sess *session) {
-	writeJSON(w, http.StatusOK, map[string]string{"name": sess.ms.UserName})
+	out := map[string]string{"name": sess.ms.UserName}
+	s.mu.Lock()
+	if mode, ok := s.themes[sess.ms.UserID]; ok {
+		out["theme"] = mode
+	}
+	s.mu.Unlock()
+	writeJSON(w, http.StatusOK, out)
+}
+
+func (s *Server) setTheme(w http.ResponseWriter, r *http.Request, _ string, sess *session) {
+	var in struct{ Theme string }
+	if err := readJSON(r, &in); err != nil || !validTheme(in.Theme) {
+		fail(w, http.StatusBadRequest, "ungültige Anfrage")
+		return
+	}
+	s.mu.Lock()
+	s.themes[sess.ms.UserID] = in.Theme
+	s.saveThemesLocked()
+	s.mu.Unlock()
+	writeJSON(w, http.StatusOK, map[string]string{"theme": in.Theme})
 }
 
 func (s *Server) listMovies(w http.ResponseWriter, r *http.Request, sid string, sess *session) {

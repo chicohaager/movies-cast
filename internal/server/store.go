@@ -186,20 +186,79 @@ func saveKeys(f string, set map[string]bool) {
 		log.Printf("formats: %v", err)
 		return
 	}
-	tmp, err := os.CreateTemp(filepath.Dir(f), ".formats-*")
+	writeAtomic(f, b, "formats")
+}
+
+// writeAtomic replaces f with b through a temporary file in the same
+// directory (0600, from CreateTemp); errors are logged under name.
+func writeAtomic(f string, b []byte, name string) {
+	tmp, err := os.CreateTemp(filepath.Dir(f), "."+name+"-*")
 	if err != nil {
-		log.Printf("formats: %v", err)
+		log.Printf("%s: %v", name, err)
 		return
 	}
 	_, werr := tmp.Write(b)
 	cerr := tmp.Close()
 	if werr != nil || cerr != nil {
 		_ = os.Remove(tmp.Name())
-		log.Printf("formats: write: %v", errors.Join(werr, cerr))
+		log.Printf("%s: write: %v", name, errors.Join(werr, cerr))
 		return
 	}
 	if err := os.Rename(tmp.Name(), f); err != nil {
 		_ = os.Remove(tmp.Name())
-		log.Printf("formats: rename: %v", err)
+		log.Printf("%s: rename: %v", name, err)
 	}
 }
+
+// The colour mode of the phone page per Movies account (userID -> "light",
+// "dark" or "" for the system), in themes.json next to the sessions: kept in
+// the browser alone, the LAN and the Tailscale address of the NAS each had
+// their own choice (2026-10-29).
+func (s *Server) themesFile() string {
+	if s.cfg.StateFile == "" {
+		return ""
+	}
+	return filepath.Join(filepath.Dir(s.cfg.StateFile), "themes.json")
+}
+
+func (s *Server) loadThemes() error {
+	f := s.themesFile()
+	if f == "" {
+		return nil
+	}
+	b, err := os.ReadFile(f)
+	if os.IsNotExist(err) {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+	m := map[string]string{}
+	if err := json.Unmarshal(b, &m); err != nil {
+		return fmt.Errorf("%s: %w", f, err)
+	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	for id, mode := range m {
+		if validTheme(mode) {
+			s.themes[id] = mode
+		}
+	}
+	return nil
+}
+
+// saveThemesLocked writes themes.json. Caller holds s.mu.
+func (s *Server) saveThemesLocked() {
+	f := s.themesFile()
+	if f == "" {
+		return
+	}
+	b, err := json.Marshal(s.themes)
+	if err != nil {
+		log.Printf("themes: %v", err)
+		return
+	}
+	writeAtomic(f, b, "themes")
+}
+
+func validTheme(mode string) bool { return mode == "" || mode == "light" || mode == "dark" }
