@@ -107,3 +107,45 @@ func TestThemeFollowsTheAccount(t *testing.T) {
 		t.Fatalf("anonymous: %d", code)
 	}
 }
+
+// The language follows the account like the colour mode: /api/me says it,
+// POST /api/lang sets one of the shipped languages, langs.json keeps it.
+func TestLangFollowsTheAccount(t *testing.T) {
+	r, f := newRigWithState(t)
+	r.login()
+	if _, me := r.getJSON("/api/me"); me["lang"] != nil {
+		t.Fatalf("fresh account: %v (want no lang)", me)
+	}
+	for _, bad := range []string{"", "xx", "../en", "en.json", "EN", "de-DE"} {
+		if code, out := r.post("/api/lang", map[string]string{"lang": bad}); code != 400 {
+			t.Errorf("lang %q: %d %v (want 400)", bad, code, out)
+		}
+	}
+	for _, good := range []string{"pt_BR", "fr"} {
+		if code, out := r.post("/api/lang", map[string]string{"lang": good}); code != 200 {
+			t.Fatalf("lang %s: %d %v", good, code, out)
+		}
+	}
+	other := r.restart(f)
+	other.login()
+	if _, me := other.getJSON("/api/me"); me["lang"] != "fr" {
+		t.Fatalf("other device after restart: %v", me)
+	}
+	st, err := os.Stat(filepath.Join(filepath.Dir(f), "langs.json"))
+	if err != nil || st.Mode().Perm() != 0o600 {
+		t.Fatalf("langs.json: %v %v", st, err)
+	}
+	anna := r.restart(f)
+	jar, _ := cookiejar.New(nil)
+	anna.client = &http.Client{Jar: jar}
+	if code, _ := anna.post("/api/login", map[string]string{"user": "Anna", "password": "richtig"}); code != 200 {
+		t.Fatal("login Anna")
+	}
+	if _, me := anna.getJSON("/api/me"); me["lang"] != nil {
+		t.Fatalf("Anna sees %v (want her own, unset language)", me)
+	}
+	anon := newRig(t)
+	if code, _ := anon.post("/api/lang", map[string]string{"lang": "fr"}); code != 401 {
+		t.Fatalf("anonymous: %d", code)
+	}
+}

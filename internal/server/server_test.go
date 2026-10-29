@@ -195,7 +195,7 @@ func (f *fakeTV) SetURI(_ context.Context, _ dlna.Renderer, m dlna.Media) error 
 		f.mu.Unlock()
 		return err
 	}
-	f.uri, f.state, f.media = m.URL, "STOPPED", m
+	f.uri, f.state, f.media, f.pos = m.URL, "STOPPED", m, 0 // a new URI starts at 0, as on a TV
 	f.mu.Unlock()
 	f.rec("SetURI")
 	return nil

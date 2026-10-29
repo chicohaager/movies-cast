@@ -7,6 +7,7 @@ import (
 	"os/signal"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"movies-cast/internal/movies"
 )
@@ -35,6 +36,20 @@ func TestDevServer(t *testing.T) {
 	defer ms.Close()
 
 	tv := &fakeTV{state: "NO_MEDIA_PRESENT"}
+	// The unit tests set the fake TV's state themselves; here it plays like a
+	// TV: TRANSITIONING becomes PLAYING after a second, and PLAYING counts up.
+	go func() {
+		for range time.Tick(time.Second) {
+			tv.mu.Lock()
+			switch tv.state {
+			case "TRANSITIONING":
+				tv.state = "PLAYING"
+			case "PLAYING":
+				tv.pos += time.Second
+			}
+			tv.mu.Unlock()
+		}
+	}()
 	state := filepath.Join(t.TempDir(), "sessions.json")
 	app := New(Config{PublicURL: "http://" + addr, StateFile: state}, movies.New("http://"+mln.Addr().String()+"/movies", "dev"), tv, staticRenderers{lg})
 	ln, err := net.Listen("tcp", addr)

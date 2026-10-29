@@ -120,7 +120,8 @@ the TV's description answers. Whether a TV wakes this way depends on the TV (LG:
 
 ```bash
 go vet ./... && go test -race ./...
-# the phone page in a browser with a login, against the fake Movies and fake TV of the tests
+# the phone page in a browser with a login, against the fake Movies and fake TV of the tests; the TV
+# goes from TRANSITIONING to PLAYING after a second and counts the position up
 # (log in as Demo or Anna, password "richtig"; Ctrl-C stops it):
 MC_DEV_SERVER=127.0.0.1:18097 go test ./internal/server/ -run TestDevServer -timeout 0 -v
 SSHPASS_FILE=/path/to/pw deploy/zimaos/build-on-host.sh <user>@<nas> 0.22.0
@@ -180,7 +181,10 @@ with the server; the TV gets no Movies token.
   (pair → library → detail → play → +30 s → audio → pause → Back) ran on the TV.
 - **Languages:** the 18 of the ZimaOS UI, English the default (`internal/server/web/i18n/<lang>.json`, served
   as `/strings.js` to both pages). `?lang=xx` (remembered), else the remembered one, else the device language,
-  else English; a picker on the phone. Server errors carry a `key` for every language;
+  else English; a picker on the phone. On the phone the choice is stored with the account like the colour mode
+  (`langs.json`, `POST /api/lang`, only languages under `web/i18n`): a language from the link or the picker is
+  stored, otherwise the account's language is loaded; the device language is never stored, and "Log out"
+  forgets the device's copy and `?lang=`. Server errors carry a `key` for every language;
   `TestEveryFailMessageHasEnglish` and `TestStringsComplete` keep them complete. Review status:
   [docs/TRANSLATIONS.md](docs/TRANSLATIONS.md) — no native speaker has read them yet.
 - **Colour mode (phone):** System, Light or Dark in the footer, stored with the Movies account in `themes.json`

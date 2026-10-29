@@ -111,9 +111,29 @@ function showView(which) {
   if (which !== "app") { stopPolling(); theme.signedOut(); }
 }
 
+// Language: the account's choice wins like the colour mode, except over a
+// language asked for in the link (the picker reloads with ?lang=), which is
+// the newest choice and is stored with the account.
+function langFromAccount(me) {
+  const store = () => api("/api/lang", { lang: I18N.lang }).catch((err) => showError(err.message));
+  if (I18N.asked) {
+    if (me.lang !== I18N.lang) store();
+  } else if (typeof me.lang === "string") {
+    if (me.lang !== I18N.lang) {
+      const u = new URL(location.href);
+      u.searchParams.set("lang", me.lang);
+      location.replace(u.toString());
+    }
+  } else if (I18N.chosen) {
+    store();
+  }
+}
+
 async function boot() {
   try {
-    theme.fromAccount(await api("/api/me"));
+    const me = await api("/api/me");
+    theme.fromAccount(me);
+    langFromAccount(me);
   } catch {
     showView("login");
     return;
@@ -157,6 +177,14 @@ $("login-form").addEventListener("submit", async (ev) => {
 $("logout").addEventListener("click", async () => {
   try { await api("/api/logout", {}); } catch (err) { showError(err.message); }
   theme.forget();
+  // The next person on a shared phone must not hand this language to an
+  // account without one: drop the remembered one and ?lang= in the address.
+  I18N.forget();
+  const u = new URL(location.href);
+  if (u.searchParams.has("lang")) {
+    u.searchParams.delete("lang");
+    history.replaceState(null, "", u.toString());
+  }
   showView("login");
 });
 

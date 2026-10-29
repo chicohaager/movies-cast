@@ -41,8 +41,9 @@ var I18N = (function () {
 
   var q = /[?&]lang=([A-Za-z_-]+)/.exec(location.search);
   var asked = q ? match(q[1]) : "";
+  var stored = match(store());
   if (asked) store(asked);
-  var lang = asked || match(store());
+  var lang = asked || stored;
   var tags = navigator.languages || [navigator.language];
   for (var i = 0; !lang && i < tags.length; i++) lang = match(tags[i]);
   if (!lang) lang = "en";
@@ -94,5 +95,13 @@ var I18N = (function () {
     return out;
   }
 
-  return { lang: lang, t: t, apply: apply, serverError: serverError, languages: languages, match: match };
+  // forget drops this device's choice (the phone's "Log out"); the page keeps
+  // its language until it is loaded again.
+  function forget() {
+    try { window.localStorage.removeItem("moviescast.lang"); } catch (e) { /* private mode */ }
+  }
+
+  // asked: the language came from the link (?lang=, also the picker);
+  // chosen: it was asked for or remembered, not taken from the device.
+  return { lang: lang, asked: !!asked, chosen: !!(asked || stored), t: t, apply: apply, serverError: serverError, languages: languages, match: match, forget: forget };
 })();
