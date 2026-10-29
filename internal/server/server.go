@@ -369,7 +369,7 @@ var errorsEn = map[string]string{
 	"Benutzer oder Passwort falsch":                               "wrong user or password",
 	"Anmeldung bei Movies abgelaufen":                             "Movies login expired",
 	"6-stelligen Code angeben":                                    "enter the 6-digit code",
-	"Die movies-cast-App auf diesem Fernseher ist nicht geöffnet": "the movies-cast app is not open on this TV",
+	"Die Movies-Cast-App auf diesem Fernseher ist nicht geöffnet": "the Movies-Cast app is not open on this TV",
 	"Name zu lang (höchstens 40 Zeichen)":                         "name too long (40 characters at most)",
 	"Speichern fehlgeschlagen":                                    "saving failed",
 	"Adresse ungültig (IPv4-Adresse im eigenen Netz)":             "invalid address (an IPv4 address on your own network)",
@@ -775,7 +775,7 @@ func (s *Server) startPlay(w http.ResponseWriter, r *http.Request, sid string, s
 			writeJSON(w, http.StatusOK, map[string]any{"ok": true, "viaApp": true, "title": m.Name})
 			return
 		}
-		fail(w, http.StatusConflict, "Die movies-cast-App auf diesem Fernseher ist nicht geöffnet")
+		fail(w, http.StatusConflict, "Die Movies-Cast-App auf diesem Fernseher ist nicht geöffnet")
 		return
 	}
 	if s.wantConvert(tv, m, in.Convert, in.Original, in.Remember) {
@@ -797,9 +797,9 @@ func (s *Server) startPlay(w http.ResponseWriter, r *http.Request, sid string, s
 	s.mu.Unlock()
 	if !in.Force && failed {
 		writeJSON(w, http.StatusConflict, map[string]any{
-			"error":        "Dieser Fernseher hat diese Art Datei per DLNA schon einmal nicht abgespielt. Hat er die movies-cast-App, spiel den Film dort.",
+			"error":        "Dieser Fernseher hat diese Art Datei per DLNA schon einmal nicht abgespielt. Hat er die Movies-Cast-App, spiel den Film dort.",
 			"args":         []string{},
-			"errorEn":      "This TV failed to play this kind of file via DLNA before. If it has the movies-cast app, play the film there.",
+			"errorEn":      "This TV failed to play this kind of file via DLNA before. If it has the Movies-Cast app, play the film there.",
 			"key":          "format.failedBefore",
 			"unlisted":     []string{},
 			"appAvailable": appOpen,

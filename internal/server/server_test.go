@@ -701,7 +701,7 @@ func TestFailedFormatIsRememberedUntilAPlayProvesIt(t *testing.T) {
 	r2 := r.restart(f)
 	carryCookie(t, r, r2)
 	code, out := r2.post("/api/play", map[string]any{"renderer": lg.ID, "movie": movieID})
-	if code != http.StatusConflict || out["key"] != "format.failedBefore" || !strings.Contains(fmt.Sprint(out["errorEn"]), "movies-cast app") {
+	if code != http.StatusConflict || out["key"] != "format.failedBefore" || !strings.Contains(fmt.Sprint(out["errorEn"]), "Movies-Cast app") {
 		t.Fatalf("after a failure: %d %v", code, out)
 	}
 	r.tv.mu.Lock()

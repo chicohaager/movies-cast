@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#111318">
-<title>Movies auf dem Fernseher</title>
+<title>Movies-Cast</title>
 <script src="theme.js"></script>
 <script src="strings.js"></script>
 <script src="i18n.js"></script>
@@ -15,13 +15,13 @@
 </head>
 <body>
 <header>
-  <h1><img class="logo" src="logo.svg" alt="">Movies <span data-i18n="sub">auf dem Fernseher</span></h1>
+  <h1><img class="logo" src="logo.svg" alt="">Movies-Cast</h1>
   <button id="logout" class="ghost" hidden data-i18n="logout">Abmelden</button>
 </header>
 
 <div id="error" class="error" role="alert" hidden></div>
 <div id="notice" class="notice" role="status" hidden></div>
-<div id="force-row" class="error force" hidden><button id="force" type="button" data-i18n="play.force">Trotzdem abspielen</button> <button id="inapp" type="button" class="ghost" data-i18n="play.inApp" hidden>In der movies-cast-App öffnen</button> <button id="wake" type="button" data-i18n="wake.btn" hidden>Einschalten und abspielen</button> <button id="convert" type="button" class="ghost" data-i18n="play.convert" hidden>Mit umgewandeltem Ton abspielen</button></div>
+<div id="force-row" class="error force" hidden><button id="force" type="button" data-i18n="play.force">Trotzdem abspielen</button> <button id="inapp" type="button" class="ghost" data-i18n="play.inApp" hidden>In der Movies-Cast-App öffnen</button> <button id="wake" type="button" data-i18n="wake.btn" hidden>Einschalten und abspielen</button> <button id="convert" type="button" class="ghost" data-i18n="play.convert" hidden>Mit umgewandeltem Ton abspielen</button></div>
 
 <main>
   <section id="login-view" hidden>
@@ -70,7 +70,7 @@
         <button type="submit" data-i18n="pair.btn">Koppeln</button>
       </form>
       <p id="pair-result" class="hint"></p>
-      <p class="hint" data-i18n="pair.note">Nur für die movies-cast-App auf dem Fernseher. Fernseher mit DLNA brauchen keine Kopplung.</p>
+      <p class="hint" data-i18n="pair.note">Nur für die Movies-Cast-App auf dem Fernseher. Fernseher mit DLNA brauchen keine Kopplung.</p>
     </details>
 
     <details id="manage" class="card pair">
