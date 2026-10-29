@@ -59,7 +59,8 @@ or is stopped, so the new resume point appears.
 Open `http://<nas>:8097` on the phone — on .143: `http://10.0.0.143:8097` in the home Wi-Fi,
 `http://100.64.0.10:8097` (or `http://my-nas:8097`) via Tailscale from outside; .143
 advertises no subnet route, so the LAN address does not work over Tailscale. Log in with the **ZimaOS account**, pick a film, pick the TV,
-press play. Pause, ±30 s, seek bar, stop and "continue at" work; progress goes back to Movies.
+press play. Pause, ±30 s, seek bar, stop and "continue at" work; progress goes back to Movies, and
+each stop is logged with film, position and outcome (`report stopped <film> at 0:01:41: ok`).
 
 - **Manage TVs** (card on the phone): give a TV a name ("Living room"), hide one (a TV nobody uses),
   or add one by IP when the search cannot see it. Stored in `tvs.json` next to `STATE_FILE` (0600);
@@ -140,7 +141,8 @@ the TV's description answers. Whether a TV wakes this way depends on the TV (LG:
   the bytes with the token in a header. The id dies on Stop, on a new play on the same TV, on logout,
   when the TV stops or is unreachable for 2 min, and after 24 h — and a running transfer is cut then.
   The TV hands that URL to anyone who asks it over UPnP, so the first address that fetches a play
-  keeps it; another host with the same URL gets 403.
+  keeps it; another host with the same URL gets 403, and the player on the phone names both
+  addresses (a TV that fetches from two addresses would otherwise just stay black).
 - Tokens live only in memory; a restart logs everyone out.
 - POSTs need same-origin (`Origin`, `Sec-Fetch-Site`) and a JSON body. 5 wrong passwords per client
   IP in 10 min → 429. At most 200 sessions.
