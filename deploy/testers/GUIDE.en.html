@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="movies-cast {{VERSION}}: installing on ZimaOS, test list and report template for testers">
-<title>movies-cast {{VERSION}} – guide for testers</title>
+<meta name="description" content="Movies-Cast {{VERSION}}: installing on ZimaOS, test list and report template for testers">
+<title>Movies-Cast {{VERSION}} – guide for testers</title>
 <style>
 :root { --bg:#f6f6f8; --card:#fff; --text:#16181d; --muted:#5d6270; --line:#d9dbe1; --accent:#c2410c; --code:#eef0f4; }
 @media (prefers-color-scheme: dark) {
@@ -28,7 +28,7 @@ pre { white-space:pre-wrap; overflow-wrap:anywhere; margin:0; }
 </head>
 <body>
 <main>
-<h1>movies-cast {{VERSION}} <small>Guide for testers</small></h1>
+<h1>Movies-Cast {{VERSION}} <small>Guide for testers</small></h1>
 <p class="muted">Play the films of IceWhale Movies on a DLNA TV, controlled from your phone. The TV plays the original file itself; only if it stays silent is the sound converted, on request.</p>
 
 <div class="card note">
@@ -38,7 +38,7 @@ pre { white-space:pre-wrap; overflow-wrap:anywhere; margin:0; }
 <h2>1. Requirements</h2>
 <ul>
   <li><strong>ZimaOS</strong> on a machine with an <strong>x86-64</strong> processor (ZimaBoard, ZimaBlade, ZimaCube, PC). ARM devices do not work with this package.</li>
-  <li>IceWhale's <strong>Movies</strong> app installed on the same ZimaOS, with at least one library of films. movies-cast logs you in to Movies with your ZimaOS account. <strong>Movies is a beta for now</strong> (module <code>zimaos-movies</code>, version 0.3.0) and is neither in the App Store nor in ZimaOS' module list. If you do not have Movies, contact the person who gave you this package.</li>
+  <li>IceWhale's <strong>Movies</strong> app installed on the same ZimaOS, with at least one library of films. Movies-Cast logs you in to Movies with your ZimaOS account. <strong>Movies is a beta for now</strong> (module <code>zimaos-movies</code>, version 0.3.0) and is neither in the App Store nor in ZimaOS' module list. If you do not have Movies, contact the person who gave you this package.</li>
   <li>A <strong>TV with DLNA</strong> (often called "Media Renderer", "DLNA" or "media sharing") on the same network as ZimaOS.</li>
   <li>A phone or computer with a browser on the same network.</li>
   <li>Internet on the ZimaOS machine for the installation: the program is downloaded from <code>{{IMAGE}}</code>.</li>
@@ -48,8 +48,8 @@ pre { white-space:pre-wrap; overflow-wrap:anywhere; margin:0; }
 <ol>
   <li>In the ZimaOS dashboard, click <strong>"+"</strong> next to <em>Apps</em>, then the entry for installing a <strong>custom app</strong>. The same button is also on the start page of the <em>App Store</em>.</li>
   <li>At the top of the dialog choose <strong>"Import"</strong> → <strong>"Docker Compose"</strong> and select the file <code>docker-compose.yml</code> from this package. ZimaOS confirms the import and shows the logo, the image <code>ghcr.io/chicohaager/movies-cast</code> and port 8097.</li>
-  <li>Click the install button at the bottom (<strong>"Installieren"</strong> in the German interface). ZimaOS downloads the program (about 9 MB) and adds the tile <strong>"Movies-Cast"</strong> with the movies-cast logo.</li>
-  <li>If the <strong>ZFW</strong> firewall runs, it shows two "new app port" cards (8097/tcp and 1901/udp, "from your LAN only"). LAN only is enough for movies-cast.</li>
+  <li>Click the install button at the bottom (<strong>"Installieren"</strong> in the German interface). ZimaOS downloads the program (about 9 MB) and adds the tile <strong>"Movies-Cast"</strong> with the Movies-Cast logo.</li>
+  <li>If the <strong>ZFW</strong> firewall runs, it shows two "new app port" cards (8097/tcp and 1901/udp, "from your LAN only"). LAN only is enough for Movies-Cast.</li>
 </ol>
 <p class="muted">The app keeps its data in <code>/DATA/AppData/movies-cast/state</code> (logins, TV names, proven formats, your settings).</p>
 
@@ -75,7 +75,7 @@ pre { white-space:pre-wrap; overflow-wrap:anywhere; margin:0; }
 <div class="card">
 <strong>What else you may see</strong>
 <ul>
-  <li><strong>Format hint</strong>: if the TV does not list the film's format, movies-cast asks first. "Play anyway" tries it – many TVs play more than they list.</li>
+  <li><strong>Format hint</strong>: if the TV does not list the film's format, Movies-Cast asks first. "Play anyway" tries it – many TVs play more than they list.</li>
   <li><strong>"No sound?"</strong> in the player restarts the film at the same place with converted sound. This is remembered per TV and audio format; "Original sound" undoes it.</li>
   <li><strong>"– off"</strong> after a TV's name: it was seen before but does not answer now. "Switch on and play" tries to wake it by Wake-on-LAN (an LG needs "Mobile TV On" enabled).</li>
 </ul>
@@ -85,7 +85,7 @@ pre { white-space:pre-wrap; overflow-wrap:anywhere; margin:0; }
 <p>Please go through it in order; for each item "works" or a short description of what happened is enough.</p>
 <table>
 <tr><th>#</th><th>What</th><th>Expected</th></tr>
-<tr><td>1</td><td>Install via "Import"</td><td>tile with the movies-cast logo, a click opens the page</td></tr>
+<tr><td>1</td><td>Install via "Import"</td><td>tile with the Movies-Cast logo, a click opens the page</td></tr>
 <tr><td>2</td><td>Log in with the ZimaOS account</td><td>the film list from Movies appears, with posters</td></tr>
 <tr><td>3</td><td>TV in the list</td><td>your TV appears (otherwise note the text below the list)</td></tr>
 <tr><td>4</td><td>Play a film from the start</td><td>it plays on the TV <strong>with sound</strong>, the phone shows "playing" and the time</td></tr>
@@ -96,13 +96,13 @@ pre { white-space:pre-wrap; overflow-wrap:anywhere; margin:0; }
 <tr><td>9</td><td>Only if there is no sound: "No sound?"</td><td>the film continues at the same point with sound</td></tr>
 <tr><td>10</td><td>Put the TV in standby, then send a film</td><td>"off" and "Switch on and play"; does it wake up?</td></tr>
 <tr><td>11</td><td>Change language and appearance, log in on a second device</td><td>the same choice there</td></tr>
-<tr><td>12</td><td>Restart ZimaOS</td><td>movies-cast runs again, you are still logged in</td></tr>
+<tr><td>12</td><td>Restart ZimaOS</td><td>Movies-Cast runs again, you are still logged in</td></tr>
 </table>
 
 <h2>5. Report</h2>
 <div class="card">
 <p>Please copy and fill in:</p>
-<pre><code>movies-cast version ("Status" card): 
+<pre><code>Movies-Cast version ("Status" card): 
 ZimaOS version: 
 Device (ZimaBoard/Cube/PC …): 
 TV (make, model): 
@@ -114,16 +114,26 @@ Screenshot: yes/no</code></pre>
 <p class="muted">Please do not send passwords. Screenshots of the "Status" card help a lot.</p>
 </div>
 
-<h2>6. Remove</h2>
-<p>Uninstall the tile in the ZimaOS dashboard. <strong>Note:</strong> ZimaOS then also deletes <code>/DATA/AppData/movies-cast</code> – all logins and settings of movies-cast. Your films and Movies itself are not touched.</p>
+<h2>6. Update to a new version</h2>
+<p>An update needs no uninstall and no new import. The labels below are those of the German interface, where this was measured:</p>
+<ol>
+  <li>In the ZimaOS dashboard open the tile's <strong>"…"</strong> menu and choose <strong>"Verwalten"</strong> (manage).</li>
+  <li>In the field <strong>"Tag"</strong> enter the new version number, for this package <code>{{VERSION}}</code>.</li>
+  <li>If the field <strong>"App-Titel"</strong> (app title) still holds the old name "Movies auf dem Fernseher" or "Movies Cast" (up to 0.24.0), enter <strong>"Movies-Cast"</strong> – otherwise the tile keeps its old name.</li>
+  <li>Click <strong>"Speichern"</strong> (save). ZimaOS downloads the new program ("Aktualisieren …&nbsp;%") and restarts Movies-Cast.</li>
+</ol>
+<p class="muted">Logins and settings are kept. The "Status" card then shows the new version. Measured on ZimaOS 1.8.0, updating from 0.24.0 to 0.25.0.</p>
 
-<h2>7. Known limits of this version</h2>
+<h2>7. Remove</h2>
+<p>Uninstall the tile in the ZimaOS dashboard. <strong>Note:</strong> ZimaOS then also deletes <code>/DATA/AppData/movies-cast</code> – all logins and settings of Movies-Cast. Your films and Movies itself are not touched.</p>
+
+<h2>8. Known limits of this version</h2>
 <ul>
   <li>The <strong>TV app</strong> for LG webOS is not part of this package; this test is about the DLNA path.</li>
   <li>The <strong>translations</strong> other than German and English were made by an AI and have not been read by a native speaker yet – corrections are welcome.</li>
   <li>Playback has been checked with ZimaOS 1.8.0 and an LG OLED55B9. A Samsung UE50MU6179 was found; whether it plays is still open – reports about other TVs are especially valuable.</li>
 </ul>
-<p class="muted">movies-cast {{VERSION}} · image <code>{{IMAGE}}</code></p>
+<p class="muted">Movies-Cast {{VERSION}} · image <code>{{IMAGE}}</code></p>
 </main>
 </body>
 </html>
