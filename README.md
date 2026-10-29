@@ -184,7 +184,9 @@ ZIMA_USER=… ZIMA_PASS=… python3 ~/dev/zimapp/zimapp.py install --host <nas> 
 cd /var/lib/casaos/apps/movies-cast && sudo docker compose up -d --force-recreate movies-cast
 ```
 
-ZimaOS rewrites the compose on install (environment as a map, `TZ: $TZ` left literal). The installed
+ZimaOS rewrites the compose on install (environment as a map). Since 0.25.1 the compose sets no `TZ`
+and binds the host's `/etc/localtime` read-only: ZimaOS fills `$TZ` in on the first import only, and
+after an update in "Verwalten" the program ran in UTC (`TestComposeTimeZoneFromHost`). The installed
 file on .143 was edited by hand (`RENDERERS`, `TZ: Europe/Berlin`); backups under
 `/DATA/AppData/ssh-sudo-backups/movies-cast-compose-*.yml`. A reinstall via ZimaOS overwrites it.
 

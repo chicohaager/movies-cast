@@ -25,7 +25,7 @@ import (
 	"strings"
 	"syscall"
 	"time"
-	_ "time/tzdata" // scratch image has no zoneinfo; without it TZ is ignored and logs are UTC
+	_ "time/tzdata" // scratch image has no zoneinfo; for a TZ=<zone> set by hand (the compose binds /etc/localtime instead)
 
 	"movies-cast/internal/dlna"
 	"movies-cast/internal/movies"
