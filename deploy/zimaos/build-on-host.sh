@@ -2,7 +2,7 @@
 # Build the movies-cast image on a ZimaOS host and put it into the host-local
 # registry, where the ZimaOS installer pulls it from (ZIMAOS-KNOWLEDGE "Weg 3").
 #
-#   deploy/zimaos/build-on-host.sh <ssh-user>@<host> [version]
+#   deploy/zimaos/build-on-host.sh <ssh-user>@<host> [version]   (-version prints <version>+<commit>)
 #
 # Steps, each with its witness:
 #   1. go vet + go test, then a static build here (CGO_ENABLED=0); sha256 printed
@@ -35,6 +35,16 @@ fi
 # DOCKER_CONFIG: on ZimaOS a non-root shell must not use /DATA/.docker (KB §2.3/§3.6)
 # shellcheck disable=SC2016 # $USER must expand on the host, not here
 remote_docker='export DOCKER_CONFIG=/tmp/dc-$USER; mkdir -p "$DOCKER_CONFIG";'
+
+# Only a committed state is built, and -version names its commit: 0.20.2 ran on
+# .143 from an uncommitted tree, and nothing said which code it was (2026-10-29).
+dirty="$(cd "$repo" && git status --porcelain --untracked-files=normal -- cmd internal go.mod go.sum Dockerfile)"
+if [[ -n "$dirty" ]]; then
+  echo "uncommitted changes, commit first:" >&2
+  echo "$dirty" >&2
+  exit 1
+fi
+version="$version+$(cd "$repo" && git rev-parse --short=12 HEAD)"
 
 echo "== 1/4 test + static build ($version)"
 (cd "$repo" && go vet ./... && go test -count=1 ./... >/dev/null)
