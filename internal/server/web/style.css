@@ -54,6 +54,9 @@ button:disabled { opacity: .5; cursor: default; }
 .controls button[data-skip] { flex-grow: 0.75; }
 .controls #p-toggle { flex-grow: 1.25; }
 @media (max-width: 359px) { .controls { gap: 6px; } .controls button { font-size: 14px; } }
+/* The film dialog's buttons carry whole phrases ("Continue at 0:32:54"): they take their label's width and wrap to a new row, unlike the one-row player bar. */
+#detail .controls { flex-wrap: wrap; }
+#detail .controls button { flex: 1 1 auto; padding: 10px 12px; }
 .vol { margin-top: 12px; }
 .pair summary { cursor: pointer; font-weight: 600; min-height: 32px; }
 .pair form { margin-top: 10px; }
