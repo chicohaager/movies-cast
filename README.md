@@ -331,8 +331,14 @@ Measured in the emulator (Android 16, WebView 133, 2026-10-30): pairing, library
 arrives as Enter), Back on detail and library, login kept across an app restart. Playback of 8 s test files
 in the app's WebView: MKV with H.264 or HEVC plays with picture; **AAC sound decodes, AC3 and E-AC3 do not**
 (`webkitAudioDecodedByteCount` 0); MPEG-TS does not open at all (`DEMUXER_ERROR_COULD_NOT_OPEN`), so the
-converted stream of the DLNA path is no way out here. Not measured: a real Android TV device (Shield),
-the Android TV home row, the media keys during playback.
+converted stream of the DLNA path is no way out here.
+
+Android TV emulator (Android 11, WebView 90.0.4430.91, 2026-10-30): the banner shows in the app list, the
+app starts with D-pad and OK, OK on the address field opens the TV keyboard, pairing and library work, Back
+(`onBackPressed` below Android 13) returns from the detail page and closes the app on the library. Playback
+there: H.264 MKV with picture, AAC sound decodes, AC3 and E-AC3 do not; HEVC gives no frames (HEVC + AC3:
+`DEMUXER_ERROR_NO_SUPPORTED_STREAMS`) — the x86 emulator image, not a statement about a device with an HEVC
+decoder; MPEG-TS does not open. Not measured: a real Android TV device (Shield), the media keys during playback.
 
 Without the app, an Android TV device can be a DLNA TV through Kodi ("Enable UPnP support" and "Allow remote
 control via UPnP", setting `services.upnprenderer`, off by default in Kodi's `settings.xml`): a tester's Nvidia
