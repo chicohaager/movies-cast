@@ -147,7 +147,7 @@ Bildschirmfoto: ja/nein</code></pre>
 <p>Für Android-TV-Geräte wie die Nvidia Shield: die Datei <code>movies-cast-tv-{{VERSION}}.apk</code> von der Release-Seite (<a href="https://github.com/chicohaager/movies-cast/releases">https://github.com/chicohaager/movies-cast/releases</a>). Sie zeigt die Bibliothek auf dem Fernseher und wird mit der TV-Fernbedienung bedient, wie die LG-App im Video. Sie braucht Movies-Cast {{VERSION}} auf dem ZimaOS.</p>
 <ol>
   <li>Die APK auf dem TV-Gerät installieren. Ein Weg: auf dem Gerät die Entwickleroptionen und das Netzwerk-Debugging einschalten, dann am Computer <code>adb connect &lt;Adresse-des-Geräts&gt;</code> und <code>adb install movies-cast-tv-{{VERSION}}.apk</code>.</li>
-  <li>„Movies-Cast“ auf dem Gerät öffnen und die Adresse deines ZimaOS eingeben (z. B. <code>10.20.30.40</code>; der Port 8097 wird ergänzt).</li>
+  <li>„Movies-Cast“ auf dem Gerät öffnen und die Adresse deines ZimaOS eingeben (die Adresse, die dein Browser beim ZimaOS-Dashboard zeigt, ohne „http://“; der Port 8097 wird ergänzt).</li>
   <li>Der Fernseher zeigt einen sechsstelligen Code. Am Handy in Movies-Cast „Fernseher-App koppeln“ öffnen und den Code eingeben (oder den QR-Code scannen).</li>
   <li>Fernbedienung: Pfeile und OK zum Auswählen; im Film OK = Pause, ◀ −10 s, ▶ +30 s, ▲ Tonspur, ▼ Untertitel; Zurück = beenden.</li>
 </ol>
