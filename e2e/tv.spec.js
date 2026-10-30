@@ -1,4 +1,4 @@
-// The TV page (web/tv/, run by the webOS app) in a desktop Chromium at
+// The TV page (web/tv/, run by the webOS and the Android TV app) in a desktop Chromium at
 // 1920x1080: pairing with a code approved on the phone, the library, and the
 // remote's keys (arrows, OK, Back). Playback in the TV's <video> is not
 // covered: the fake Movies serves no decodable film. Chromium is not the
@@ -43,6 +43,15 @@ test("TV: pair with a code from the phone, library, remote keys", async ({ brows
   await tv.keyboard.press("Escape");
   await expect(tv.locator("#lib")).toBeVisible();
   await expect(tv.locator("#lib .focus")).toHaveAttribute("data-id", id); // back on the same film
+
+  // The Android TV app hands Back (461) to window.moviesCastKey: true while the
+  // page uses it, false on the library, where the app then closes.
+  await tv.keyboard.press("Enter");
+  await expect(tv.locator("#detail")).toBeVisible();
+  expect(await tv.evaluate(() => window.moviesCastKey(461))).toBe(true);
+  await expect(tv.locator("#lib")).toBeVisible();
+  expect(await tv.evaluate(() => window.moviesCastKey(461))).toBe(false);
+  await expect(tv.locator("#lib")).toBeVisible();
 
   await tvCtx.close();
   await phoneCtx.close();

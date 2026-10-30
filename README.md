@@ -11,6 +11,25 @@ phone ──HTTP──> movies-cast :8097 ──Jellyfin API──> Movies (127.
                     TV ──GET /s/<play-id>/movie.mkv──> movies-cast
 ```
 
+## Install (testers)
+
+Movies-Cast is a second app on ZimaOS next to IceWhale Movies. **Your phone is the remote; nothing is
+installed on the TV** — the TV only has to be a DLNA media renderer and plays the file itself. The TV app
+in the video (LG webOS) is not part of the testers' package; for Android TV (Shield) there is a test APK in the
+release, see [Android TV app](#android-tv-app-shield-google-tv-test-build).
+
+The easiest way: add the Lintuxer app store to ZimaOS (App Store → add a source →
+`https://chicohaager.github.io/zima-appstore/store.json`) and install **Movies-Cast** there. Or by hand:
+
+1. Download `movies-cast-<version>.zip` from the [latest release](https://github.com/chicohaager/movies-cast/releases/latest) and unpack it.
+2. Open `GUIDE.en.html` (German: `ANLEITUNG.de.html`) from the zip in a browser.
+3. In the ZimaOS dashboard: "+" next to Apps → install a custom app → "Import" → "Docker Compose" →
+   `docker-compose.yml` from the zip → install.
+4. On the phone open `http://<address-of-your-ZimaOS>:8097`, log in with the ZimaOS account, pick the TV
+   and a film. If a TV or box is missing from the list, the text below the list says why.
+
+Requirements: ZimaOS on x86-64, Movies (`zimaos-movies` 0.3.0 or later, a beta not in the App Store).
+
 ## Screenshots
 
 The phone page and the TV page in English, from the dev server with a demo library of public-domain
@@ -168,7 +187,7 @@ deploy/testers/make-package.sh 0.24.0 --push   # image to ghcr.io/chicohaager/mo
 
 Testers import the compose in the ZimaOS dashboard; ZimaOS pulls the image itself, which is why it lives in a
 public registry (a `docker load`ed image is not used by the installer since ZimaOS 1.7.1). The tile shows the
-movies-cast logo as a `data:` URI in the compose (`TestComposeIconIsTheLogo`). The TV app is not in the package.
+movies-cast logo as a `data:` URI in the compose (`TestComposeIconIsTheLogo`). The webOS TV app is not in the package; the Android TV APK is attached to the release.
 
 
 ```bash
@@ -291,6 +310,29 @@ developer mode are removed after a reboot past expiry, and an expired session ca
 (LG docs). `deploy/webos/renew-devmode.sh` renews it daily from .143
 (`movies-cast-devmode.timer`, data in `/DATA/AppData/movies-cast-devmode`); check with
 `journalctl -u movies-cast-devmode.service -n 3` → `renewed: result=success`.
+
+## Android TV app (Shield, Google TV; test build)
+
+`deploy/androidtv` is the same hosted app for Android TV: a WebView that opens `/tv/` on movies-cast, so
+pairing, library, remote and subtitles are the webOS app's code. On first start it asks for the address of
+movies-cast (`10.20.30.40` becomes `http://10.20.30.40:8097`) and keeps it; when the page does not load it
+shows the address again and retries every 10 s. Back and the media keys go to the page through
+`window.moviesCastKey(<webOS key code>)`; Back on the library closes the app (from Android 13 through an
+`OnBackInvokedCallback`: consuming the key in `dispatchKeyEvent` still closed the app, measured on Android 16).
+
+```bash
+deploy/androidtv/build.sh 0.26.0   # aapt2, javac, d8, apksigner from the SDK, no Gradle
+# -> deploy/androidtv/out/movies-cast-tv-0.26.0.apk; the signing key is created once in
+#    ~/.local/share/movies-cast/ — keep it, an update signed with another key does not install
+python3 deploy/androidtv/render.py # icon and the 320x180 banner of the Android TV home row, from the logo
+```
+
+Measured in the emulator (Android 16, WebView 133, 2026-10-30): pairing, library, D-pad, OK (DPAD_CENTER
+arrives as Enter), Back on detail and library, login kept across an app restart. Playback of 8 s test files
+in the app's WebView: MKV with H.264 or HEVC plays with picture; **AAC sound decodes, AC3 and E-AC3 do not**
+(`webkitAudioDecodedByteCount` 0); MPEG-TS does not open at all (`DEMUXER_ERROR_COULD_NOT_OPEN`), so the
+converted stream of the DLNA path is no way out here. Not measured: a real Android TV device (Shield),
+the Android TV home row, the media keys during playback.
 
 ## License
 
