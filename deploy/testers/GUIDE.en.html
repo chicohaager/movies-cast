@@ -35,6 +35,15 @@ pre { white-space:pre-wrap; overflow-wrap:anywhere; margin:0; }
 <strong>Thank you for testing!</strong> This version is a test build. Please report anything that fails or surprises you, using the template at the end. Your report goes to the person who gave you this package.
 </div>
 
+<h2>0. How it works – no app on the TV</h2>
+<ul>
+  <li><strong>Movies-Cast is a second app on your ZimaOS</strong>, next to Movies. You install it from the file <code>docker-compose.yml</code> in this package (section 2).</li>
+  <li><strong>Your phone is the remote.</strong> You open the Movies-Cast page in the phone's browser, pick a film and a TV, and press play. Pause, jump and stop are on the phone too.</li>
+  <li><strong>Nothing is installed on the TV.</strong> The TV only has to understand DLNA ("Media Renderer"); Movies-Cast sends it the film, and the TV plays it itself.</li>
+  <li>The <strong>TV app</strong> shown in the video (LG webOS, pairing code, library on the TV) is <strong>not part of this package</strong>. For <strong>Android TV</strong> (e.g. Nvidia Shield) there is a test app, see section 9.</li>
+  <li><strong>Is my TV or box suitable?</strong> Install Movies-Cast and switch the device on: if it appears in the TV list on the phone, it answers as a DLNA video renderer. If not, the text below the list says what the search found.</li>
+</ul>
+
 <h2>1. Requirements</h2>
 <ul>
   <li><strong>ZimaOS</strong> on a machine with an <strong>x86-64</strong> processor (ZimaBoard, ZimaBlade, ZimaCube, PC). ARM devices do not work with this package.</li>
@@ -134,6 +143,16 @@ Screenshot: yes/no</code></pre>
   <li>Playback has been checked with ZimaOS 1.8.0 and an LG OLED55B9. A Samsung UE50MU6179 was found; whether it plays is still open – reports about other TVs are especially valuable.</li>
   <li><strong>Updating from 0.24.0 or 0.25.0:</strong> an update via "Tag" brings only the new program, no change to the compose file. Movies-Cast then writes its log in UTC instead of local time – this is harmless. To change it: in "Verwalten" open <strong>"YAML"</strong>, delete the line <code>- TZ=$TZ</code>, add the <code>/etc/localtime</code> entry under <code>volumes:</code> as in this package's <code>docker-compose.yml</code>, and save (measured on ZimaOS 1.8.0; logins are kept).</li>
 </ul>
+<h2>9. Android TV app (test build)</h2>
+<p>For Android TV devices such as the Nvidia Shield: the file <code>movies-cast-tv-{{VERSION}}.apk</code> from the release page (<a href="https://github.com/chicohaager/movies-cast/releases">https://github.com/chicohaager/movies-cast/releases</a>). It shows the library on the TV and is operated with the TV remote, like the LG app in the video. It needs Movies-Cast {{VERSION}} on ZimaOS.</p>
+<ol>
+  <li>Install the APK on the TV device. One way: on the device enable the developer options and network debugging, then on a computer <code>adb connect &lt;address-of-the-device&gt;</code> and <code>adb install movies-cast-tv-{{VERSION}}.apk</code>.</li>
+  <li>Open "Movies-Cast" on the device and enter the address of your ZimaOS (e.g. <code>10.20.30.40</code>; port 8097 is added).</li>
+  <li>The TV shows a six-digit code. On the phone, in Movies-Cast, open "Pair the TV app" and enter the code (or scan the QR code).</li>
+  <li>Remote: arrows and OK to choose; in the film OK = pause, ◀ −10 s, ▶ +30 s, ▲ audio track, ▼ subtitles; Back = end.</li>
+</ol>
+<p><strong>Please check the sound:</strong> in the Android emulator, films with AC3 or E-AC3 sound played without sound (AAC worked). Whether a Shield plays them with sound is not known yet. Please try one film whose line below the title says AC3 or E-AC3 and one with AAC, and report "sound yes/no" for each.</p>
+
 <p class="muted">Movies-Cast {{VERSION}} · image <code>{{IMAGE}}</code></p>
 </main>
 </body>

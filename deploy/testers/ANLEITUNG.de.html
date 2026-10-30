@@ -35,6 +35,15 @@ pre { white-space:pre-wrap; overflow-wrap:anywhere; margin:0; }
 <strong>Danke fürs Testen!</strong> Diese Version ist ein Test-Stand. Bitte melde alles, was nicht geht oder dich wundert – mit der Vorlage am Ende. Deine Rückmeldung geht an die Person, von der du dieses Paket hast.
 </div>
 
+<h2>0. So funktioniert es – keine App auf dem Fernseher</h2>
+<ul>
+  <li><strong>Movies-Cast ist eine zweite App auf deinem ZimaOS</strong>, neben Movies. Du installierst sie aus der Datei <code>docker-compose.yml</code> in diesem Paket (Abschnitt 2).</li>
+  <li><strong>Dein Handy ist die Fernbedienung.</strong> Du öffnest die Movies-Cast-Seite im Browser des Handys, wählst Film und Fernseher und drückst Abspielen. Pause, Springen und Stopp sind ebenfalls auf dem Handy.</li>
+  <li><strong>Auf dem Fernseher wird nichts installiert.</strong> Er muss nur DLNA verstehen („Media Renderer“); Movies-Cast schickt ihm den Film, der Fernseher spielt ihn selbst ab.</li>
+  <li>Die <strong>TV-App</strong> aus dem Video (LG webOS, Kopplungscode, Bibliothek auf dem Fernseher) ist <strong>nicht in diesem Paket</strong>. Für <strong>Android TV</strong> (z. B. Nvidia Shield) gibt es eine Test-App, siehe Abschnitt 9.</li>
+  <li><strong>Passt mein Fernseher oder meine Box?</strong> Movies-Cast installieren und das Gerät einschalten: erscheint es auf dem Handy in der Fernseher-Liste, antwortet es als DLNA-Video-Renderer. Wenn nicht, sagt der Text unter der Liste, was die Suche gefunden hat.</li>
+</ul>
+
 <h2>1. Voraussetzungen</h2>
 <ul>
   <li><strong>ZimaOS</strong> auf einem Rechner mit <strong>x86-64</strong>-Prozessor (ZimaBoard, ZimaBlade, ZimaCube, PC). Ein ARM-Gerät geht mit diesem Paket nicht.</li>
@@ -134,6 +143,16 @@ Bildschirmfoto: ja/nein</code></pre>
   <li>Die Wiedergabe ist bisher mit ZimaOS 1.8.0 und einem LG OLED55B9 geprüft. Ein Samsung UE50MU6179 wurde gefunden; ob er abspielt, ist noch offen – Rückmeldungen zu anderen Fernsehern sind besonders wertvoll.</li>
   <li><strong>Update von 0.24.0 oder 0.25.0:</strong> Ein Update über „Tag“ bringt nur das neue Programm, keine Änderung an der Compose-Datei. Movies-Cast schreibt sein Protokoll dann in UTC statt in Ortszeit – das ist harmlos. Wer es ändern will: in „Verwalten“ auf <strong>„YAML“</strong> die Zeile <code>- TZ=$TZ</code> löschen, unter <code>volumes:</code> den Eintrag <code>/etc/localtime</code> wie in der <code>docker-compose.yml</code> dieses Pakets ergänzen und speichern (so gemessen auf ZimaOS 1.8.0; Anmeldungen bleiben erhalten).</li>
 </ul>
+<h2>9. Android-TV-App (Testversion)</h2>
+<p>Für Android-TV-Geräte wie die Nvidia Shield: die Datei <code>movies-cast-tv-{{VERSION}}.apk</code> von der Release-Seite (<a href="https://github.com/chicohaager/movies-cast/releases">https://github.com/chicohaager/movies-cast/releases</a>). Sie zeigt die Bibliothek auf dem Fernseher und wird mit der TV-Fernbedienung bedient, wie die LG-App im Video. Sie braucht Movies-Cast {{VERSION}} auf dem ZimaOS.</p>
+<ol>
+  <li>Die APK auf dem TV-Gerät installieren. Ein Weg: auf dem Gerät die Entwickleroptionen und das Netzwerk-Debugging einschalten, dann am Computer <code>adb connect &lt;Adresse-des-Geräts&gt;</code> und <code>adb install movies-cast-tv-{{VERSION}}.apk</code>.</li>
+  <li>„Movies-Cast“ auf dem Gerät öffnen und die Adresse deines ZimaOS eingeben (z. B. <code>10.20.30.40</code>; der Port 8097 wird ergänzt).</li>
+  <li>Der Fernseher zeigt einen sechsstelligen Code. Am Handy in Movies-Cast „Fernseher-App koppeln“ öffnen und den Code eingeben (oder den QR-Code scannen).</li>
+  <li>Fernbedienung: Pfeile und OK zum Auswählen; im Film OK = Pause, ◀ −10 s, ▶ +30 s, ▲ Tonspur, ▼ Untertitel; Zurück = beenden.</li>
+</ol>
+<p><strong>Bitte den Ton prüfen:</strong> Im Android-Emulator liefen Filme mit AC3- oder E-AC3-Ton ohne Ton (AAC ging). Ob eine Shield sie mit Ton abspielt, ist noch offen. Bitte einen Film probieren, dessen Zeile unter dem Titel AC3 oder E-AC3 zeigt, und einen mit AAC, und je „Ton ja/nein“ melden.</p>
+
 <p class="muted">Movies-Cast {{VERSION}} · Image <code>{{IMAGE}}</code></p>
 </main>
 </body>

@@ -1,0 +1,81 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Start page of the Android TV app: asks once for the address of movies-cast,
+     then opens its TV page. The app shows it again when that page does not load
+     (?fail=<reason>), with the address to correct and a new try every 10 s. -->
+<style>
+body { margin: 0; background: #0d0f14; color: #eef0f5; font: 2.2vw sans-serif; text-align: center; padding-top: 10vw; }
+h1 { font-size: 3.2vw; margin: 0 0 2vw; }
+img { width: 9vw; height: 9vw; }
+p { margin: 1.2vw 0; }
+.hint { color: #9aa0ad; font-size: 1.6vw; }
+.err { color: #fdba74; }
+input, button { font: inherit; padding: .8vw 1.4vw; border-radius: .8vw; border: .25vw solid #3a4150; background: #1d2232; color: #eef0f5; }
+input { width: 34vw; }
+input:focus, button:focus { border-color: #fb923c; outline: none; }
+button { background: #fb923c; color: #0f121a; font-weight: bold; margin-left: 1vw; }
+</style>
+</head>
+<body>
+<img src="logo.svg" alt="">
+<h1>Movies-Cast</h1>
+<p id="err" class="err" hidden></p>
+<p id="ask"></p>
+<form id="f"><input id="addr" inputmode="url" autocomplete="off" spellcheck="false"><button id="go"></button></form>
+<p id="hint" class="hint"></p>
+<script>
+"use strict";
+var L = (navigator.language || "en").toLowerCase().slice(0, 2);
+var T = {
+  en: { ask: "Address of Movies-Cast on your ZimaOS:", go: "Connect", hint: "For example 10.20.30.40 – the port 8097 is added.",
+        fail: "Movies-Cast at {s} did not answer ({w}).", retry: "Trying again in 10 seconds – or correct the address." },
+  de: { ask: "Adresse von Movies-Cast auf deinem ZimaOS:", go: "Verbinden", hint: "Zum Beispiel 10.20.30.40 – der Port 8097 wird ergänzt.",
+        fail: "Movies-Cast unter {s} hat nicht geantwortet ({w}).", retry: "Neuer Versuch in 10 Sekunden – oder die Adresse korrigieren." },
+  fr: { ask: "Adresse de Movies-Cast sur votre ZimaOS :", go: "Connecter", hint: "Par exemple 10.20.30.40 – le port 8097 est ajouté.",
+        fail: "Movies-Cast à {s} n'a pas répondu ({w}).", retry: "Nouvel essai dans 10 secondes – ou corrigez l'adresse." }
+};
+var t = T[L] || T.en;
+function $(id) { return document.getElementById(id); }
+var KEY = "moviescast.server";
+function load() { try { return localStorage.getItem(KEY) || ""; } catch (e) { return ""; } }
+function save(v) { try { localStorage.setItem(KEY, v); } catch (e) { /* asked again next start */ } }
+
+// "10.20.30.40" -> "http://10.20.30.40:8097"; a scheme or port typed in stays.
+function normalise(v) {
+  v = v.trim().replace(/\/+$/, "");
+  if (!v) return "";
+  if (!/^https?:\/\//i.test(v)) v = "http://" + v;
+  if (!/^https?:\/\/(\[[^\]]+\]|[^\/:]+):\d+/i.test(v)) v = v.replace(/^(https?:\/\/(\[[^\]]+\]|[^\/:]+))/i, "$1:8097");
+  return v;
+}
+function open(server) { save(server); location.replace(server + "/tv/"); }
+
+$("ask").textContent = t.ask;
+$("go").textContent = t.go;
+$("hint").textContent = t.hint;
+var server = load();
+var fail = new URLSearchParams(location.search).get("fail");
+$("addr").value = server ? server.replace(/^http:\/\//, "") : "";
+$("f").addEventListener("submit", function (ev) {
+  ev.preventDefault();
+  var v = normalise($("addr").value);
+  if (v) open(v);
+});
+if (server && !fail) {
+  open(server);
+} else {
+  if (fail && server) {
+    $("err").hidden = false;
+    $("err").textContent = t.fail.replace("{s}", server).replace("{w}", fail);
+    $("hint").textContent = t.retry;
+    var retry = setTimeout(function () { open(server); }, 10000);
+    $("addr").addEventListener("input", function () { clearTimeout(retry); $("hint").textContent = t.hint; });
+  }
+  $("addr").focus();
+}
+</script>
+</body>
+</html>

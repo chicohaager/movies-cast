@@ -1,4 +1,4 @@
-// TV UI for the LG webOS app. Runs on Chrome 53 (measured user agent,
+// TV UI for the LG webOS app and the Android TV app. Runs on Chrome 53 (measured user agent,
 // 2026-10-28): no async/await, no object spread, no ?. / ??, no padStart,
 // no Object.entries/values. TestTVAssetsFitChrome53 enforces this list.
 "use strict";
@@ -498,11 +498,12 @@ function togglePause() {
 
 // ---- keys ---------------------------------------------------------------
 
-document.addEventListener("keydown", function (ev) {
-  var k = ev.keyCode;
+// handleKey returns true when the page used the key. The Android TV app calls
+// it for Back and the media keys (window.moviesCastKey) with the webOS codes
+// of KEY; false on Back means "leave the app".
+function handleKey(k) {
   var isBack = k === KEY.BACK || k === KEY.BACKSPACE || k === KEY.ESC;
   if (state.screen === "player") {
-    ev.preventDefault();
     if (isBack || k === KEY.STOP) stopPlay();
     else if (k === KEY.OK || k === KEY.PLAYPAUSE) togglePause();
     else if (k === KEY.PLAY) { video.play(); osd(); }
@@ -512,25 +513,31 @@ document.addEventListener("keydown", function (ev) {
     else if (k === KEY.UP) cycleAudio(1);
     else if (k === KEY.DOWN) cycleSub();
     else osd();
-    return;
+    return true;
   }
-  if (k === KEY.LEFT) { ev.preventDefault(); move(-1, 0); }
-  else if (k === KEY.RIGHT) { ev.preventDefault(); move(1, 0); }
-  else if (k === KEY.UP) { ev.preventDefault(); move(0, -1); }
-  else if (k === KEY.DOWN) { ev.preventDefault(); move(0, 1); }
+  if (k === KEY.LEFT) move(-1, 0);
+  else if (k === KEY.RIGHT) move(1, 0);
+  else if (k === KEY.UP) move(0, -1);
+  else if (k === KEY.DOWN) move(0, 1);
   else if (k === KEY.OK) {
-    ev.preventDefault();
     var c = current();
-    if (!c) return;
+    if (!c) return true;
     if (state.screen === "lib") openDetail(c.getAttribute("data-id"));
     else if (c.id === "d-resume") startPlay(true);
     else if (c.id === "d-start") startPlay(false);
     else if (c.id === "d-back") openLibrary(state.selected && state.selected.id);
   } else if (isBack && state.screen === "detail") {
-    ev.preventDefault();
     openLibrary(state.selected && state.selected.id);
+  } else {
+    // Back on the library is left to the TV (webOS offers to close the app).
+    return false;
   }
-  // Back on the library is left to webOS (it offers to close the app).
+  return true;
+}
+window.moviesCastKey = handleKey;
+
+document.addEventListener("keydown", function (ev) {
+  if (handleKey(ev.keyCode)) ev.preventDefault();
 });
 
 // Mouse/Magic Remote pointer: hover focuses, click activates.
