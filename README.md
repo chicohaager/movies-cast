@@ -338,7 +338,11 @@ app starts with D-pad and OK, OK on the address field opens the TV keyboard, pai
 (`onBackPressed` below Android 13) returns from the detail page and closes the app on the library. Playback
 there: H.264 MKV with picture, AAC sound decodes, AC3 and E-AC3 do not; HEVC gives no frames (HEVC + AC3:
 `DEMUXER_ERROR_NO_SUPPORTED_STREAMS`) — the x86 emulator image, not a statement about a device with an HEVC
-decoder; MPEG-TS does not open. Not measured: a real Android TV device (Shield), the media keys during playback.
+decoder; MPEG-TS does not open. Audio track choice (▲) cannot work in an Android WebView: `audioTracks` exists only
+with the Blink runtime feature `AudioVideoTracks` (`html_media_element.idl`), status "experimental" (off by default)
+in Chromium 90.0.4430.91, 133.0.6943.137 and main; MDN's compatibility data says WebView Android "No". The film
+plays its first audio track. On a tester's Shield (2026-10-30) E-AC3 had sound and AAC was silent — the opposite
+of both emulators; why is open. Not measured: a real Android TV device (Shield), the media keys during playback.
 
 Without the app, an Android TV device can be a DLNA TV through Kodi ("Enable UPnP support" and "Allow remote
 control via UPnP", setting `services.upnprenderer`, off by default in Kodi's `settings.xml`): a tester's Nvidia
