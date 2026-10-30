@@ -33,5 +33,3 @@ LICENSE:Kuehn
 # Invented example address of the Android TV start page (hint text and a code comment).
 deploy/androidtv/assets/start.html:10.20.30.40
 README.md:10.20.30.40
-deploy/testers/GUIDE.en.html:10.20.30.40
-deploy/testers/ANLEITUNG.de.html:10.20.30.40
