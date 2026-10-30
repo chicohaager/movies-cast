@@ -334,6 +334,11 @@ in the app's WebView: MKV with H.264 or HEVC plays with picture; **AAC sound dec
 converted stream of the DLNA path is no way out here. Not measured: a real Android TV device (Shield),
 the Android TV home row, the media keys during playback.
 
+Without the app, an Android TV device can be a DLNA TV through Kodi ("Enable UPnP support" and "Allow remote
+control via UPnP", setting `services.upnprenderer`, off by default in Kodi's `settings.xml`): a tester's Nvidia
+Shield TV Pro then appeared in the list and played a film sent from the phone, in Kodi's player (2026-10-30). Before
+that the Shield answered no search: nothing on it offered AVTransport.
+
 ## License
 
 MIT, see [LICENSE](LICENSE).
