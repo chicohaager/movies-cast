@@ -175,6 +175,9 @@ func (s *Server) remember(rs []dlna.Renderer) {
 	defer s.mu.Unlock()
 	changed := false
 	for _, x := range rs {
+		if isCast(x) {
+			continue // no description URL to ask, no Wake-on-LAN
+		}
 		k := knownTV{Name: x.Name, Model: x.Model, Host: x.Host(), MAC: s.macOf(x.Host()), Location: x.Location}
 		old, had := s.prefs.Known[x.ID]
 		if k.MAC == "" {

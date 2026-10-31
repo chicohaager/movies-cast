@@ -9,6 +9,7 @@
 //	SSDP_PORT   local UDP port of the SSDP search (default 1901; 0 = any), so a firewall can allow the answers
 //	SSDP        "false" turns discovery off
 //	STATE_FILE  file that keeps sessions across restarts (holds Movies tokens, 0600)
+//	CAST        "false" turns the search for Google Cast devices off
 //	TLS_LISTEN  also serve HTTPS here (e.g. :8443); the TVs keep fetching films over HTTP
 //	TLS_CERT, TLS_KEY  certificate and key for HTTPS (e.g. from `tailscale cert`);
 //	            without them a self-signed one is created once in TLS_DIR
@@ -113,7 +114,13 @@ func main() {
 		log.Printf("ssdp: port %d: %v (searching from a random port instead)", ssdpPort, err)
 		finder.Port = 0
 	}
-	srv := server.New(server.Config{PublicURL: os.Getenv("PUBLIC_URL"), Port: port, StateFile: os.Getenv("STATE_FILE")}, mc, tv, finder)
+	// Google Cast devices next to the DLNA TVs (CAST=false turns it off).
+	var transport server.Transport = tv
+	var renderers server.Renderers = finder
+	if env("CAST", "true") != "false" {
+		transport, renderers = server.CastAware(tv, finder)
+	}
+	srv := server.New(server.Config{PublicURL: os.Getenv("PUBLIC_URL"), Port: port, StateFile: os.Getenv("STATE_FILE")}, mc, transport, renderers)
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
