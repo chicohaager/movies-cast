@@ -44,6 +44,46 @@ Sound (8): the LG lists no AC3, E-AC3, TrueHD or DTS (measured 2026-10-28) yet p
 "No sound?" in 0.20. The Samsung UE50MU6179 lists AC3 only; whether it has sound with E-AC3 or TrueHD
 is unknown.
 
+## From the review of 2026-10-31
+
+A review as a computer magazine would write it (pros/cons, compared with 5KPlayer's DLNA page and with
+BubbleUPnP, Jellyfin cast, Plex, Infuse). Each line names what was measured that day; nothing here is
+built yet, and the order is open.
+
+### Features
+
+| # | What | Measured 2026-10-31 | Effort | Note |
+|---|---|---|---|---|
+| 12 | series and episodes, "next episode" | `Movies()` asks `IncludeItemTypes=Movie` only (`internal/movies/movies.go:202`); `Series`/`Episode` appear nowhere in the code | measure first: small | whether Movies 0.3.0 lists series is unknown — measurable with `Items?IncludeItemTypes=Series` on .143; the biggest gap for readers |
+| 13 | search, filter (genre, year, unwatched), sort ("recently added") on the phone | no filter or sort in `web/app.js`; the list is always by name | small–medium | |
+| 14 | paging of the library | one request for the whole library, no `Limit`/`StartIndex` (`movies.go:199-215`) | small | how it feels with 2000 films is not measured |
+| 15 | queue and autoplay of the next film | no `Queue`/`autoplay`/`Next` in the code | medium | matters most once 12 exists |
+| 16 | subtitles over DLNA | subtitles only in the TV app; Samsung's extension parked (7 below) | medium | ways: `sec:CaptionInfoEx` (Samsung), an SRT `res`, or burned in by Movies' transcode on request like "No sound?" |
+| 17 | Chromecast as a target, AirPlay later | no `Chromecast`/`AirPlay` in the code | large | would reach Google TV, Shield and Fire TV without an own app; the Shield needs Kodi today |
+| 18 | audio track on Android TV | `audioTracks` missing in Android WebView (README); on a tester's Shield E-AC3 had sound and AAC was silent | open | until then: "Android TV app experimental" |
+| 19 | music and photos | no `Music`/`Photo` in the code | medium | only if Movies serves them |
+
+### Audience and getting started
+
+| # | What | Measured 2026-10-31 | Effort | Note |
+|---|---|---|---|---|
+| 20 | Jellyfin/Emby server as a second source | Movies imitates the Jellyfin API (README); movies-cast talks only to Movies | medium | owner's decision: widens the audience from ZimaOS + Movies beta to every Jellyfin user with a DLNA TV |
+| 21 | HTTPS | no TLS anywhere (`grep https\|TLS` empty); the password crosses the LAN in plain HTTP | medium | through the ZimaOS gateway or `tailscale cert`; also solves the cookie limit (README "Known limit") |
+| 22 | requirement: ZimaOS x86-64 and the Movies beta ≥ 0.3.0, not in the App Store | README "Requirements" | — | depends on IceWhale; 20 is the way around it |
+| 23 | webOS app for users | developer mode only, renewed daily (README) | large | LG Content Store submission |
+| 24 | translations read by native speakers | none yet (`docs/TRANSLATIONS.md`) | small per language | testers can help |
+| 25 | accessibility | 4 `aria-` attributes in `web/index.html`, 1 in `web/app.js` | small–medium | screen reader not tried |
+| 26 | maturity signals | repository public since 2026-10-28, 0 stars, 0 issues (`gh api`) | — | a magazine would say "early beta"; issue templates and a changelog help |
+| 27 | README split: product page (what it does, what it needs, how to start) and measurement logs in `docs/` | README reads as a measurement log | small | |
+
+### Further ideas (not measured, beyond the current scope)
+
+- A public table "TV model × format × sound" from testers' `formats.json` (opt-in export) — no competitor has one.
+- Home Assistant integration (`media_player`), voice ("play Avatar in the living room").
+- Several TVs at once (party mode), sleep timer, parental control from `OfficialRating`, switching the account on the TV (11).
+- Update notice in the status card (new GitHub release), a diagnostics bundle for testers' reports.
+- Presentation: a 30 s video and a comparison with Jellyfin cast / BubbleUPnP; sell "no transcoding, no load on the NAS" as the strength it is.
+
 ## Measured and parked
 
 - **Login through the ZimaOS session (5):** the ZimaOS UI keeps its token in `localStorage.access_token`
