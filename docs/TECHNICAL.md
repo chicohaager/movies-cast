@@ -335,6 +335,16 @@ answered with 200 at every step; the TV showed a spinner, `/playback-info` answe
 showed no connection from the Apple TV to the media server. pyatv 0.18.0 (`atvremote play_url`, same
 credentials) gave the same result. AirPlay video therefore is not in 0.27.
 
+Later that day the same Apple TV (tvOS 26.6.1) played a URL through its remote-control queue instead of
+`/play` (tvOS 26 changed this flow; pyatv issues #2821 and #2906, an unmerged rework of pyatv's `play_url`):
+after RECORD a second SETUP with one stream (`type` 130, `controlType` 1, `clientTypeUUID`
+`A6B27562-B43A-4F2D-B75F-82391E250194`) returns a `streamID`, and `POST /command` (HTTP/1.1, `X-Apple-StreamID`,
+the first SETUP's session UUID as `X-Apple-Session-ID`, body `{params: {data: <binary plist>}}`) carries
+`insertPlayQueueItem` with the `Content-Location`, two `setProperty` and `setRate`. The Apple TV fetched the MP4
+(`AppleCoreMedia/1.0.0.23L781`, one range request over the whole file), and the event channel reported
+`loading`, `readyToPlay`, `playing` with position and duration, and after 30.2 s `itemPlayedToEnd` and `stopped`.
+Measured with the pairing tool outside this repository; movies-cast itself has no AirPlay code yet.
+
 ## Jellyfin and Emby as the source (0.27)
 
 The same client talks to Movies, Jellyfin and Emby: login (`/Users/AuthenticateByName`), lists, streams,
