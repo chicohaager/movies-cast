@@ -238,7 +238,7 @@ function nextAfter(m) {
 function metaLine(m) {
   var parts = [];
   if (m.year) parts.push(m.year);
-  if (m.runtimeSeconds) parts.push(Math.round(m.runtimeSeconds / 60) + " min");
+  if (m.runtimeSeconds) parts.push(m.runtimeSeconds < 60 ? hms(m.runtimeSeconds) : Math.round(m.runtimeSeconds / 60) + " min");
   if (m.width >= 3800) parts.push("4K");
   if (m.videoCodec) parts.push(m.videoCodec.toUpperCase());
   if (m.audio) parts.push(m.audio.toUpperCase());
@@ -260,6 +260,7 @@ function openDetail(id) {
   r.textContent = tr("d.resume", hms(m.resumeSeconds));
   $("d-start").hidden = series;
   $("d-eps").hidden = true;
+  showKodiChoice();
   if (series) {
     $("d-meta").textContent = tr("d.nEpisodes", m.count || 0);
     setFocus($("d-back"));
@@ -267,6 +268,43 @@ function openDetail(id) {
     return;
   }
   setFocus(r.hidden ? $("d-start") : r);
+}
+
+// ---- Kodi (Android TV) -----------------------------------------------------
+// On Android TV with Kodi installed the detail page offers "Play with: Kodi";
+// the choice is kept on the device. Kodi plays the sound the WebView cannot
+// (a tester's Shield, 2026-10-30). The server sends the film to Kodi by DLNA
+// when Kodi's UPnP renderer answers on this device, else hands back a stream
+// URL that the app passes to Kodi (Android intent, from the start).
+
+function android() { return window.MoviesCastAndroid || null; }
+function kodiThere() { try { return !!(android() && android().hasKodi()); } catch (e) { return false; } }
+function useKodi() { return kodiThere() && loadPref("player") === "kodi"; }
+
+function showKodiChoice() {
+  var b = $("d-kodi");
+  b.hidden = !kodiThere();
+  b.textContent = tr(useKodi() ? "kodi.on" : "kodi.off");
+}
+
+function toggleKodi() {
+  savePref("player", useKodi() ? "" : "kodi");
+  showKodiChoice();
+}
+
+// The server is asked first, while this app is in front: Android (10+)
+// refuses an activity start from an app in the background ("Abort background
+// activity starts", logcat in the Android TV emulator, 2026-10-31) — opening
+// Kodi first had put this app behind it and the intent was dropped.
+function playInKodi(m, resume) {
+  showMsg(tr("kodi.starting"));
+  api("/api/tv/kodi", { movie: m.id, resume: !!resume }).then(function (p) {
+    if (p.mode === "intent") {
+      if (!android().playInKodi(p.url, p.mime, p.title)) showMsg(tr("kodi.none"));
+      return;
+    }
+    android().openKodi(); // DLNA: Kodi plays it; bring its player to the front
+  }).catch(function (e) { showMsg(e.message); });
 }
 
 function playEpisode(id) {
@@ -283,6 +321,7 @@ var video = $("video");
 
 function startPlay(resume) {
   var m = state.selected;
+  if (useKodi()) { playInKodi(m, resume); return; }
   show("player");
   $("spinner").hidden = false;
   $("o-title").textContent = m.name;
@@ -599,6 +638,7 @@ function handleKey(k) {
     else if (c.getAttribute("data-ep")) playEpisode(c.getAttribute("data-ep"));
     else if (c.id === "d-resume") startPlay(true);
     else if (c.id === "d-start") startPlay(false);
+    else if (c.id === "d-kodi") toggleKodi();
     else if (c.id === "d-back") openLibrary(state.selected && state.selected.id);
   } else if (isBack && state.screen === "detail") {
     openLibrary(state.selected && state.selected.id);
@@ -628,6 +668,7 @@ document.addEventListener("click", function (ev) {
   else if (el.getAttribute("data-ep")) playEpisode(el.getAttribute("data-ep"));
   else if (el.id === "d-resume") startPlay(true);
   else if (el.id === "d-start") startPlay(false);
+  else if (el.id === "d-kodi") toggleKodi();
   else if (el.id === "d-back") openLibrary(state.selected && state.selected.id);
 });
 

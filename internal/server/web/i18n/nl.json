@@ -181,5 +181,9 @@
  "srv:100 entries in the queue at most": "hoogstens 100 items in de wachtrij",
  "login.hintServer": "Met je account op de {0}.",
  "d.sub": "Ondertitels",
- "d.subOff": "Uit"
+ "d.subOff": "Uit",
+ "kodi.on": "Afspelen met: Kodi",
+ "kodi.off": "Afspelen met: Movies-Cast",
+ "kodi.starting": "Kodi wordt gestart …",
+ "kodi.none": "Kodi heeft de film niet aangenomen."
 }

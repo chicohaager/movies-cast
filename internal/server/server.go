@@ -271,6 +271,7 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /api/tv/pair/qr", s.tvPairQR)
 	mux.HandleFunc("POST /api/tv/pair/approve", s.withSession(s.tvPairApprove))
 	mux.HandleFunc("POST /api/tv/play", s.withSession(s.tvPlay))
+	mux.HandleFunc("POST /api/tv/kodi", s.withSession(s.tvKodi))
 	mux.HandleFunc("GET /api/tv/cmd", s.withSession(s.tvCmd))
 	mux.HandleFunc("POST /api/tv/progress", s.withSession(s.tvProgress))
 	mux.HandleFunc("GET /api/tv/subs/{play}/{file}", s.withSession(s.tvSubtitle))

@@ -181,5 +181,9 @@
  "srv:100 entries in the queue at most": "no máximo 100 itens na fila",
  "login.hintServer": "Com a sua conta no {0}.",
  "d.sub": "Legendas",
- "d.subOff": "Desativadas"
+ "d.subOff": "Desativadas",
+ "kodi.on": "Reproduzir com: Kodi",
+ "kodi.off": "Reproduzir com: Movies-Cast",
+ "kodi.starting": "A iniciar o Kodi …",
+ "kodi.none": "O Kodi não aceitou o filme."
 }

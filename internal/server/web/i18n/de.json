@@ -181,5 +181,9 @@
  "srv:100 entries in the queue at most": "höchstens 100 Einträge in der Warteschlange",
  "login.hintServer": "Mit deinem Konto auf dem {0}.",
  "d.sub": "Untertitel",
- "d.subOff": "Aus"
+ "d.subOff": "Aus",
+ "kodi.on": "Abspielen mit: Kodi",
+ "kodi.off": "Abspielen mit: Movies-Cast",
+ "kodi.starting": "Kodi startet …",
+ "kodi.none": "Kodi hat den Film nicht angenommen."
 }

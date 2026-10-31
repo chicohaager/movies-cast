@@ -181,5 +181,9 @@
  "srv:100 entries in the queue at most": "100 elementos como máximo en la cola",
  "login.hintServer": "Con tu cuenta en el {0}.",
  "d.sub": "Subtítulos",
- "d.subOff": "Desactivados"
+ "d.subOff": "Desactivados",
+ "kodi.on": "Reproducir con: Kodi",
+ "kodi.off": "Reproducir con: Movies-Cast",
+ "kodi.starting": "Iniciando Kodi …",
+ "kodi.none": "Kodi no aceptó la película."
 }

@@ -5,6 +5,10 @@
     package="io.github.moviescast.tv">
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Android 11+ shows an app only the packages it names: Kodi plays the sound the WebView cannot. -->
+    <queries>
+        <package android:name="org.xbmc.kodi" />
+    </queries>
     <uses-feature android:name="android.software.leanback" android:required="false" />
     <uses-feature android:name="android.hardware.touchscreen" android:required="false" />
 

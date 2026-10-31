@@ -181,5 +181,9 @@
  "srv:100 entries in the queue at most": "nejvýše 100 položek ve frontě",
  "login.hintServer": "Svým účtem na serveru {0}.",
  "d.sub": "Titulky",
- "d.subOff": "Vypnuto"
+ "d.subOff": "Vypnuto",
+ "kodi.on": "Přehrávat v: Kodi",
+ "kodi.off": "Přehrávat v: Movies-Cast",
+ "kodi.starting": "Spouští se Kodi …",
+ "kodi.none": "Kodi film nepřijal."
 }
