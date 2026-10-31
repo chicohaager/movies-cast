@@ -35,7 +35,11 @@ import (
 var webFS embed.FS
 
 const (
-	cookieName      = "mc_s"
+	cookieName = "mc_s"
+	// tlsCookieName is the cookie over HTTPS (roadmap 21): __Host- makes the
+	// browser keep it to this origin (no Domain, Path /, Secure), so another
+	// app on the same NAS address no longer receives it.
+	tlsCookieName   = "__Host-mc_s"
 	sessionMaxAge   = 30 * 24 * time.Hour
 	playMaxAge      = 24 * time.Hour
 	rendererTTL     = 5 * time.Minute
@@ -424,7 +428,7 @@ type handlerWithSession func(http.ResponseWriter, *http.Request, string, *sessio
 
 func (s *Server) withSession(h handlerWithSession) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		c, err := r.Cookie(cookieName)
+		c, err := r.Cookie(cookieNameFor(r))
 		if err != nil {
 			fail(w, http.StatusUnauthorized, "nicht angemeldet")
 			return
@@ -453,7 +457,7 @@ func (s *Server) withSession(h handlerWithSession) http.HandlerFunc {
 			return
 		}
 		if reissue {
-			setSessionCookie(w, c.Value)
+			setSessionCookie(w, r, c.Value)
 		}
 		h(w, r, c.Value, sess)
 	}
@@ -501,7 +505,7 @@ func (s *Server) login(w http.ResponseWriter, r *http.Request) {
 	delete(s.loginFails, ip)
 	s.saveSessionsLocked()
 	s.mu.Unlock()
-	setSessionCookie(w, sid)
+	setSessionCookie(w, r, sid)
 	writeJSON(w, http.StatusOK, map[string]string{"name": ms.UserName})
 }
 
@@ -524,7 +528,7 @@ func (s *Server) logout(w http.ResponseWriter, r *http.Request, sid string, sess
 			log.Printf("logout at movies: %v", err)
 		}
 	}
-	http.SetCookie(w, &http.Cookie{Name: cookieName, Value: "", Path: "/", MaxAge: -1, HttpOnly: true, SameSite: http.SameSiteStrictMode})
+	http.SetCookie(w, &http.Cookie{Name: cookieNameFor(r), Value: "", Path: "/", MaxAge: -1, HttpOnly: true, Secure: r.TLS != nil, SameSite: http.SameSiteStrictMode})
 	writeJSON(w, http.StatusOK, map[string]bool{"ok": true})
 }
 
@@ -599,8 +603,17 @@ func (s *Server) loginDone(ip string, failed bool) {
 }
 
 // setSessionCookie issues the session cookie for sessionMaxAge from now.
-func setSessionCookie(w http.ResponseWriter, sid string) {
-	http.SetCookie(w, &http.Cookie{Name: cookieName, Value: sid, Path: "/", HttpOnly: true, SameSite: http.SameSiteStrictMode, MaxAge: int(sessionMaxAge / time.Second)})
+func setSessionCookie(w http.ResponseWriter, r *http.Request, sid string) {
+	http.SetCookie(w, &http.Cookie{Name: cookieNameFor(r), Value: sid, Path: "/", HttpOnly: true, Secure: r.TLS != nil, SameSite: http.SameSiteStrictMode, MaxAge: int(sessionMaxAge / time.Second)})
+}
+
+// cookieNameFor: __Host-mc_s over HTTPS, mc_s over plain HTTP (a browser
+// refuses a Secure cookie there).
+func cookieNameFor(r *http.Request) string {
+	if r.TLS != nil {
+		return tlsCookieName
+	}
+	return cookieName
 }
 
 // unreachable is a connection that never reached the TV (off, standby, gone),

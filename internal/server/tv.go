@@ -153,7 +153,7 @@ func (s *Server) tvPairPoll(w http.ResponseWriter, r *http.Request) {
 	case sid == "":
 		writeJSON(w, http.StatusOK, map[string]bool{"pending": true})
 	default:
-		setSessionCookie(w, sid)
+		setSessionCookie(w, r, sid)
 		writeJSON(w, http.StatusOK, map[string]string{"name": name})
 	}
 }

@@ -9,10 +9,15 @@
 //	SSDP_PORT   local UDP port of the SSDP search (default 1901; 0 = any), so a firewall can allow the answers
 //	SSDP        "false" turns discovery off
 //	STATE_FILE  file that keeps sessions across restarts (holds Movies tokens, 0600)
+//	TLS_LISTEN  also serve HTTPS here (e.g. :8443); the TVs keep fetching films over HTTP
+//	TLS_CERT, TLS_KEY  certificate and key for HTTPS (e.g. from `tailscale cert`);
+//	            without them a self-signed one is created once in TLS_DIR
+//	TLS_DIR     where the self-signed certificate lives (default: the STATE_FILE's directory, else .)
 package main
 
 import (
 	"context"
+	"crypto/tls"
 	"errors"
 	"flag"
 	"fmt"
@@ -21,6 +26,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"syscall"
@@ -30,6 +36,7 @@ import (
 	"movies-cast/internal/dlna"
 	"movies-cast/internal/movies"
 	"movies-cast/internal/server"
+	"movies-cast/internal/tlsconf"
 )
 
 var version = "dev"
@@ -132,6 +139,34 @@ func main() {
 			log.Printf("shutdown: %v", err)
 		}
 	}()
+	if tl := os.Getenv("TLS_LISTEN"); tl != "" {
+		dir := env("TLS_DIR", ".")
+		if sf := os.Getenv("STATE_FILE"); sf != "" && os.Getenv("TLS_DIR") == "" {
+			dir = filepath.Dir(sf)
+		}
+		cert, err := tlsconf.Load(os.Getenv("TLS_CERT"), os.Getenv("TLS_KEY"), dir, dlna.OwnIPs())
+		if err != nil {
+			log.Fatalf("TLS: %v", err)
+		}
+		tln, err := lc.Listen(ctx, "tcp", tl)
+		if err != nil {
+			log.Fatal(err)
+		}
+		ts := &http.Server{Handler: srv.Handler(), ReadHeaderTimeout: 10 * time.Second, IdleTimeout: 2 * time.Minute,
+			TLSConfig: &tls.Config{Certificates: []tls.Certificate{cert}, MinVersion: tls.VersionTLS12}}
+		log.Printf("HTTPS on %s (%s)", tln.Addr(), map[bool]string{true: "own certificate", false: "self-signed, in " + dir}[os.Getenv("TLS_CERT") != ""])
+		go func() {
+			<-ctx.Done()
+			sctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+			_ = ts.Shutdown(sctx)
+		}()
+		go func() {
+			if err := ts.ServeTLS(tln, "", ""); err != nil && !errors.Is(err, http.ErrServerClosed) {
+				log.Fatal(err)
+			}
+		}()
+	}
 	if err := hs.Serve(ln); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		log.Fatal(err)
 	}
