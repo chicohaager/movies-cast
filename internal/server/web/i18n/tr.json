@@ -181,5 +181,9 @@
  "srv:100 entries in the queue at most": "sırada en fazla 100 öğe olabilir",
  "login.hintServer": "{0} hesabınızla.",
  "d.sub": "Altyazı",
- "d.subOff": "Kapalı"
+ "d.subOff": "Kapalı",
+ "kodi.on": "Oynatıcı: Kodi",
+ "kodi.off": "Oynatıcı: Movies-Cast",
+ "kodi.starting": "Kodi başlatılıyor …",
+ "kodi.none": "Kodi filmi kabul etmedi."
 }

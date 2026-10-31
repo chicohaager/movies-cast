@@ -181,5 +181,9 @@
  "srv:100 entries in the queue at most": "キューは最大 100 件までです",
  "login.hintServer": "{0} のアカウントで。",
  "d.sub": "字幕",
- "d.subOff": "オフ"
+ "d.subOff": "オフ",
+ "kodi.on": "再生アプリ: Kodi",
+ "kodi.off": "再生アプリ: Movies-Cast",
+ "kodi.starting": "Kodi を起動中 …",
+ "kodi.none": "Kodi が映画を受け付けませんでした。"
 }

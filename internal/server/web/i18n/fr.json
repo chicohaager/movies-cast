@@ -181,5 +181,9 @@
  "srv:100 entries in the queue at most": "100 éléments au plus dans la file",
  "login.hintServer": "Avec votre compte sur le {0}.",
  "d.sub": "Sous-titres",
- "d.subOff": "Désactivés"
+ "d.subOff": "Désactivés",
+ "kodi.on": "Lire avec : Kodi",
+ "kodi.off": "Lire avec : Movies-Cast",
+ "kodi.starting": "Démarrage de Kodi …",
+ "kodi.none": "Kodi n'a pas accepté le film."
 }

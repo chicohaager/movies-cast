@@ -181,5 +181,9 @@
  "srv:100 entries in the queue at most": "legfeljebb 100 elem lehet a sorban",
  "login.hintServer": "A(z) {0} fiókoddal.",
  "d.sub": "Felirat",
- "d.subOff": "Ki"
+ "d.subOff": "Ki",
+ "kodi.on": "Lejátszás ezzel: Kodi",
+ "kodi.off": "Lejátszás ezzel: Movies-Cast",
+ "kodi.starting": "Kodi indul …",
+ "kodi.none": "A Kodi nem fogadta a filmet."
 }

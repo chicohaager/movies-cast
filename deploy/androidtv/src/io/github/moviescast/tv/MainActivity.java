@@ -1,11 +1,14 @@
 package io.github.moviescast.tv;
 
 import android.app.Activity;
+import android.content.ActivityNotFoundException;
+import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.KeyEvent;
 import android.view.WindowManager;
+import android.webkit.JavascriptInterface;
 import android.webkit.WebResourceError;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebSettings;
@@ -22,6 +25,7 @@ import android.window.OnBackInvokedDispatcher;
  */
 public class MainActivity extends Activity {
     static final String START = "file:///android_asset/start.html";
+    static final String KODI = "org.xbmc.kodi";
 
     private WebView web;
 
@@ -46,6 +50,9 @@ public class MainActivity extends Activity {
                 view.loadUrl(START + "?fail=" + Uri.encode(String.valueOf(err.getDescription())));
             }
         });
+        // Kodi plays the sound the WebView cannot (a tester's Shield, 2026-10-30:
+        // AAC silent, no audio track choice); tv.js offers it when Kodi is installed.
+        web.addJavascriptInterface(new Bridge(), "MoviesCastAndroid");
         setContentView(web);
         web.requestFocus();
         if (saved == null || web.restoreState(saved) == null) {
@@ -56,6 +63,41 @@ public class MainActivity extends Activity {
         if (Build.VERSION.SDK_INT >= 33) {
             getOnBackInvokedDispatcher().registerOnBackInvokedCallback(
                     OnBackInvokedDispatcher.PRIORITY_DEFAULT, this::pageBack);
+        }
+    }
+
+    /** What tv.js may ask of Android: is Kodi there, start it, hand it a film. */
+    class Bridge {
+        @JavascriptInterface
+        public boolean hasKodi() {
+            return getPackageManager().getLaunchIntentForPackage(KODI) != null;
+        }
+
+        /** Starts Kodi, so its UPnP renderer answers the server's search. */
+        @JavascriptInterface
+        public boolean openKodi() {
+            Intent i = getPackageManager().getLaunchIntentForPackage(KODI);
+            if (i == null) {
+                return false;
+            }
+            startActivity(i);
+            return true;
+        }
+
+        /** Hands Kodi a stream URL, as other apps use Kodi as external player. */
+        @JavascriptInterface
+        public boolean playInKodi(String url, String mime, String title) {
+            Intent i = new Intent(Intent.ACTION_VIEW);
+            i.setDataAndType(Uri.parse(url), mime);
+            i.setPackage(KODI);
+            i.putExtra(Intent.EXTRA_TITLE, title);
+            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            try {
+                startActivity(i);
+                return true;
+            } catch (ActivityNotFoundException e) {
+                return false;
+            }
         }
     }
 

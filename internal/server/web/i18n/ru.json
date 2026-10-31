@@ -181,5 +181,9 @@
  "srv:100 entries in the queue at most": "не более 100 элементов в очереди",
  "login.hintServer": "С вашей учётной записью на {0}.",
  "d.sub": "Субтитры",
- "d.subOff": "Выкл."
+ "d.subOff": "Выкл.",
+ "kodi.on": "Воспроизводить в: Kodi",
+ "kodi.off": "Воспроизводить в: Movies-Cast",
+ "kodi.starting": "Запуск Kodi …",
+ "kodi.none": "Kodi не принял фильм."
 }

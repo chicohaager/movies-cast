@@ -181,5 +181,9 @@
  "srv:100 entries in the queue at most": "佇列最多 100 項",
  "login.hintServer": "使用你在 {0} 上的帳號。",
  "d.sub": "字幕",
- "d.subOff": "關閉"
+ "d.subOff": "關閉",
+ "kodi.on": "播放方式：Kodi",
+ "kodi.off": "播放方式：Movies-Cast",
+ "kodi.starting": "正在啟動 Kodi …",
+ "kodi.none": "Kodi 未接收該影片。"
 }

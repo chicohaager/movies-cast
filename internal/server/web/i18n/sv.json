@@ -181,5 +181,9 @@
  "srv:100 entries in the queue at most": "högst 100 poster i kön",
  "login.hintServer": "Med ditt konto på {0}.",
  "d.sub": "Undertexter",
- "d.subOff": "Av"
+ "d.subOff": "Av",
+ "kodi.on": "Spela med: Kodi",
+ "kodi.off": "Spela med: Movies-Cast",
+ "kodi.starting": "Kodi startar …",
+ "kodi.none": "Kodi tog inte emot filmen."
 }

@@ -471,7 +471,7 @@ function metaLine(m) {
   if (m.type === "MusicAlbum") parts.push(t("d.nTracks", m.count || 0));
   if (m.type === "Episode") parts.push(`${m.seriesName || ""} ${epLabel(m)}`.trim());
   if (m.year) parts.push(m.year);
-  if (m.runtimeSeconds && m.type !== "Audio") parts.push(`${Math.round(m.runtimeSeconds / 60)} min`);
+  if (m.runtimeSeconds && m.type !== "Audio") parts.push(m.runtimeSeconds < 60 ? hms(m.runtimeSeconds) : `${Math.round(m.runtimeSeconds / 60)} min`);
   if (m.runtimeSeconds && m.type === "Audio") parts.push(hms(m.runtimeSeconds));
   if (m.rating) parts.push(m.rating);
   if (m.width >= 3800) parts.push("4K");

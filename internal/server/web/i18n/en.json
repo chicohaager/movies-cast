@@ -181,5 +181,9 @@
  "srv:100 entries in the queue at most": "100 entries in the queue at most",
  "login.hintServer": "With your account on the {0}.",
  "d.sub": "Subtitles",
- "d.subOff": "Off"
+ "d.subOff": "Off",
+ "kodi.on": "Play with: Kodi",
+ "kodi.off": "Play with: Movies-Cast",
+ "kodi.starting": "Starting Kodi …",
+ "kodi.none": "Kodi did not take the film."
 }
