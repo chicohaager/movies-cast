@@ -202,7 +202,7 @@ async function loadTVs(refresh) {
     if (!tvs.length) {
       sel.append(new Option(t("tv.none"), ""));
       showError(t("tv.noneHint"));
-      return;
+      return [];
     }
     state.tvs = tvs;
     for (const tv of tvs) {
@@ -213,6 +213,7 @@ async function loadTVs(refresh) {
     if (tvs.some((t) => t.id === want)) sel.value = want;
     state.tv = sel.value;
     localSet("tv", state.tv);
+    return tvs;
   } catch (err) {
     // No TV listed (the server answers 502): the one chosen before must not
     // get the next film. The stored choice stays for when the list is back.
@@ -223,6 +224,7 @@ async function loadTVs(refresh) {
     state.status = null;
     $("player").hidden = true;
     showError(err.message);
+    return null;
   }
 }
 
@@ -346,7 +348,27 @@ $("tv").addEventListener("change", (ev) => {
   localSet("tv", state.tv);
   pollOnce();
 });
-$("refresh").addEventListener("click", () => loadTVs(true));
+// A search waits several seconds for answers (7 s measured on .143,
+// 2026-10-31) and the list often comes back the same, so the button says it
+// is searching and the line under the header what the search found.
+$("refresh").addEventListener("click", async () => {
+  const b = $("refresh");
+  if (b.disabled) return;
+  b.disabled = true;
+  b.setAttribute("aria-busy", "true");
+  b.textContent = t("tv.searching");
+  try {
+    const tvs = await loadTVs(true);
+    if (tvs && tvs.length) {
+      const on = tvs.filter((x) => !x.off).length;
+      showNotice(on ? t("tv.found", on) : t("tv.foundOff"));
+    }
+  } finally {
+    b.disabled = false;
+    b.removeAttribute("aria-busy");
+    b.textContent = t("tv.search");
+  }
+});
 
 // The library: films (and series) always; series, music and photos as tabs
 // when the server has them (/api/views; Movies 0.3.0 has films only).

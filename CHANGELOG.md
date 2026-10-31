@@ -8,8 +8,10 @@ What changed in each version; the "why" with its measurements is in
 - Series and episodes, music albums and photos (with Jellyfin or Emby; Movies 0.3.0 has films only); tabs show only what the server has.
 - Search, sort (name, recently added, year, rating) and filter (unwatched, started, genre) on the phone; the library is read in pages of 200.
 - Queue, and the next episode or track follows by itself when one ran to its end; "Up next" in the episode list.
+- The sleep timer (and Stop on the phone) near the end of an episode no longer lets the next episode start: the watcher could see the TV's STOPPED after the play had been ended.
 - Subtitles to DLNA TVs as SRT (picked on the phone).
 - Google Cast devices as targets.
+- "Search" for TVs says "Searching …" while it waits (7 s on a test NAS) and then what it found, also when no TV answered and the list shows known TVs that are off.
 - Android TV: "Play with: Kodi" — Kodi plays the film with its own player and sound (by DLNA with progress, or by intent).
 - Jellyfin and Emby servers as the source; the login names the server's account.
 - HTTPS (`TLS_LISTEN`) with a `__Host-` session cookie.

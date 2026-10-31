@@ -1172,11 +1172,16 @@ func (s *Server) watch(ctx context.Context, p *play, resume time.Duration) {
 		case mine && sawPlay && !restarting && (st.State == "STOPPED" || st.State == "NO_MEDIA_PRESENT"):
 			s.mu.Lock()
 			last := p.lastPos
+			// Stop on the phone and the sleep timer end the play before the
+			// TV gets Stop; this loop could already be in its next poll and
+			// see that STOPPED. Only a play nobody ended ran to its end
+			// (the sleep timer near the end of an episode started the next
+			// one: TestSleepTimerStopsTheTVAndNothingFollows, 1 in 6 runs).
+			current := s.plays[p.id] == p
+			s.endPlayLocked(p.id)
 			s.mu.Unlock()
-			s.abortPlay(p.id)
-			// Ran to the end (not Stop on the phone, which ends the play
-			// first): the queue or the next episode follows.
-			if finished(p.movie, last) {
+			// Ran to the end: the queue or the next episode follows.
+			if current && finished(p.movie, last) {
 				go s.playNext(p)
 			}
 			return

@@ -80,6 +80,36 @@ test("TV list fails: the old TV is not used any more", async ({ page }) => {
   await page.unroute("**/api/renderers*");
 });
 
+// "Search" waited 7 s on .143 (2026-10-31) without a sign and came back with
+// the same list: it looked dead. While searching the button says so and is
+// locked; afterwards the line under the header names the outcome.
+test("TV search shows that it searches and what it found", async ({ page }) => {
+  await login(page);
+  const off = [
+    { id: "a", name: "Gästezimmer", model: "x", host: "192.0.2.86", off: true },
+    { id: "b", name: "Wohnzimmer", model: "y", host: "192.0.2.252", off: true },
+  ];
+  let answer = off;
+  await page.route("**/api/renderers*", async (route) => {
+    await new Promise((res) => setTimeout(res, 1_500));
+    await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(answer) });
+  });
+  const btn = page.locator("#refresh");
+  await btn.click();
+  await expect(btn).toBeDisabled();
+  await expect(btn).toHaveText("Sucht …");
+  await expect(btn).toHaveAttribute("aria-busy", "true");
+  await expect(btn).toBeEnabled({ timeout: 5_000 });
+  await expect(btn).toHaveText("Suchen");
+  await expect(page.locator("#notice")).toHaveText("Kein Fernseher hat geantwortet. Die Liste zeigt bekannte Fernseher, die aus sind.");
+
+  answer = [{ ...off[0], off: false }, off[1]];
+  await btn.click();
+  await expect(btn).toBeEnabled({ timeout: 5_000 });
+  await expect(page.locator("#notice")).toHaveText("Fernseher gefunden: 1");
+  await page.unroute("**/api/renderers*");
+});
+
 // A refusal shows its buttons (Play anyway, Convert sound …); a failing
 // status poll called showError, which hid them within two seconds.
 test("refusal buttons stay while the status poll fails", async ({ page }) => {
