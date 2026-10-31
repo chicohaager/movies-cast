@@ -23,6 +23,7 @@ day). Order approved on 2026-10-28.
 | 0.25.2 | code and security review: parallel login guesses throttled, the cookie slides with the session, unique pair codes, state files synced; a TV that stopped answering ages out, no HTTP client follows redirects; SSDP answers, description fetches, known TVs, added hosts and open pairings capped; a stream stays with the address that fetched it first, and the player names a refused fetch; make-package.sh builds a worktree of HEAD; the phone page polls once at a time and keeps refusal buttons; the English check of server messages reads every source file (the host cap message was German only) | one SSDP sender on the LAN could fill memory and the TV list without logging in; any LAN host could fetch a running film with the URL the TV hands out over UPnP |
 | 0.25.3 | every stopped report to Movies is logged with film, position and outcome, also when it reached Movies; build-on-host.sh builds a worktree of HEAD, like make-package.sh since 0.25.2 | on .143 (2026-10-29) the log could not say whether Movies got the resume point; check.sh had run on a tree with another session's files |
 | 0.25.4 | MIT license; the repository is public; author, committer and tagger use the GitHub noreply address; image built from the rewritten history, so its revision label names a commit that exists | after the rewrite the 0.25.3 image named 5d3a960, which the repository no longer has |
+| 0.27.0 | series, episodes, music, photos; search, sort, filter; paging; queue and next episode; subtitles over DLNA; Google Cast; Kodi on Android TV; Jellyfin and Emby as the source; HTTPS; axe checks; webOS store build; README split, CHANGELOG, CONTRIBUTING; sleep timer, diagnostics, opt-in update notice (roadmap 12–27, see below) | the review of 2026-10-31; the owner asked for all of it and for Kodi on the Shield as the sound path |
 | 0.26.0 | Android TV app (test build, `deploy/androidtv`): WebView on `/tv/`, start page for the server address, Back and media keys through `window.moviesCastKey`; testers' guides explain how it works (phone = remote, nothing installed on a DLNA TV) | a tester with an Nvidia Shield: it answers no DLNA search, and the guide did not say how the parts fit together (2026-10-30). Emulator (WebView 133): MKV H.264/HEVC plays, AC3/E-AC3 silent, MPEG-TS does not open — Shield not measured |
 
 With 0.16 on .143 the search found both TVs with `RENDERERS` empty (3 of 3 searches, 0 drops).
@@ -47,8 +48,32 @@ is unknown.
 ## From the review of 2026-10-31
 
 A review as a computer magazine would write it (pros/cons, compared with 5KPlayer's DLNA page and with
-BubbleUPnP, Jellyfin cast, Plex, Infuse). Each line names what was measured that day; nothing here is
-built yet, and the order is open.
+BubbleUPnP, Jellyfin cast, Plex, Infuse). Each line names what was measured that day. Built on
+2026-10-31 (0.27.0, not released yet); the state of each line:
+
+| # | State 2026-10-31 | Evidence |
+|---|---|---|
+| 12 | done | Movies 0.3.0 has no series (0 Series/Episode items on .143); with Jellyfin 10.11.0 / Emby 4.10.2.0 test servers: episodes in order, "Up next", the TV app's episode list |
+| 13 | done | search, sort, filter on the phone (Movies ignores `IsPlayed`/`Genres`); browser test `e2e/library.spec.js` |
+| 14 | done | pages of 200 (`StartIndex`/`Limit` honoured by Movies 0.3.0); a repeated page stops; 2000 films not tried |
+| 15 | done | on the LG: episode 1 → episode 2 by itself, a queued film before episode 3 |
+| 16 | done for DLNA | SRT + `sec:CaptionInfoEx`; the LG fetched `sub.srt` — whether it showed the lines was not seen |
+| 17 | Cast done, AirPlay not | Cast against test receivers (no Cast device on the LAN); AirPlay: Apple TV 4K and the LG answer `/play` with 403 without pairing |
+| 18 | done through Kodi | "Play with: Kodi" in the Android TV app (DLNA to Kodi, or intent); intent path measured in the emulator with Kodi 21.3; sound on a real Shield not measured by me |
+| 19 | done | music (MP3 PLAYING on the LG) and photos (JPEG accepted) with Jellyfin/Emby; Movies has neither |
+| 20 | done | Jellyfin 10.11.0 and Emby 4.10.2.0 as `MOVIES_URL`, measured with test servers and on the LG |
+| 21 | done | `TLS_LISTEN`, `__Host-mc_s` measured over HTTPS |
+| 22 | documented | README "Requirements": Movies or Jellyfin/Emby; the Movies beta stays IceWhale's decision |
+| 23 | prepared | store build + docs/WEBOS-STORE.md; account, checklist and submission are the owner's |
+| 24 | prepared | TRANSLATIONS lists the 42 new keys, issue template; native speakers are needed |
+| 25 | done (automated) | axe-core WCAG 2.1 AA in the browser tests, all pass; a screen reader not tried |
+| 26 | prepared | CHANGELOG, CONTRIBUTING, issue templates (not pushed); stars and issues come from others |
+| 27 | done | README product page, docs/TECHNICAL.md (moved verbatim) |
+
+Further ideas: sleep timer, diagnostics file (formats per TV model, the "TV × format" data for testers'
+reports) and an opt-in update notice are built; Home Assistant integration, several TVs at once, parental
+control in Movies-Cast (the server's per-user rating limit applies — not measured), switching the account on
+the TV and a presentation video are not.
 
 ### Features
 
