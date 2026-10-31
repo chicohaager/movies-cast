@@ -185,5 +185,6 @@
  "kodi.on": "Oynatıcı: Kodi",
  "kodi.off": "Oynatıcı: Movies-Cast",
  "kodi.starting": "Kodi başlatılıyor …",
- "kodi.none": "Kodi filmi kabul etmedi."
+ "kodi.none": "Kodi filmi kabul etmedi.",
+ "p.pos": "Konum"
 }

@@ -185,5 +185,6 @@
  "kodi.on": "Play with: Kodi",
  "kodi.off": "Play with: Movies-Cast",
  "kodi.starting": "Starting Kodi …",
- "kodi.none": "Kodi did not take the film."
+ "kodi.none": "Kodi did not take the film.",
+ "p.pos": "Position"
 }

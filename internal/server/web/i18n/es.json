@@ -185,5 +185,6 @@
  "kodi.on": "Reproducir con: Kodi",
  "kodi.off": "Reproducir con: Movies-Cast",
  "kodi.starting": "Iniciando Kodi …",
- "kodi.none": "Kodi no aceptó la película."
+ "kodi.none": "Kodi no aceptó la película.",
+ "p.pos": "Posición"
 }

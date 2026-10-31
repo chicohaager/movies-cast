@@ -185,5 +185,6 @@
  "kodi.on": "播放方式：Kodi",
  "kodi.off": "播放方式：Movies-Cast",
  "kodi.starting": "正在启动 Kodi …",
- "kodi.none": "Kodi 未接收该影片。"
+ "kodi.none": "Kodi 未接收该影片。",
+ "p.pos": "播放位置"
 }

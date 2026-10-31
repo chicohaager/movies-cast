@@ -185,5 +185,6 @@
  "kodi.on": "Afspelen met: Kodi",
  "kodi.off": "Afspelen met: Movies-Cast",
  "kodi.starting": "Kodi wordt gestart …",
- "kodi.none": "Kodi heeft de film niet aangenomen."
+ "kodi.none": "Kodi heeft de film niet aangenomen.",
+ "p.pos": "Positie"
 }

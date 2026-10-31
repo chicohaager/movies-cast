@@ -185,5 +185,6 @@
  "kodi.on": "Lire avec : Kodi",
  "kodi.off": "Lire avec : Movies-Cast",
  "kodi.starting": "Démarrage de Kodi …",
- "kodi.none": "Kodi n'a pas accepté le film."
+ "kodi.none": "Kodi n'a pas accepté le film.",
+ "p.pos": "Position"
 }

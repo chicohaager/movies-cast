@@ -185,5 +185,6 @@
  "kodi.on": "Воспроизводить в: Kodi",
  "kodi.off": "Воспроизводить в: Movies-Cast",
  "kodi.starting": "Запуск Kodi …",
- "kodi.none": "Kodi не принял фильм."
+ "kodi.none": "Kodi не принял фильм.",
+ "p.pos": "Позиция"
 }
