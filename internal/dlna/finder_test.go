@@ -355,3 +355,33 @@ func TestFinderAsksKnownTVsDuringTheSSDPWait(t *testing.T) {
 		t.Fatalf("search took %v, want the known TV asked during the SSDP wait", took)
 	}
 }
+
+// A TV seen before that does not answer in time (off: the kernel's ARP wait
+// took 3.07 s on .143) is given up after knownFetchTimeout, so it does not
+// outlast the SSDP wait; it is no error, the phone lists it as off.
+func TestFinderGivesUpOnASilentKnownTV(t *testing.T) {
+	old := knownFetchTimeout
+	knownFetchTimeout = 200 * time.Millisecond
+	t.Cleanup(func() { knownFetchTimeout = old })
+	release := make(chan struct{})
+	silent := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		select {
+		case <-release:
+		case <-r.Context().Done():
+		}
+	}))
+	t.Cleanup(func() { close(release); silent.Close() })
+	f := NewFinder(nil, true, 0, NewClient())
+	f.allow = func(string) bool { return true }
+	f.search = func(context.Context, time.Duration) ([]string, int, error) { return nil, 0, nil }
+	f.SetKnown([]string{silent.URL + "/"})
+	t0 := time.Now()
+	rs, err := f.Find(context.Background(), true)
+	took := time.Since(t0)
+	if len(rs) != 0 || err != nil {
+		t.Fatalf("got %+v, %v; want no TV and no error", rs, err)
+	}
+	if took < 200*time.Millisecond || took > 600*time.Millisecond {
+		t.Fatalf("search took %v, want about the 200 ms limit", took)
+	}
+}

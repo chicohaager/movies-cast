@@ -179,6 +179,13 @@ func (f *Finder) Open(ctx context.Context) error {
 // maxFetches bounds the description fetches running at once in Find.
 const maxFetches = 8
 
+// knownFetchTimeout bounds asking a TV seen before at its last address. On
+// .143 (2026-10-31) the LG, switched on, gave description and protocol info
+// within 0.3 s; a device that is off costs the kernel's ARP wait, 3.07 s
+// measured, which then outlasted the 2 s SSDP wait. A TV the search finds
+// keeps the search's own limit. A variable for the tests.
+var knownFetchTimeout = 1500 * time.Millisecond
+
 // Find returns the cached list, or searches when it is stale or refresh is set.
 //
 // The search runs on its own context: the result is shared by every client,
@@ -215,6 +222,12 @@ func (f *Finder) Find(_ context.Context, refresh bool) ([]Renderer, error) {
 		go func() {
 			slots <- struct{}{}
 			defer func() { <-slots }()
+			ctx := ctx
+			if known {
+				var cancel context.CancelFunc
+				ctx, cancel = context.WithTimeout(ctx, knownFetchTimeout)
+				defer cancel()
+			}
 			r, err := FetchRenderer(ctx, f.HTTP, loc)
 			if err != nil {
 				results <- result{err: err, known: known}
