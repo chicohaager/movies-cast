@@ -94,9 +94,9 @@ public-data scan; `build-on-host.sh` and the testers' package run it first (`CHE
 ### Package for testers
 
 ```bash
-deploy/testers/make-package.sh 0.24.0 --push   # image to ghcr.io/chicohaager/movies-cast:0.24.0 (public)
-# -> deploy/testers/out/movies-cast-0.24.0.zip: docker-compose.yml (ZimaOS "Import"), ANLEITUNG.de.html,
-#    GUIDE.en.html (install, test list of 12, report template, removal), SHA256SUMS
+deploy/testers/make-package.sh 0.27.0 --push   # image to ghcr.io/chicohaager/movies-cast:0.27.0 (public)
+# -> deploy/testers/out/movies-cast-0.27.0.zip: docker-compose.yml (ZimaOS "Import"), ANLEITUNG.de.html,
+#    GUIDE.en.html, GUIDE.fr.html (install, test list of 16, report template, removal), SHA256SUMS
 ```
 
 Testers import the compose in the ZimaOS dashboard; ZimaOS pulls the image itself, which is why it lives in a

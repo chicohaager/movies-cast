@@ -33,12 +33,23 @@ assert d["x-casaos"]["icon"].startswith("data:image/svg+xml;base64,")
 
 header = (
     f"# movies-cast {version} for ZimaOS: Dashboard -> \"+\" next to Apps -> custom app -> Import.\n"
-    "# Guide: ANLEITUNG.de.html / GUIDE.en.html in the same package.\n"
+    "# Guide: ANLEITUNG.de.html / GUIDE.en.html / GUIDE.fr.html in the same package.\n"
 )
 with open(os.path.join(out, "docker-compose.yml"), "w") as f:
     f.write(header + compose)
 
-for name in ("ANLEITUNG.de.html", "GUIDE.en.html"):
+guides = ("ANLEITUNG.de.html", "GUIDE.en.html", "GUIDE.fr.html")
+# The guides are one text in three languages: a row or section added to one
+# only (the test list grew in de/en first, 2026-10-31) stops the package.
+shape = {}
+for name in guides:
+    with open(os.path.join(here, name)) as f:
+        page = f.read()
+    shape[name] = (page.count("<tr><td>"), page.count("<h2>"), page.count("<li>"))
+if len(set(shape.values())) != 1:
+    sys.exit(f"render: the guides differ in test rows, sections or list items: {shape}")
+
+for name in guides:
     with open(os.path.join(here, name)) as f:
         page = f.read()
     for key, value in (("{{VERSION}}", version), ("{{IMAGE}}", image)):

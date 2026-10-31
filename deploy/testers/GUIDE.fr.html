@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Movies-Cast {{VERSION}} : installation sur ZimaOS, liste de tests et modèle de rapport pour les testeurs">
+<title>Movies-Cast {{VERSION}} – guide pour les testeurs</title>
+<style>
+:root { --bg:#f6f6f8; --card:#fff; --text:#16181d; --muted:#5d6270; --line:#d9dbe1; --accent:#c2410c; --code:#eef0f4; }
+@media (prefers-color-scheme: dark) {
+  :root { --bg:#111318; --card:#1b1e25; --text:#eceef3; --muted:#9aa0ad; --line:#2c303a; --accent:#fb923c; --code:#232733; }
+}
+* { box-sizing: border-box; }
+body { margin:0; background:var(--bg); color:var(--text); font:16px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif; }
+main { max-width:860px; margin:0 auto; padding:24px 16px 48px; }
+h1 { font-size:1.6rem; margin:0 0 4px; } h1 small { color:var(--muted); font-weight:400; font-size:1rem; }
+h2 { font-size:1.2rem; margin:32px 0 8px; border-bottom:1px solid var(--line); padding-bottom:4px; }
+.card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px 16px; margin:12px 0; }
+.note { border-left:4px solid var(--accent); }
+code, kbd { background:var(--code); border-radius:4px; padding:1px 5px; font-size:.92em; overflow-wrap:anywhere; }
+table { width:100%; border-collapse:collapse; } th, td { text-align:left; vertical-align:top; padding:8px 6px; border-bottom:1px solid var(--line); }
+th { color:var(--muted); font-weight:600; } td:first-child { width:2.2em; color:var(--muted); }
+ol li, ul li { margin:4px 0; }
+pre { white-space:pre-wrap; overflow-wrap:anywhere; margin:0; }
+.muted { color:var(--muted); }
+@media print { body { background:#fff; color:#000; } .card { border-color:#999; break-inside:avoid; } a { color:#000; } }
+</style>
+</head>
+<body>
+<main>
+<h1>Movies-Cast {{VERSION}} <small>Guide pour les testeurs</small></h1>
+<p class="muted">Regarder les films d’IceWhale Movies sur un téléviseur DLNA, piloté depuis le téléphone. Le téléviseur lit lui-même le fichier d’origine ; le son n’est converti que s’il reste muet, et seulement sur demande.</p>
+
+<div class="card note">
+<strong>Merci de tester !</strong> Cette version est une version de test. Merci de signaler tout ce qui ne fonctionne pas ou vous surprend, avec le modèle à la fin. Votre rapport va à la personne qui vous a donné ce paquet.
+</div>
+
+<h2>0. Fonctionnement – aucune application sur le téléviseur</h2>
+<ul>
+  <li><strong>Movies-Cast est une deuxième application sur votre ZimaOS</strong>, à côté de Movies. Vous l’installez à partir du fichier <code>docker-compose.yml</code> de ce paquet (section 2).</li>
+  <li><strong>Votre téléphone est la télécommande.</strong> Vous ouvrez la page Movies-Cast dans le navigateur du téléphone, choisissez un film et un téléviseur, puis lancez la lecture. Pause, saut et arrêt se font aussi sur le téléphone.</li>
+  <li><strong>Rien n’est installé sur le téléviseur.</strong> Il doit seulement comprendre le DLNA («&nbsp;Media Renderer&nbsp;») ; Movies-Cast lui envoie le film et le téléviseur le lit lui-même.</li>
+  <li>L’<strong>application TV</strong> montrée dans la vidéo (LG webOS, code d’association, bibliothèque sur le téléviseur) <strong>ne fait pas partie de ce paquet</strong>. Pour <strong>Android TV</strong> (par ex. Nvidia Shield), il existe une application de test, voir la section 9.</li>
+  <li><strong>Mon téléviseur ou mon boîtier convient-il ?</strong> Installez Movies-Cast et allumez l’appareil : s’il apparaît dans la liste des téléviseurs sur le téléphone, il répond comme lecteur vidéo DLNA. Sinon, le texte sous la liste indique ce que la recherche a trouvé.</li>
+  <li><strong>Apple TV :</strong> pas pris en charge dans cette version (AirPlay est prévu pour une version ultérieure).</li>
+</ul>
+
+<h2>1. Prérequis</h2>
+<ul>
+  <li><strong>ZimaOS</strong> sur une machine avec un processeur <strong>x86-64</strong> (ZimaBoard, ZimaBlade, ZimaCube, PC). Les appareils ARM ne fonctionnent pas avec ce paquet.</li>
+  <li>L’application <strong>Movies</strong> d’IceWhale installée sur le même ZimaOS, avec au moins une bibliothèque de films. Movies-Cast vous connecte à Movies avec votre compte ZimaOS. <strong>Movies est pour l’instant une bêta</strong> (module <code>zimaos-movies</code>, version 0.3.0 ou ultérieure ; Movies-Cast fonctionne avec 0.4.0, mesuré le 29/10/2026) et ne figure ni dans l’App Store ni dans la liste des modules de ZimaOS. Si vous n’avez pas Movies, contactez la personne qui vous a donné ce paquet.</li>
+  <li>Un <strong>téléviseur DLNA</strong> (souvent appelé «&nbsp;Media Renderer&nbsp;», «&nbsp;DLNA&nbsp;» ou «&nbsp;partage de médias&nbsp;») sur le même réseau que ZimaOS.</li>
+  <li>Un téléphone ou un ordinateur avec un navigateur sur le même réseau.</li>
+  <li>Une connexion Internet sur la machine ZimaOS pour l’installation : le programme est téléchargé depuis <code>{{IMAGE}}</code>.</li>
+</ul>
+
+<h2>2. Installation</h2>
+<ol>
+  <li>Dans le tableau de bord ZimaOS, cliquez sur <strong>«&nbsp;+&nbsp;»</strong> à côté d’<em>Apps</em>, puis sur l’entrée pour installer une <strong>application personnalisée</strong>. Le même bouton se trouve aussi sur la page d’accueil de l’<em>App Store</em>.</li>
+  <li>En haut de la fenêtre, choisissez <strong>«&nbsp;Import&nbsp;»</strong> → <strong>«&nbsp;Docker Compose&nbsp;»</strong> et sélectionnez le fichier <code>docker-compose.yml</code> de ce paquet. ZimaOS confirme l’import et affiche le logo, l’image <code>ghcr.io/chicohaager/movies-cast</code> et le port 8097.</li>
+  <li>Cliquez sur le bouton d’installation en bas (<strong>«&nbsp;Installieren&nbsp;»</strong> dans l’interface allemande). ZimaOS télécharge le programme (environ 9 Mo) et ajoute la tuile <strong>«&nbsp;Movies-Cast&nbsp;»</strong> avec le logo de Movies-Cast.</li>
+  <li>Si le pare-feu <strong>ZFW</strong> est actif, il affiche deux cartes «&nbsp;nouveau port d’application&nbsp;» (8097/tcp et 1901/udp, «&nbsp;depuis votre réseau local uniquement&nbsp;»). Le réseau local suffit pour Movies-Cast.</li>
+</ol>
+<p class="muted">L’application garde ses données dans <code>/DATA/AppData/movies-cast/state</code> (connexions, noms des téléviseurs, formats éprouvés, vos réglages).</p>
+
+<h2>3. Premiers pas</h2>
+<ol>
+  <li>Ouvrez la tuile – ou, sur votre téléphone, <code>http://&lt;adresse-de-votre-ZimaOS&gt;:8097</code>. Astuce : ajoutez un favori ou «&nbsp;Ajouter à l’écran d’accueil&nbsp;».</li>
+  <li>Connectez-vous avec votre <strong>compte ZimaOS</strong>.</li>
+  <li>Choisissez le <strong>téléviseur</strong> en haut. Il doit être allumé.</li>
+  <li>Touchez un film → <strong>«&nbsp;Lire depuis le début&nbsp;»</strong> (ou «&nbsp;Reprendre à …&nbsp;»).</li>
+  <li>La page s’affiche dans la langue de votre navigateur. En bas de page, vous pouvez choisir la <strong>langue</strong> («&nbsp;Langue&nbsp;») et l’<strong>apparence</strong> («&nbsp;Système&nbsp;», «&nbsp;Clair&nbsp;», «&nbsp;Sombre&nbsp;») ; les deux s’appliquent à votre compte sur tous les appareils.</li>
+</ol>
+
+<div class="card">
+<strong>Aucun téléviseur dans la liste ?</strong>
+<ul>
+  <li>Le texte sous la liste en donne la raison : pas de réponse à la recherche, des réponses sans appareil vidéo, ou tous masqués.</li>
+  <li>Sous <strong>«&nbsp;Gérer les téléviseurs&nbsp;»</strong>, vous pouvez ajouter le téléviseur par son adresse IP.</li>
+  <li>Si un pare-feu tourne sur ZimaOS, il doit autoriser le <strong>port UDP 1901</strong> depuis le réseau domestique (les réponses des téléviseurs à la recherche).</li>
+  <li>La carte <strong>«&nbsp;État&nbsp;»</strong> indique si Movies est joignable, quand la dernière recherche a eu lieu et ce qu’elle a trouvé.</li>
+  <li><strong>«&nbsp;Rechercher&nbsp;»</strong> à côté de la liste relance la recherche : le bouton affiche «&nbsp;Recherche …&nbsp;» pendant quelques secondes, puis le résultat apparaît en haut de la page.</li>
+</ul>
+</div>
+
+<div class="card">
+<strong>Ce que vous pouvez aussi voir</strong>
+<ul>
+  <li><strong>Indication de format</strong> : si le téléviseur n’annonce pas le format du film, Movies-Cast demande d’abord. «&nbsp;Lire quand même&nbsp;» essaie – beaucoup de téléviseurs lisent plus qu’ils n’annoncent.</li>
+  <li><strong>«&nbsp;Pas de son ?&nbsp;»</strong> dans le lecteur relance le film au même endroit avec un son converti. C’est mémorisé par téléviseur et par format audio ; «&nbsp;Son d’origine&nbsp;» l’annule.</li>
+  <li><strong>«&nbsp;– éteint&nbsp;»</strong> après le nom d’un téléviseur : il a déjà été vu, mais ne répond pas maintenant. «&nbsp;Allumer et lire&nbsp;» essaie de le réveiller par Wake-on-LAN (un LG doit avoir «&nbsp;Mobile TV On&nbsp;» activé).</li>
+</ul>
+</div>
+
+<h2>4. Liste de tests</h2>
+<p>Merci de suivre l’ordre ; pour chaque point, «&nbsp;fonctionne&nbsp;» ou une courte description de ce qui s’est passé suffit.</p>
+<table>
+<tr><th>#</th><th>Quoi</th><th>Attendu</th></tr>
+<tr><td>1</td><td>Installation via «&nbsp;Import&nbsp;»</td><td>tuile avec le logo Movies-Cast, un clic ouvre la page</td></tr>
+<tr><td>2</td><td>Connexion avec le compte ZimaOS</td><td>la liste des films de Movies apparaît, avec les affiches</td></tr>
+<tr><td>3</td><td>Téléviseur dans la liste</td><td>votre téléviseur apparaît (sinon, notez le texte sous la liste)</td></tr>
+<tr><td>4</td><td>Lire un film depuis le début</td><td>il est lu sur le téléviseur <strong>avec le son</strong>, le téléphone affiche «&nbsp;lecture&nbsp;» et le temps</td></tr>
+<tr><td>5</td><td>Pause et reprise</td><td>le téléviseur s’arrête et reprend</td></tr>
+<tr><td>6</td><td>+30 s et −30 s, le curseur</td><td>le téléviseur saute à cet endroit</td></tr>
+<tr><td>7</td><td>Arrêt, puis rouvrir le film</td><td>«&nbsp;Reprendre à …&nbsp;» démarre à l’endroit mémorisé</td></tr>
+<tr><td>8</td><td>Un deuxième film dans un autre format (voir la ligne sous le titre)</td><td>il est lu, ou une indication claire</td></tr>
+<tr><td>9</td><td>Seulement s’il n’y a pas de son : «&nbsp;Pas de son ?&nbsp;»</td><td>le film continue au même endroit avec le son</td></tr>
+<tr><td>10</td><td>Mettre le téléviseur en veille, puis envoyer un film</td><td>«&nbsp;éteint&nbsp;» et «&nbsp;Allumer et lire&nbsp;» ; se réveille-t-il ?</td></tr>
+<tr><td>11</td><td>Changer la langue et l’apparence, se connecter sur un deuxième appareil</td><td>le même choix y apparaît</td></tr>
+<tr><td>12</td><td>Redémarrer ZimaOS</td><td>Movies-Cast tourne à nouveau, vous êtes toujours connecté</td></tr>
+<tr><td>13</td><td>Essayer «&nbsp;Rechercher&nbsp;», «&nbsp;Trier&nbsp;» et «&nbsp;Filtre&nbsp;» (par ex. «&nbsp;Non vus&nbsp;») en haut</td><td>la liste n’affiche que les films correspondants</td></tr>
+<tr><td>14</td><td>Ouvrir un film avec des sous-titres, choisir une langue sous «&nbsp;Sous-titres&nbsp;» dans la fenêtre du film, lancer la lecture</td><td>le téléviseur affiche les sous-titres (tous les téléviseurs ne le peuvent pas – merci d’indiquer le modèle)</td></tr>
+<tr><td>15</td><td>«&nbsp;Ajouter à la file&nbsp;» dans la fenêtre du film pour deux films, laisser le premier aller jusqu’à la fin (ou sauter près de la fin)</td><td>le deuxième démarre tout seul</td></tr>
+<tr><td>16</td><td>Seulement avec l’application Android TV et Kodi : voir la section 9</td><td>le film est lu dans Kodi avec le son, le téléphone affiche le temps</td></tr>
+</table>
+
+<h2>5. Rapport</h2>
+<div class="card">
+<p>Merci de copier et de remplir :</p>
+<pre><code>Version de Movies-Cast (carte «&nbsp;État&nbsp;») :
+Version de ZimaOS :
+Appareil (ZimaBoard/Cube/PC …) :
+Téléviseur (marque, modèle) :
+Téléphone/navigateur :
+Liste de tests : 1 … 16 (fonctionne / ne fonctionne pas + ce qui s’est passé)
+Film qui a posé problème (ligne sous le titre, par ex. «&nbsp;HEVC · AC3&nbsp;») :
+Ce que j’attendais / ce qui s’est passé :
+Capture d’écran : oui/non</code></pre>
+<p class="muted">Merci de ne pas envoyer de mots de passe. Les captures d’écran de la carte «&nbsp;État&nbsp;» aident beaucoup.</p>
+</div>
+
+<h2>6. Passer à une nouvelle version</h2>
+<p>Une mise à jour ne demande ni désinstallation ni nouvel import. Les libellés ci-dessous sont ceux de l’interface allemande, où cela a été mesuré :</p>
+<ol>
+  <li>Dans le tableau de bord ZimaOS, ouvrez le menu <strong>«&nbsp;…&nbsp;»</strong> de la tuile et choisissez <strong>«&nbsp;Verwalten&nbsp;»</strong> (gérer).</li>
+  <li>Dans le champ <strong>«&nbsp;Tag&nbsp;»</strong>, saisissez le nouveau numéro de version, pour ce paquet <code>{{VERSION}}</code>.</li>
+  <li>Si le champ <strong>«&nbsp;App-Titel&nbsp;»</strong> (titre de l’application) contient encore l’ancien nom «&nbsp;Movies auf dem Fernseher&nbsp;» ou «&nbsp;Movies Cast&nbsp;» (jusqu’à 0.24.0), saisissez <strong>«&nbsp;Movies-Cast&nbsp;»</strong> – sinon la tuile garde son ancien nom.</li>
+  <li>Cliquez sur <strong>«&nbsp;Speichern&nbsp;»</strong> (enregistrer). ZimaOS télécharge le nouveau programme («&nbsp;Aktualisieren …&nbsp;%&nbsp;») et redémarre Movies-Cast.</li>
+</ol>
+<p class="muted">L’enregistrement écrit ce que contiennent les champs – si vous ouvrez plus tard «&nbsp;Verwalten&nbsp;» pour autre chose, vérifiez avant d’enregistrer que «&nbsp;Tag&nbsp;» indique toujours la version en cours. Les connexions et les réglages sont conservés. La carte «&nbsp;État&nbsp;» affiche ensuite la nouvelle version. Mesuré sur ZimaOS 1.8.0, lors du passage de 0.24.0 à 0.25.0.</p>
+
+<h2>7. Désinstaller</h2>
+<p>Désinstallez la tuile dans le tableau de bord ZimaOS. <strong>Attention :</strong> ZimaOS supprime alors aussi <code>/DATA/AppData/movies-cast</code> – toutes les connexions et tous les réglages de Movies-Cast. Vos films et Movies lui-même ne sont pas touchés.</p>
+
+<h2>8. Limites connues de cette version</h2>
+<ul>
+  <li>L’<strong>application TV</strong> pour LG webOS ne fait pas partie de ce paquet ; ce test porte sur la voie DLNA.</li>
+  <li>Les <strong>traductions</strong> autres que l’allemand et l’anglais – y compris <strong>ce guide en français</strong> – ont été faites par une IA et n’ont pas encore été relues par une personne de langue maternelle. Les corrections sont les bienvenues.</li>
+  <li>La lecture a été vérifiée avec ZimaOS 1.8.0 et un LG OLED55B9. Un Samsung UE50MU6179 a été trouvé ; s’il lit les films reste à voir – les retours sur d’autres téléviseurs sont particulièrement précieux.</li>
+  <li><strong>Apple TV</strong> n’apparaît pas dans la liste : ce n’est pas un appareil DLNA, et la lecture par AirPlay n’est pas encore dans cette version.</li>
+  <li><strong>Mise à jour depuis 0.24.0 ou 0.25.0 :</strong> une mise à jour via «&nbsp;Tag&nbsp;» n’apporte que le nouveau programme, sans modifier le fichier compose. Movies-Cast écrit alors son journal en UTC au lieu de l’heure locale – c’est sans gravité. Pour le changer : dans «&nbsp;Verwalten&nbsp;», ouvrez <strong>«&nbsp;YAML&nbsp;»</strong>, supprimez la ligne <code>- TZ=$TZ</code>, ajoutez l’entrée <code>/etc/localtime</code> sous <code>volumes:</code> comme dans le <code>docker-compose.yml</code> de ce paquet, et enregistrez (mesuré sur ZimaOS 1.8.0 ; les connexions sont conservées).</li>
+</ul>
+<h2>9. Application Android TV (version de test)</h2>
+<p>Pour les appareils Android TV comme la Nvidia Shield : le fichier <code>movies-cast-tv-{{VERSION}}.apk</code> sur la page des versions (<a href="https://github.com/chicohaager/movies-cast/releases">https://github.com/chicohaager/movies-cast/releases</a>). Elle affiche la bibliothèque sur le téléviseur et se pilote avec la télécommande du téléviseur, comme l’application LG de la vidéo. Elle nécessite Movies-Cast {{VERSION}} sur ZimaOS.</p>
+<ol>
+  <li>Installez l’APK sur l’appareil TV. Une façon de faire : sur l’appareil, activez les options pour les développeurs et le débogage réseau, puis sur un ordinateur <code>adb connect &lt;adresse-de-l’appareil&gt;</code> et <code>adb install movies-cast-tv-{{VERSION}}.apk</code>.</li>
+  <li>Ouvrez «&nbsp;Movies-Cast&nbsp;» sur l’appareil et saisissez l’adresse de votre ZimaOS (l’adresse que votre navigateur affiche pour le tableau de bord ZimaOS, sans «&nbsp;http://&nbsp;» ; le port 8097 est ajouté).</li>
+  <li>Le téléviseur affiche un code à six chiffres. Sur le téléphone, dans Movies-Cast, ouvrez «&nbsp;Associer l’application TV&nbsp;» et saisissez le code (ou scannez le QR code).</li>
+  <li>Télécommande : flèches et OK pour choisir ; pendant le film, OK = pause, ◀ −10 s, ▶ +30 s, ▼ sous-titres ; Retour = quitter. Le choix de la piste audio (▲) ne fonctionne pas sur Android TV : sa WebView n’a pas <code>audioTracks</code> (Chromium : expérimental, désactivé par défaut) – c’est la WebView qui décide quelle piste est lue.</li>
+</ol>
+<p><strong>Nouveau dans {{VERSION}} : «&nbsp;Lire avec : Kodi&nbsp;».</strong> Si Kodi est installé sur l’appareil, l’application affiche le bouton «&nbsp;Lire avec : Movies-Cast&nbsp;» sur la page d’un film. OK dessus passe à «&nbsp;Lire avec : Kodi&nbsp;» (le choix est gardé sur l’appareil). Kodi lit alors le film avec son propre lecteur et son propre son. Si les options UPnP ci-dessous sont activées dans Kodi, Movies-Cast envoie le film à Kodi par DLNA : la reprise, le temps sur le téléphone et pause/reprise depuis le téléphone fonctionnent alors. Sans elles, l’application passe le film directement à Kodi, qui le lit alors depuis le début. Merci d’indiquer : Kodi démarre-t-il, le film est-il lu avec le son (AAC et E-AC3), le téléphone affiche-t-il le temps, «&nbsp;Reprendre à …&nbsp;» fonctionne-t-il ?</p>
+<p><strong>Sans cette application :</strong> Kodi sur la Shield fonctionne comme téléviseur DLNA – dans Kodi, Settings → Services → UPnP / DLNA : activez «&nbsp;Enable UPnP support&nbsp;» et «&nbsp;Allow remote control via UPnP&nbsp;» (libellés de l’interface anglaise de Kodi) ; il apparaît alors dans la liste des téléviseurs et lit avec le lecteur de Kodi (un testeur, Nvidia Shield TV Pro, 30/10/2026).</p>
+<p><strong>Son :</strong> sur une Nvidia Shield (retour du 30/10/2026), l’E-AC3 a été lu avec le son dans l’application, l’AAC sans. C’est pourquoi «&nbsp;Lire avec : Kodi&nbsp;» existe. Merci d’essayer un film en AAC et un en E-AC3 (ligne sous le titre), chacun avec Movies-Cast et avec Kodi, et d’indiquer «&nbsp;son oui/non&nbsp;».</p>
+
+<p class="muted">Movies-Cast {{VERSION}} · image <code>{{IMAGE}}</code></p>
+</main>
+</body>
+</html>
