@@ -328,7 +328,14 @@ func (s *Server) system(w http.ResponseWriter, r *http.Request, _ string, _ *ses
 		"provenFormats": len(s.proven),
 		"activePlays":   len(s.plays),
 	}
+	u := s.update
 	s.mu.Unlock()
+	if u != nil {
+		if l := u.get(ctx); l != "" {
+			out["latest"] = l
+			out["updateAvailable"] = newer(l, s.movies.Version)
+		}
+	}
 	writeJSON(w, http.StatusOK, out)
 }
 

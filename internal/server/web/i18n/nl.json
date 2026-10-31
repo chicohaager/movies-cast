@@ -190,5 +190,7 @@
  "s.diag": "Diagnose downloaden (voor een fout- of tv-rapport)",
  "p.sleep": "Slaaptimer",
  "p.sleepOff": "Uit",
- "p.sleepLeft": "stopt over {0} min"
+ "p.sleepLeft": "stopt over {0} min",
+ "s.latest": "Nieuwste versie",
+ "s.updateAvail": "{0} – er is een update beschikbaar"
 }

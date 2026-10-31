@@ -190,5 +190,7 @@
  "s.diag": "Baixar diagnóstico (para um relatório de erro ou de TV)",
  "p.sleep": "Timer de desligamento",
  "p.sleepOff": "Desligado",
- "p.sleepLeft": "para em {0} min"
+ "p.sleepLeft": "para em {0} min",
+ "s.latest": "Versão mais recente",
+ "s.updateAvail": "{0} – há uma atualização disponível"
 }

@@ -190,5 +190,7 @@
  "s.diag": "Diagnose herunterladen (für einen Fehler- oder Fernseherbericht)",
  "p.sleep": "Schlaf-Timer",
  "p.sleepOff": "Aus",
- "p.sleepLeft": "stoppt in {0} min"
+ "p.sleepLeft": "stoppt in {0} min",
+ "s.latest": "Neueste Version",
+ "s.updateAvail": "{0} – ein Update ist verfügbar"
 }

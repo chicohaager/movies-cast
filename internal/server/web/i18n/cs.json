@@ -190,5 +190,7 @@
  "s.diag": "Stáhnout diagnostiku (pro hlášení chyby nebo televize)",
  "p.sleep": "Časovač vypnutí",
  "p.sleepOff": "Vypnuto",
- "p.sleepLeft": "zastaví se za {0} min"
+ "p.sleepLeft": "zastaví se za {0} min",
+ "s.latest": "Nejnovější verze",
+ "s.updateAvail": "{0} – je k dispozici aktualizace"
 }

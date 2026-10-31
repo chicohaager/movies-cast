@@ -190,5 +190,7 @@
  "s.diag": "Ladda ner diagnostik (för en fel- eller tv-rapport)",
  "p.sleep": "Insomningstimer",
  "p.sleepOff": "Av",
- "p.sleepLeft": "stoppar om {0} min"
+ "p.sleepLeft": "stoppar om {0} min",
+ "s.latest": "Senaste version",
+ "s.updateAvail": "{0} – en uppdatering finns"
 }

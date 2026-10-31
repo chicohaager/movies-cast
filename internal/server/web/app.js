@@ -326,6 +326,7 @@ async function loadStatus() {
       [t("s.plays"), d.activePlays],
     ];
     if (s.error) rows.push([t("s.searchErr"), s.error]);
+    if (d.latest) rows.push([t("s.latest"), d.updateAvailable ? t("s.updateAvail", d.latest) : d.latest]);
     dl.textContent = "";
     for (const [k, v] of rows) {
       const dt = document.createElement("dt");

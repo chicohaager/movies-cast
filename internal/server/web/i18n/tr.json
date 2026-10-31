@@ -190,5 +190,7 @@
  "s.diag": "Tanılamayı indir (hata veya TV raporu için)",
  "p.sleep": "Uyku zamanlayıcısı",
  "p.sleepOff": "Kapalı",
- "p.sleepLeft": "{0} dk sonra durur"
+ "p.sleepLeft": "{0} dk sonra durur",
+ "s.latest": "En yeni sürüm",
+ "s.updateAvail": "{0} – güncelleme mevcut"
 }

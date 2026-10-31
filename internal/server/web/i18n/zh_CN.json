@@ -190,5 +190,7 @@
  "s.diag": "下载诊断信息（用于错误或电视报告）",
  "p.sleep": "睡眠定时",
  "p.sleepOff": "关闭",
- "p.sleepLeft": "{0} 分钟后停止"
+ "p.sleepLeft": "{0} 分钟后停止",
+ "s.latest": "最新版本",
+ "s.updateAvail": "{0} – 有可用更新"
 }
