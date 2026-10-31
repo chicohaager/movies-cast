@@ -20,7 +20,11 @@ import (
 // episodes, an album with two tracks and a photo (shapes as Jellyfin 10.11.0
 // answered them on 2026-10-31; names and IDs invented).
 var libItems = map[string]map[string]any{
-	"F1": {"Id": "F1", "Name": "Film One", "Type": "Movie", "RunTimeTicks": 6000 * 10_000_000, "Container": "mkv"},
+	"F1": {"Id": "F1", "Name": "Film One", "Type": "Movie", "RunTimeTicks": 6000 * 10_000_000, "Container": "mkv",
+		"MediaSources": []map[string]any{{"Id": "ms1", "Container": "mkv", "MediaStreams": []map[string]any{
+			{"Type": "Video", "Codec": "h264", "Width": 1920, "Index": 0},
+			{"Type": "Subtitle", "Language": "ger", "DisplayTitle": "Deutsch", "DeliveryMethod": "External", "Index": 2},
+		}}}},
 	"S1": {"Id": "S1", "Name": "The Show", "Type": "Series", "RecursiveItemCount": 2},
 	"E1": {"Id": "E1", "Name": "Pilot", "Type": "Episode", "SeriesId": "S1", "SeriesName": "The Show", "ParentIndexNumber": 1, "IndexNumber": 1, "RunTimeTicks": 1200 * 10_000_000, "Container": "mkv"},
 	"E2": {"Id": "E2", "Name": "Second", "Type": "Episode", "SeriesId": "S1", "SeriesName": "The Show", "ParentIndexNumber": 1, "IndexNumber": 2, "RunTimeTicks": 1200 * 10_000_000, "Container": "mkv"},
@@ -75,6 +79,8 @@ func (f *libMovies) handler() http.Handler {
 				return
 			}
 			_ = json.NewEncoder(w).Encode(it)
+		case p == "/Videos/F1/ms1/Subtitles/2/Stream.vtt":
+			_, _ = io.WriteString(w, "WEBVTT\n\n00:00:01.000 --> 00:00:02.500\nHallo\n")
 		case strings.HasPrefix(p, "/Sessions/"):
 			w.WriteHeader(http.StatusNoContent)
 		case strings.HasPrefix(p, "/Items/") && r.Method == http.MethodHead:
@@ -318,5 +324,54 @@ func TestSourceNamesTheAccountsServer(t *testing.T) {
 		if got := strings.TrimSpace(rec.Body.String()); rec.Code != 200 || got != want {
 			t.Errorf("%s: %d %s, want %s", base, rec.Code, got, want)
 		}
+	}
+}
+
+func TestADLNAPlayCarriesTheChosenSubtitleAsSRT(t *testing.T) {
+	r, _ := newLibRig(t)
+	code, body := r.get("/api/subtitles/F1")
+	if code != 200 || !strings.Contains(body, `"label":"Deutsch"`) || !strings.Contains(body, `"index":2`) {
+		t.Fatalf("subtitles: %d %s", code, body)
+	}
+	if code, out := r.post("/api/play", map[string]any{"renderer": lg.ID, "movie": "F1", "sub": 2}); code != 200 {
+		t.Fatalf("play: %d %v", code, out)
+	}
+	r.tv.mu.Lock()
+	m := r.tv.media
+	r.tv.mu.Unlock()
+	if !strings.HasSuffix(m.SubtitleURL, "/sub.srt") || strings.TrimSuffix(m.SubtitleURL, "sub.srt") != strings.TrimSuffix(m.URL, "movie.mkv") {
+		t.Fatalf("subtitle URL %q next to %q", m.SubtitleURL, m.URL)
+	}
+	didl := dlna.DIDL(m)
+	if !strings.Contains(didl, `<sec:CaptionInfoEx sec:type="srt">`+m.SubtitleURL) || !strings.Contains(didl, `protocolInfo="http-get:*:text/srt:*"`) {
+		t.Fatalf("DIDL: %s", didl)
+	}
+	resp, err := http.Get(r.srv.URL + strings.TrimPrefix(m.SubtitleURL, "http://tv-reaches-me:8097"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	b, _ := io.ReadAll(resp.Body)
+	resp.Body.Close()
+	if resp.StatusCode != 200 || string(b) != "1\n00:00:01,000 --> 00:00:02,500\nHallo\n\n" {
+		t.Fatalf("sub.srt: %d %q", resp.StatusCode, b)
+	}
+	// The film's own fetch tells a Samsung where the subtitle is.
+	req, _ := http.NewRequest(http.MethodHead, r.srv.URL+strings.TrimPrefix(m.URL, "http://tv-reaches-me:8097"), nil)
+	req.Header.Set("getcaptionInfo.sec", "1")
+	h, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	h.Body.Close()
+	if h.Header.Get("CaptionInfo.sec") != m.SubtitleURL {
+		t.Fatalf("CaptionInfo.sec = %q", h.Header.Get("CaptionInfo.sec"))
+	}
+	// Without a choice: no subtitle.
+	r.post("/api/play", map[string]any{"renderer": lg.ID, "movie": "F1"})
+	r.tv.mu.Lock()
+	m = r.tv.media
+	r.tv.mu.Unlock()
+	if m.SubtitleURL != "" || strings.Contains(dlna.DIDL(m), "CaptionInfo") {
+		t.Fatalf("no subtitle chosen, TV got %q", m.SubtitleURL)
 	}
 }

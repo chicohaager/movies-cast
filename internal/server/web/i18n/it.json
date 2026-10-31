@@ -179,5 +179,7 @@
  "q.added": "Aggiunto alla coda: {0}",
  "srv:choose an episode or a track": "scegli un episodio o un brano",
  "srv:100 entries in the queue at most": "al massimo 100 elementi nella coda",
- "login.hintServer": "Con il tuo account sul {0}."
+ "login.hintServer": "Con il tuo account sul {0}.",
+ "d.sub": "Sottotitoli",
+ "d.subOff": "Disattivati"
 }

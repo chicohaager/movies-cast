@@ -168,6 +168,10 @@ type play struct {
 	// anyone who asks it (GetPositionInfo), so the URL alone is not enough.
 	peer    string
 	refused string // the last other address turned away; the phone shows it
+	// dlnaSub is the subtitle track sent to a DLNA TV as /s/{id}/sub.srt,
+	// -1 for none.
+	dlnaSub int
+	subURL  string // that URL as the TV got it, for CaptionInfo.sec
 }
 
 func New(cfg Config, mc *movies.Client, tv Transport, r Renderers) *Server {
@@ -273,6 +277,7 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("POST /api/tv/subs-probe", s.withSession(s.tvSubsProbe))
 	mux.HandleFunc("GET /api/resume", s.withSession(s.listResume))
 	mux.HandleFunc("GET /api/children/{id}", s.withSession(s.children))
+	mux.HandleFunc("GET /api/subtitles/{id}", s.withSession(s.subtitles))
 	mux.HandleFunc("GET /api/library", s.withSession(s.library))
 	mux.HandleFunc("GET /api/views", s.withSession(s.views))
 	mux.HandleFunc("GET /api/queue", s.withSession(s.queueGet))
@@ -819,6 +824,9 @@ func (s *Server) startPlay(w http.ResponseWriter, r *http.Request, sid string, s
 		Original bool    `json:"original"`
 		Remember bool    `json:"remember"`
 		At       float64 `json:"at"` // start here (seconds), for "No sound?" during a play
+		// Sub is the subtitle track (index from /api/subtitles) the TV gets as
+		// SRT; nil = none (roadmap 16).
+		Sub *int `json:"sub"`
 	}
 	if err := readJSON(r, &in); err != nil || in.Renderer == "" || in.Movie == "" {
 		fail(w, http.StatusBadRequest, "Film und Fernseher angeben")
@@ -902,7 +910,19 @@ func (s *Server) startPlay(w http.ResponseWriter, r *http.Request, sid string, s
 		return
 	}
 
-	p := &play{id: randomID(), sess: sess, movie: m, tv: tv, ext: ext, psID: randomID(), created: s.now()}
+	p := &play{id: randomID(), sess: sess, movie: m, tv: tv, ext: ext, psID: randomID(), created: s.now(), dlnaSub: -1}
+	if in.Sub != nil && *in.Sub >= 0 {
+		subs, msID, _, err := s.movies.Subtitles(r.Context(), sess.ms, m.ID)
+		if err != nil {
+			log.Printf("subtitles %s: %v", m.Name, err)
+		}
+		for _, st := range subs {
+			if st.Index == *in.Sub {
+				p.dlnaSub, p.msID = st.Index, msID
+				p.subURL = base + "/s/" + p.id + "/sub.srt"
+			}
+		}
+	}
 	p.ctx, p.cancel = context.WithCancel(context.Background())
 	s.mu.Lock()
 	if old := s.byTV[tv.ID]; old != nil {
@@ -914,6 +934,7 @@ func (s *Server) startPlay(w http.ResponseWriter, r *http.Request, sid string, s
 
 	media := dlna.Media{URL: base + "/s/" + p.id + "/movie." + url.PathEscape(ext), Title: m.Name, MimeType: mimeFor(ext),
 		Size: m.Size, Duration: time.Duration(m.Runtime) * time.Second, Class: upnpClass(m)}
+	media.SubtitleURL = p.subURL
 	ctx := r.Context()
 	if err := s.tv.SetURI(ctx, tv, media); err != nil {
 		s.abortPlay(p.id)
@@ -1299,6 +1320,10 @@ func (s *Server) serveStream(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "forbidden", http.StatusForbidden)
 		return
 	}
+	if r.PathValue("name") == "sub.srt" {
+		s.serveSRT(w, r, p)
+		return
+	}
 	if p.conv != nil {
 		s.serveConverted(w, r, p)
 		return
@@ -1348,6 +1373,10 @@ func (s *Server) serveStream(w http.ResponseWriter, r *http.Request) {
 	// DLNA renderers look for these before seeking.
 	w.Header().Set("transferMode.dlna.org", "Streaming")
 	w.Header().Set("contentFeatures.dlna.org", "DLNA.ORG_OP=01;DLNA.ORG_CI=0;DLNA.ORG_FLAGS=01700000000000000000000000000000")
+	// Samsung TVs ask for the subtitle with getcaptionInfo.sec: 1.
+	if p.subURL != "" && r.Header.Get("getcaptionInfo.sec") != "" {
+		w.Header().Set("CaptionInfo.sec", p.subURL)
+	}
 	w.WriteHeader(resp.StatusCode)
 	t0 := time.Now()
 	var n int64

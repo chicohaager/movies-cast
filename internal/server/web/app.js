@@ -528,10 +528,37 @@ function openDetail(m) {
   $("d-start").textContent = m.type === "Photo" ? t("d.show") : t("d.start");
   $("d-queue").hidden = folder || m.type === "Photo";
   $("d-children-wrap").hidden = !folder;
+  loadSubtitles(m);
   $("d-children").textContent = "";
   if (folder) loadChildren(m);
   $("detail").showModal();
 }
+
+// loadSubtitles fills the subtitle choice of a film or episode (roadmap 16):
+// the TV gets the chosen track as SRT. The last language chosen is
+// preselected (this device only).
+async function loadSubtitles(m) {
+  const row = $("d-sub-row"), sel = $("d-sub");
+  row.hidden = true;
+  for (const o of [...sel.options]) if (o.value !== "") o.remove();
+  sel.value = "";
+  if (!(m.type === "Movie" || m.type === "Episode" || !m.type)) return;
+  try {
+    const d = await api(`/api/subtitles/${encodeURIComponent(m.id)}`);
+    if (state.selected !== m || !d.subtitles.length) return;
+    const want = localGet("subLang");
+    for (const st of d.subtitles) {
+      sel.append(new Option(st.label, String(st.index)));
+      if (want && st.lang === want && sel.value === "") sel.value = String(st.index);
+    }
+    state.subs = d.subtitles;
+    row.hidden = false;
+  } catch { /* the film plays without */ }
+}
+$("d-sub").addEventListener("change", () => {
+  const st = (state.subs || []).find((x) => String(x.index) === $("d-sub").value);
+  localSet("subLang", st ? st.lang || "" : "");
+});
 
 // loadChildren lists a series' episodes or an album's tracks; each one is a
 // button that closes the dialog with "ep:<id>". The first unwatched episode
@@ -590,7 +617,9 @@ $("detail").addEventListener("close", async () => {
     }
     return;
   }
-  play({ renderer: state.tv, movie: m.id, resume });
+  const req = { renderer: state.tv, movie: m.id, resume };
+  if (m === state.selected && $("d-sub").value !== "" && !$("d-sub-row").hidden) req.sub = Number($("d-sub").value);
+  play(req);
 });
 
 // The queue of the chosen TV, shown in the player card.

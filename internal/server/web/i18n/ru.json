@@ -179,5 +179,7 @@
  "q.added": "Добавлено в очередь: {0}",
  "srv:choose an episode or a track": "выберите серию или трек",
  "srv:100 entries in the queue at most": "не более 100 элементов в очереди",
- "login.hintServer": "С вашей учётной записью на {0}."
+ "login.hintServer": "С вашей учётной записью на {0}.",
+ "d.sub": "Субтитры",
+ "d.subOff": "Выкл."
 }

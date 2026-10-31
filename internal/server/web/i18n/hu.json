@@ -179,5 +179,7 @@
  "q.added": "Sorba állítva: {0}",
  "srv:choose an episode or a track": "válassz egy epizódot vagy egy számot",
  "srv:100 entries in the queue at most": "legfeljebb 100 elem lehet a sorban",
- "login.hintServer": "A(z) {0} fiókoddal."
+ "login.hintServer": "A(z) {0} fiókoddal.",
+ "d.sub": "Felirat",
+ "d.subOff": "Ki"
 }

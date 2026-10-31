@@ -179,5 +179,7 @@
  "q.added": "キューに追加しました: {0}",
  "srv:choose an episode or a track": "エピソードまたは曲を選んでください",
  "srv:100 entries in the queue at most": "キューは最大 100 件までです",
- "login.hintServer": "{0} のアカウントで。"
+ "login.hintServer": "{0} のアカウントで。",
+ "d.sub": "字幕",
+ "d.subOff": "オフ"
 }

@@ -480,6 +480,7 @@ type mediaSources struct {
 		MediaStreams []struct {
 			Type, Language, DisplayTitle, DeliveryMethod string
 			Index, Width                                 int
+			IsTextSubtitleStream                         bool
 		}
 	}
 }
@@ -499,7 +500,10 @@ func (res mediaSources) subtitles() ([]Subtitle, string, bool) {
 		}
 		// "External" = Movies converts it and serves Stream.vtt; image
 		// subtitles (PGS) would need burning in and are left out.
-		if st.Type != "Subtitle" || st.DeliveryMethod != "External" {
+		// Jellyfin's item answer has no DeliveryMethod (10.11.0, measured
+		// 2026-10-31); its text tracks say IsTextSubtitleStream.
+		text := st.DeliveryMethod == "External" || (st.DeliveryMethod == "" && st.IsTextSubtitleStream)
+		if st.Type != "Subtitle" || !text {
 			continue
 		}
 		label := st.DisplayTitle
