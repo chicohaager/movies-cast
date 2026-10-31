@@ -12,6 +12,7 @@ What changed in each version; the "why" with its measurements is in
 - Subtitles to DLNA TVs as SRT (picked on the phone).
 - Google Cast devices as targets.
 - "Search" for TVs says "Searching …" while it waits (7 s on a test NAS) and then what it found, also when no TV answered and the list shows known TVs that are off.
+- Each TV search writes one log line with answers, TVs, Cast devices and where the time went (SSDP, descriptions, Cast); the Cast search runs next to the DLNA search instead of after it.
 - Android TV: "Play with: Kodi" — Kodi plays the film with its own player and sound (by DLNA with progress, or by intent).
 - Jellyfin and Emby servers as the source; the login names the server's account.
 - HTTPS (`TLS_LISTEN`) with a `__Host-` session cookie.

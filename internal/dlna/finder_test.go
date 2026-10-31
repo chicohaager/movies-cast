@@ -300,3 +300,25 @@ func TestFinderAsksKnownTVsTheSearchMissed(t *testing.T) {
 		t.Fatalf("got %+v, %v", rs, err)
 	}
 }
+
+// The stats say where a search spent its time: the SSDP wait and the
+// description fetches (a search took 7 s on .143 and nobody could tell why).
+func TestFinderStatsTimeTheSearch(t *testing.T) {
+	lgSrv := fakeDevice(t, "lg-oled55b9-desc.xml", "lg-protocolinfo.xml")
+	f := NewFinder(nil, true, 0, NewClient())
+	f.allow = func(string) bool { return true }
+	f.search = func(context.Context, time.Duration) ([]string, int, error) {
+		time.Sleep(150 * time.Millisecond)
+		return []string{lgSrv.URL + "/"}, 1, nil
+	}
+	if rs, _ := f.Find(context.Background(), true); len(rs) != 1 {
+		t.Fatalf("renderers: %+v", rs)
+	}
+	st := f.LastSearch()
+	if st.SSDPMs < 150 || st.SSDPMs > 1000 {
+		t.Fatalf("ssdpMs %d, want about 150", st.SSDPMs)
+	}
+	if st.DescribeMs < 0 || st.DescribeMs >= 150 {
+		t.Fatalf("describeMs %d, want the fetch time only (well under the SSDP wait)", st.DescribeMs)
+	}
+}

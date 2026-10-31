@@ -56,6 +56,15 @@ type SearchStats struct {
 	Err       string    `json:"error,omitempty"`
 	Port      int       `json:"port"`     // local SSDP port, 0 = random
 	PortHeld  bool      `json:"portHeld"` // the fixed port is bound now
+	// Where the time went (a search took 7 s on .143, 2026-10-31, and
+	// nobody could tell why): the SSDP wait, then fetching the description
+	// of every TV found or known (a TV that is off answers by timeout).
+	SSDPMs     int64 `json:"ssdpMs"`
+	DescribeMs int64 `json:"describeMs"`
+	// Filled by the server's Cast wrapper: devices that answered mDNS and
+	// how long that search took (it runs next to the DLNA search).
+	Cast   int   `json:"cast"`
+	CastMs int64 `json:"castMs"`
 }
 
 // LastSearch returns the stats of the last search.
@@ -189,6 +198,7 @@ func (f *Finder) Find(_ context.Context, refresh bool) ([]Renderer, error) {
 	var errs []error
 	hosts := f.hosts()
 	answers := 0
+	t0 := time.Now()
 	if f.SSDP || len(hosts) > 0 {
 		found, n, err := f.search(ctx, f.Wait)
 		answers = n
@@ -234,6 +244,8 @@ func (f *Finder) Find(_ context.Context, refresh bool) ([]Renderer, error) {
 			knownLocs = append(knownLocs, loc)
 		}
 	}
+	ssdpTime := time.Since(t0)
+	t1 := time.Now()
 	results := make(chan result)
 	slots := make(chan struct{}, maxFetches)
 	n := 0
@@ -296,7 +308,8 @@ func (f *Finder) Find(_ context.Context, refresh bool) ([]Renderer, error) {
 		f.cached, f.at = out, f.now()
 	}
 	err := errors.Join(errs...)
-	f.last = SearchStats{At: time.Now(), Answers: answers, Renderers: len(out)}
+	f.last = SearchStats{At: time.Now(), Answers: answers, Renderers: len(out),
+		SSDPMs: ssdpTime.Milliseconds(), DescribeMs: time.Since(t1).Milliseconds()}
 	if err != nil {
 		f.last.Err = err.Error()
 	}

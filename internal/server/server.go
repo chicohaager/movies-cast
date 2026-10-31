@@ -742,9 +742,18 @@ type rendererOut struct {
 }
 
 func (s *Server) listRenderers(w http.ResponseWriter, r *http.Request, _ string, _ *session) {
+	before, _ := s.searchStats()
+	t0 := time.Now()
 	rs, err := s.renderers.Find(r.Context(), r.URL.Query().Get("refresh") == "1")
 	if err != nil {
 		log.Printf("renderers: %v", err)
+	}
+	// One line per search that ran (not per answer from the cache): a
+	// "Search" on the phone left no trace in the log (2026-10-31).
+	if st, ok := s.searchStats(); ok && !st.At.Equal(before.At) {
+		log.Printf("tv search: %d answers, %d TVs, %d Cast, %.1f s (ssdp %.1f s, descriptions %.1f s, cast %.1f s)",
+			st.Answers, st.Renderers, st.Cast, time.Since(t0).Seconds(),
+			float64(st.SSDPMs)/1000, float64(st.DescribeMs)/1000, float64(st.CastMs)/1000)
 	}
 	s.remember(rs)
 	s.mu.Lock()

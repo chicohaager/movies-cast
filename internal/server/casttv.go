@@ -165,19 +165,39 @@ type castRenderers struct {
 	discover func(context.Context, time.Duration) ([]cast.Found, error)
 	ttl      time.Duration
 
-	mu    sync.Mutex
-	found []dlna.Renderer
-	at    time.Time
+	mu     sync.Mutex
+	found  []dlna.Renderer
+	at     time.Time
+	castMs int64
 }
 
 func (c *castRenderers) Find(ctx context.Context, refresh bool) ([]dlna.Renderer, error) {
-	rs, err := c.inner.Find(ctx, refresh)
 	c.mu.Lock()
 	stale := refresh || time.Since(c.at) > c.ttl
 	found := c.found
 	c.mu.Unlock()
+	// mDNS runs next to the DLNA search, not after it: one after the other
+	// added its 2 s to every "Search" on the phone.
+	type castResult struct {
+		fs  []cast.Found
+		err error
+		ms  int64
+	}
+	castDone := make(chan castResult, 1)
 	if stale {
-		fs, derr := c.discover(ctx, 2*time.Second)
+		go func() {
+			t0 := time.Now()
+			fs, err := c.discover(ctx, 2*time.Second)
+			castDone <- castResult{fs, err, time.Since(t0).Milliseconds()}
+		}()
+	}
+	rs, err := c.inner.Find(ctx, refresh)
+	if stale {
+		cr := <-castDone
+		fs, derr := cr.fs, cr.err
+		c.mu.Lock()
+		c.castMs = cr.ms
+		c.mu.Unlock()
 		if derr != nil {
 			log.Printf("cast: %v", derr)
 		} else {
@@ -200,10 +220,14 @@ func (c *castRenderers) Find(ctx context.Context, refresh bool) ([]dlna.Renderer
 // The DLNA finder's extras pass through; Cast devices are never handed to
 // it (their cast:// location is no description URL).
 func (c *castRenderers) LastSearch() dlna.SearchStats {
+	var st dlna.SearchStats
 	if fi, ok := c.inner.(finderInfo); ok {
-		return fi.LastSearch()
+		st = fi.LastSearch()
 	}
-	return dlna.SearchStats{}
+	c.mu.Lock()
+	st.Cast, st.CastMs = len(c.found), c.castMs
+	c.mu.Unlock()
+	return st
 }
 
 func (c *castRenderers) SetExtraHosts(h []string) {
