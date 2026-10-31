@@ -81,7 +81,7 @@ each stop is logged with film, position and outcome (`report stopped <film> at 0
 | Google Cast (Chromecast, Google TV) | found by mDNS, Default Media Receiver | the device's decoders | against a test receiver only: no Cast device on the owner's LAN |
 | **Android TV / Nvidia Shield with Kodi** | Movies-Cast app on the box, "Play with: Kodi" — or Kodi alone as a DLNA TV | **Kodi's player** (passthrough of AC3/E-AC3/DTS to the AV receiver as Kodi is set up) | a tester's Shield TV Pro played a film sent from the phone in Kodi (2026-10-30); the app's Kodi path in the Android TV emulator with Kodi 21.3 (2026-10-31) |
 | LG webOS TV app | Movies-Cast app on the TV (developer mode) | the TV's decoders | see [docs/TECHNICAL.md](docs/TECHNICAL.md#tv-app-webos-stage-2) |
-| Apple TV, AirPlay | not supported | — | Apple TV 4K and the LG answer AirPlay `/play` with 403 without pairing (2026-10-31) |
+| Apple TV, AirPlay | not supported | — | paired Apple TV 4K accepts AirPlay `/play` but never fetches the file, pyatv 0.18.0 the same (2026-10-31) |
 
 **Kodi on the Shield is the way to good sound on Android TV.** Kodi plays the file in its own player — like
 it does for Jellyfin, Plex or Emby when they use Kodi as external player — so the formats the Android

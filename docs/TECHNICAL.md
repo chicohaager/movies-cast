@@ -323,6 +323,14 @@ AirPlay, measured the same day: AirPlay devices on the LAN were two Sonos Era 10
 and the LG (AirPlay 2). `GET :7000/info`: the LG lacks feature bit 0 (video); both video devices answer
 `POST /play` without pairing with 403. AirPlay would need Apple's pairing with a PIN shown on the TV.
 
+A pairing tool outside this repository (HAP pair-setup, ported from pyatv) then paired with the Apple TV 4K
+(tvOS build 23L781): the PIN appeared only after `POST /pair-pin-start`, with AirPlay access set to "anyone on
+the same network", and the device answered `470` until the header was sent spelled exactly `X-Apple-HKP`.
+Pair-verify worked, and the AirPlay 2 sequence (SETUP, event channel, RECORD, `POST /play`, `/rate`) was
+answered with 200 at every step; the TV showed a spinner, `/playback-info` answered 500, and a packet capture
+showed no connection from the Apple TV to the media server. pyatv 0.18.0 (`atvremote play_url`, same
+credentials) gave the same result. AirPlay video therefore is not in 0.27.
+
 ## Jellyfin and Emby as the source (0.27)
 
 The same client talks to Movies, Jellyfin and Emby: login (`/Users/AuthenticateByName`), lists, streams,

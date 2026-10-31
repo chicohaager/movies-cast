@@ -58,7 +58,7 @@ BubbleUPnP, Jellyfin cast, Plex, Infuse). Each line names what was measured that
 | 14 | done | pages of 200 (`StartIndex`/`Limit` honoured by Movies 0.3.0); a repeated page stops; 2000 films not tried |
 | 15 | done | on the LG: episode 1 → episode 2 by itself, a queued film before episode 3 |
 | 16 | done for DLNA | SRT + `sec:CaptionInfoEx`; the LG fetched `sub.srt` — whether it showed the lines was not seen |
-| 17 | Cast done, AirPlay not | Cast against test receivers (no Cast device on the LAN); AirPlay: Apple TV 4K and the LG answer `/play` with 403 without pairing |
+| 17 | Cast done, AirPlay not | Cast against test receivers (no Cast device on the LAN); AirPlay: Apple TV 4K and the LG answer `/play` with 403 without pairing; after pairing the Apple TV accepts `/play` but never fetches the file, pyatv 0.18.0 the same (docs/TECHNICAL.md) |
 | 18 | done through Kodi | "Play with: Kodi" in the Android TV app (DLNA to Kodi, or intent); intent path measured in the emulator with Kodi 21.3; sound on a real Shield not measured by me |
 | 19 | done | music (MP3 PLAYING on the LG) and photos (JPEG accepted) with Jellyfin/Emby; Movies has neither |
 | 20 | done | Jellyfin 10.11.0 and Emby 4.10.2.0 as `MOVIES_URL`, measured with test servers and on the LG |
