@@ -106,6 +106,10 @@ pre { white-space:pre-wrap; overflow-wrap:anywhere; margin:0; }
 <tr><td>10</td><td>Put the TV in standby, then send a film</td><td>"off" and "Switch on and play"; does it wake up?</td></tr>
 <tr><td>11</td><td>Change language and appearance, log in on a second device</td><td>the same choice there</td></tr>
 <tr><td>12</td><td>Restart ZimaOS</td><td>Movies-Cast runs again, you are still logged in</td></tr>
+<tr><td>13</td><td>Try "Search", "Sort" and "Filter" (e.g. "Unwatched") at the top</td><td>the list shows only matching films</td></tr>
+<tr><td>14</td><td>Open a film with subtitles, choose a language under "Subtitles" in the film window, play</td><td>the TV shows the subtitles (not every TV can – please name the model)</td></tr>
+<tr><td>15</td><td>"Add to queue" in the film window for two films, let the first run to its end (or jump close to the end)</td><td>the second starts by itself</td></tr>
+<tr><td>16</td><td>Only with the Android TV app and Kodi: see section 9</td><td>the film plays in Kodi with sound, the phone shows the time</td></tr>
 </table>
 
 <h2>5. Report</h2>
@@ -116,7 +120,7 @@ ZimaOS version:
 Device (ZimaBoard/Cube/PC …): 
 TV (make, model): 
 Phone/browser: 
-Test list: 1 … 12 (works / fails + what happened)
+Test list: 1 … 16 (works / fails + what happened)
 Film where it failed (line below the title, e.g. "HEVC · AC3"): 
 What I expected / what happened: 
 Screenshot: yes/no</code></pre>
@@ -151,8 +155,9 @@ Screenshot: yes/no</code></pre>
   <li>The TV shows a six-digit code. On the phone, in Movies-Cast, open "Pair the TV app" and enter the code (or scan the QR code).</li>
   <li>Remote: arrows and OK to choose; in the film OK = pause, ◀ −10 s, ▶ +30 s, ▼ subtitles; Back = end. Choosing the audio track (▲) does not work on Android TV: its WebView has no <code>audioTracks</code> (Chromium: experimental, off by default) – which track plays is up to the WebView.</li>
 </ol>
+<p><strong>New in {{VERSION}}: "Play with: Kodi".</strong> When Kodi is installed on the device, the app shows the button "Play with: Movies-Cast" on a film's page. OK on it switches to "Play with: Kodi" (the choice is kept on the device). Kodi then plays the film with its own player and sound. With the UPnP switches below on in Kodi, Movies-Cast sends the film to Kodi by DLNA: resume, the time on the phone and pause/resume from the phone work then. Without them the app hands the film straight to Kodi, which then starts from the beginning. Please report: does Kodi start, does the film play with sound (AAC and E-AC3), does the phone show the time, does "Continue" work?</p>
 <p><strong>Without this app:</strong> Kodi on the Shield works as a DLNA TV – in Kodi, Settings → Services → UPnP / DLNA: "Enable UPnP support" and "Allow remote control via UPnP" on; it then appears in the TV list and plays with Kodi's player (a tester, Nvidia Shield TV Pro, 2026-10-30).</p>
-<p><strong>Please check the sound:</strong> in the Android emulator, films with AC3 or E-AC3 sound played without sound (AAC worked). Whether a Shield plays them with sound is not known yet. Please try one film whose line below the title says AC3 or E-AC3 and one with AAC, and report "sound yes/no" for each.</p>
+<p><strong>Sound:</strong> on an Nvidia Shield (report of 2026-10-30) E-AC3 played with sound in the app, AAC without. That is why "Play with: Kodi" exists. Please try one film with AAC and one with E-AC3 (line below the title), each with Movies-Cast and with Kodi, and report "sound yes/no".</p>
 
 <p class="muted">Movies-Cast {{VERSION}} · image <code>{{IMAGE}}</code></p>
 </main>
