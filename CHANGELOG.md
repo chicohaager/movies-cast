@@ -12,7 +12,7 @@ What changed in each version; the "why" with its measurements is in
 - Subtitles to DLNA TVs as SRT (picked on the phone).
 - Google Cast devices as targets.
 - "Search" for TVs says "Searching …" while it waits (7 s on a test NAS) and then what it found, also when no TV answered and the list shows known TVs that are off.
-- Each TV search writes one log line with answers, TVs, Cast devices and where the time went (SSDP, descriptions, Cast); the Cast search runs next to the DLNA search instead of after it, and TVs seen before are asked during the SSDP wait (a search with two TVs off took 7 s on a test NAS, 5.1 s after the Cast change).
+- Each TV search writes one log line with answers, TVs, Cast devices and where the time went (SSDP, descriptions, Cast); the Cast search runs next to the DLNA search instead of after it, and TVs seen before are asked during the SSDP wait (a search with two TVs off took 7 s on a test NAS, 5.1 s after the Cast change); a known TV that does not answer within 1.5 s counts as off (the LG answered in 0.3 s, a device that is off took 3.07 s to fail).
 - Android TV: "Play with: Kodi" — Kodi plays the film with its own player and sound (by DLNA with progress, or by intent).
 - Jellyfin and Emby servers as the source; the login names the server's account.
 - HTTPS (`TLS_LISTEN`) with a `__Host-` session cookie.
