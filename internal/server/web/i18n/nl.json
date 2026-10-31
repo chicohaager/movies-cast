@@ -186,5 +186,9 @@
  "kodi.off": "Afspelen met: Movies-Cast",
  "kodi.starting": "Kodi wordt gestart …",
  "kodi.none": "Kodi heeft de film niet aangenomen.",
- "p.pos": "Positie"
+ "p.pos": "Positie",
+ "s.diag": "Diagnose downloaden (voor een fout- of tv-rapport)",
+ "p.sleep": "Slaaptimer",
+ "p.sleepOff": "Uit",
+ "p.sleepLeft": "stopt over {0} min"
 }

@@ -186,5 +186,9 @@
  "kodi.off": "Play with: Movies-Cast",
  "kodi.starting": "Starting Kodi …",
  "kodi.none": "Kodi did not take the film.",
- "p.pos": "Position"
+ "p.pos": "Position",
+ "s.diag": "Download diagnostics (for a bug or TV report)",
+ "p.sleep": "Sleep timer",
+ "p.sleepOff": "Off",
+ "p.sleepLeft": "stops in {0} min"
 }

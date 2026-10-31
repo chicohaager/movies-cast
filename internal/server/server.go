@@ -115,6 +115,7 @@ type Server struct {
 	newPairCode  func() string          // pairCode; a fixed sequence in tests
 	pairings     map[string]*pairing    // TV-app pairings by secret ID
 	queue        map[string]*tvQueue    // what plays next, by renderer ID (library.go)
+	sleep        map[string]*sleepTimer // sleep timer by renderer ID
 
 	browserSilence time.Duration
 
@@ -187,6 +188,7 @@ func New(cfg Config, mc *movies.Client, tv Transport, r Renderers) *Server {
 		loginPending:   map[string]int{},
 		pairings:       map[string]*pairing{},
 		queue:          map[string]*tvQueue{},
+		sleep:          map[string]*sleepTimer{},
 		newPairCode:    pairCode,
 		now:            time.Now,
 		pollEvery:      time.Second,
@@ -263,6 +265,7 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("POST /api/tvs/hosts", s.withSession(s.setTVHost))
 	mux.HandleFunc("POST /api/tvs/wake", s.withSession(s.wakeTV))
 	mux.HandleFunc("GET /api/system", s.withSession(s.system))
+	mux.HandleFunc("GET /api/diagnostics", s.withSession(s.diagnostics))
 	mux.HandleFunc("POST /api/play", s.withSession(s.startPlay))
 	mux.HandleFunc("POST /api/control", s.withSession(s.control))
 	mux.HandleFunc("GET /api/status", s.withSession(s.status))
@@ -1231,6 +1234,8 @@ func (s *Server) control(w http.ResponseWriter, r *http.Request, _ string, sess 
 		}
 	case "volume":
 		err = s.tv.SetVolume(ctx, tv, in.Volume)
+	case "sleep":
+		s.setSleep(tv, time.Duration(in.Seconds*float64(time.Second)))
 	case "stop":
 		err = s.tv.Stop(ctx, tv)
 		s.mu.Lock()
@@ -1285,6 +1290,11 @@ func (s *Server) status(w http.ResponseWriter, r *http.Request, _ string, _ *ses
 	if v, err := s.tv.Volume(r.Context(), tv); err == nil {
 		out["volume"] = v
 	}
+	s.mu.Lock()
+	if t := s.sleep[tv.ID]; t != nil {
+		out["sleepSeconds"] = int64(t.at.Sub(s.now()).Round(time.Second) / time.Second)
+	}
+	s.mu.Unlock()
 	writeJSON(w, http.StatusOK, out)
 }
 

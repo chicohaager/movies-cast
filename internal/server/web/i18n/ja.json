@@ -186,5 +186,9 @@
  "kodi.off": "再生アプリ: Movies-Cast",
  "kodi.starting": "Kodi を起動中 …",
  "kodi.none": "Kodi が映画を受け付けませんでした。",
- "p.pos": "再生位置"
+ "p.pos": "再生位置",
+ "s.diag": "診断情報をダウンロード（不具合・テレビの報告用）",
+ "p.sleep": "スリープタイマー",
+ "p.sleepOff": "オフ",
+ "p.sleepLeft": "あと {0} 分で停止"
 }

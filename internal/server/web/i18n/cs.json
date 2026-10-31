@@ -186,5 +186,9 @@
  "kodi.off": "Přehrávat v: Movies-Cast",
  "kodi.starting": "Spouští se Kodi …",
  "kodi.none": "Kodi film nepřijal.",
- "p.pos": "Pozice"
+ "p.pos": "Pozice",
+ "s.diag": "Stáhnout diagnostiku (pro hlášení chyby nebo televize)",
+ "p.sleep": "Časovač vypnutí",
+ "p.sleepOff": "Vypnuto",
+ "p.sleepLeft": "zastaví se za {0} min"
 }
