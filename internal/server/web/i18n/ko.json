@@ -185,5 +185,6 @@
  "kodi.on": "재생 앱: Kodi",
  "kodi.off": "재생 앱: Movies-Cast",
  "kodi.starting": "Kodi 시작 중 …",
- "kodi.none": "Kodi가 영화를 받지 않았습니다."
+ "kodi.none": "Kodi가 영화를 받지 않았습니다.",
+ "p.pos": "재생 위치"
 }

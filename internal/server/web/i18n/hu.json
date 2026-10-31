@@ -185,5 +185,6 @@
  "kodi.on": "Lejátszás ezzel: Kodi",
  "kodi.off": "Lejátszás ezzel: Movies-Cast",
  "kodi.starting": "Kodi indul …",
- "kodi.none": "A Kodi nem fogadta a filmet."
+ "kodi.none": "A Kodi nem fogadta a filmet.",
+ "p.pos": "Pozíció"
 }

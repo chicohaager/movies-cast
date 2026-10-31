@@ -185,5 +185,6 @@
  "kodi.on": "Abspielen mit: Kodi",
  "kodi.off": "Abspielen mit: Movies-Cast",
  "kodi.starting": "Kodi startet …",
- "kodi.none": "Kodi hat den Film nicht angenommen."
+ "kodi.none": "Kodi hat den Film nicht angenommen.",
+ "p.pos": "Position"
 }

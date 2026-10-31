@@ -185,5 +185,6 @@
  "kodi.on": "Spela med: Kodi",
  "kodi.off": "Spela med: Movies-Cast",
  "kodi.starting": "Kodi startar …",
- "kodi.none": "Kodi tog inte emot filmen."
+ "kodi.none": "Kodi tog inte emot filmen.",
+ "p.pos": "Position"
 }

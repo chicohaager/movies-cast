@@ -185,5 +185,6 @@
  "kodi.on": "Přehrávat v: Kodi",
  "kodi.off": "Přehrávat v: Movies-Cast",
  "kodi.starting": "Spouští se Kodi …",
- "kodi.none": "Kodi film nepřijal."
+ "kodi.none": "Kodi film nepřijal.",
+ "p.pos": "Pozice"
 }

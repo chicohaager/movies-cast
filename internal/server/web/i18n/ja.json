@@ -185,5 +185,6 @@
  "kodi.on": "再生アプリ: Kodi",
  "kodi.off": "再生アプリ: Movies-Cast",
  "kodi.starting": "Kodi を起動中 …",
- "kodi.none": "Kodi が映画を受け付けませんでした。"
+ "kodi.none": "Kodi が映画を受け付けませんでした。",
+ "p.pos": "再生位置"
 }
