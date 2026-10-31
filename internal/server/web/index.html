@@ -60,6 +60,17 @@
         <label for="p-vol" data-i18n="p.vol">Lautstärke</label>
         <input id="p-vol" type="range" min="0" max="100">
       </div>
+      <div class="vol">
+        <label for="p-sleep" data-i18n="p.sleep">Schlaf-Timer</label>
+        <select id="p-sleep">
+          <option value="0" data-i18n="p.sleepOff">Aus</option>
+          <option value="900">15 min</option>
+          <option value="1800">30 min</option>
+          <option value="3600">60 min</option>
+          <option value="5400">90 min</option>
+        </select>
+        <span id="p-sleep-left" class="hint" role="status"></span>
+      </div>
       <p id="p-refused" class="hint" role="status" hidden></p>
       <div id="q-wrap" class="queue" hidden>
         <h3 data-i18n="q.h">Als Nächstes</h3>
@@ -93,6 +104,7 @@
     <details id="sys" class="card pair">
       <summary data-i18n="s.summary">Status</summary>
       <dl id="s-list" class="kv"></dl>
+      <p class="hint"><a id="s-diag" href="/api/diagnostics" download="movies-cast-diagnostics.json" data-i18n="s.diag">Diagnose herunterladen (für einen Fehler- oder Fernseherbericht)</a></p>
     </details>
 
     <div id="tabs" class="tabs" role="tablist" hidden>

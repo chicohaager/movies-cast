@@ -186,5 +186,9 @@
  "kodi.off": "播放方式：Movies-Cast",
  "kodi.starting": "正在啟動 Kodi …",
  "kodi.none": "Kodi 未接收該影片。",
- "p.pos": "播放位置"
+ "p.pos": "播放位置",
+ "s.diag": "下載診斷資訊（用於錯誤或電視回報）",
+ "p.sleep": "睡眠定時",
+ "p.sleepOff": "關閉",
+ "p.sleepLeft": "{0} 分鐘後停止"
 }

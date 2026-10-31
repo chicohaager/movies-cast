@@ -186,5 +186,9 @@
  "kodi.off": "Reproducir con: Movies-Cast",
  "kodi.starting": "Iniciando Kodi …",
  "kodi.none": "Kodi no aceptó la película.",
- "p.pos": "Posición"
+ "p.pos": "Posición",
+ "s.diag": "Descargar diagnóstico (para un informe de error o de TV)",
+ "p.sleep": "Temporizador de apagado",
+ "p.sleepOff": "Desactivado",
+ "p.sleepLeft": "se detiene en {0} min"
 }

@@ -760,6 +760,8 @@ const seek = $("p-seek");
 seek.addEventListener("input", () => { state.seeking = true; $("p-pos").textContent = hms(seek.value); });
 seek.addEventListener("change", () => { state.seeking = false; control("seek", { seconds: Number(seek.value) }); });
 $("p-vol").addEventListener("change", (ev) => control("volume", { volume: Number(ev.target.value) }));
+// Sleep timer: the server stops the TV after the chosen time (nothing from the queue follows).
+$("p-sleep").addEventListener("change", (ev) => control("sleep", { seconds: Number(ev.target.value) }));
 
 $("pair-form").addEventListener("submit", async (ev) => {
   ev.preventDefault();
@@ -820,6 +822,9 @@ async function pollOnce() {
     state.converted = st.converted === true;
     $("p-sound").textContent = state.converted ? t("p.original") : t("p.noSound");
     if (typeof st.volume === "number" && document.activeElement !== $("p-vol")) $("p-vol").value = st.volume;
+    const left = typeof st.sleepSeconds === "number" ? st.sleepSeconds : -1;
+    $("p-sleep-left").textContent = left >= 0 ? t("p.sleepLeft", Math.max(1, Math.ceil(left / 60))) : "";
+    if (left < 0 && document.activeElement !== $("p-sleep")) $("p-sleep").value = "0";
   } catch (err) {
     if (tv !== state.tv) return;
     // A TV that is switched off answers nothing; show it, keep polling.

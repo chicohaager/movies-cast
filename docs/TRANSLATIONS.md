@@ -10,7 +10,7 @@ right now.
 
 ## Where the texts are
 
-- `internal/server/web/i18n/<lang>.json` — one file per language, keys sorted.
+- `internal/server/web/i18n/<lang>.json` — one file per language; new keys are appended.
 - `{0}`, `{1}` are placeholders; keep them, in any order the sentence needs.
 - `srv:<English text>` keys are messages from the server; the English key is the meaning.
 - `go test ./internal/server/ -run Strings` checks that every language has every key, no empty text
@@ -60,3 +60,15 @@ name in every language's TV menu is unchecked.
 
 Edit the JSON file and open a pull request, or open an issue with the key, the language and the
 better wording. Please say whether you are a native speaker.
+
+## Added in 0.27 — every language
+
+Written by the author's AI assistant on 2026-10-31 (library tabs, search, sort and filter, episodes and
+queue, subtitles over DLNA, the login hint for Jellyfin/Emby, Kodi on Android TV), 42 keys:
+
+`tab.films`, `tab.series`, `tab.music`, `tab.photos`, `f.search`, `f.sortLabel`, `f.sortName`, `f.sortAdded`, `f.sortYear`, `f.sortScore`, `f.filterLabel`, `f.all`, `f.unwatched`, `f.started`, `f.genre`, `f.count`, `f.more`, `f.none`, `d.nEpisodes`, `d.nTracks`, `d.watched`, `d.show`, `d.queue`, `d.episodes`, `d.tracks`, `d.nextUp`, `d.seen`, `q.h`, `q.auto`, `q.remove`, `q.removeName`, `q.added`, `srv:choose an episode or a track`, `srv:100 entries in the queue at most`, `login.hintServer`, `d.sub`, `d.subOff`, `kodi.on`, `kodi.off`, `kodi.starting`, `kodi.none`, `p.pos`
+
+## How to help
+
+Open an issue with the template **"Translation"** (language, key, what it says, what it should say) — or a
+pull request that changes the `<lang>.json` file; `go test ./internal/server/ -run Strings` must stay green.

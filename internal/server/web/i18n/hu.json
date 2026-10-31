@@ -186,5 +186,9 @@
  "kodi.off": "Lejátszás ezzel: Movies-Cast",
  "kodi.starting": "Kodi indul …",
  "kodi.none": "A Kodi nem fogadta a filmet.",
- "p.pos": "Pozíció"
+ "p.pos": "Pozíció",
+ "s.diag": "Diagnosztika letöltése (hiba- vagy tévéjelentéshez)",
+ "p.sleep": "Elalvási időzítő",
+ "p.sleepOff": "Ki",
+ "p.sleepLeft": "{0} perc múlva leáll"
 }

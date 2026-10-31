@@ -375,3 +375,74 @@ func TestADLNAPlayCarriesTheChosenSubtitleAsSRT(t *testing.T) {
 		t.Fatalf("no subtitle chosen, TV got %q", m.SubtitleURL)
 	}
 }
+
+// The diagnostics file names TV models and their formats, never an address,
+// a MAC or the TV's UDN (the LG's carries its IP).
+func TestDiagnosticsListFormatsPerTVWithoutAddresses(t *testing.T) {
+	r, _ := newLibRig(t)
+	tv := lg
+	tv.ID = "uuid:abc@192.0.2.252"
+	tv.Model = "LG TV"
+	r.app.renderers = staticRenderers{tv}
+	r.app.mu.Lock()
+	r.app.proven[tv.ID+"|mkv|hevc"] = true
+	r.app.failed[tv.ID+"|ts|h264"] = true
+	r.app.convert[tv.ID+"|audio|eac3"] = true
+	r.app.mu.Unlock()
+	code, body := r.get("/api/diagnostics")
+	if code != 200 {
+		t.Fatalf("%d %s", code, body)
+	}
+	for _, want := range []string{`"Model":"LG TV"`, `"Played":["mkv hevc"]`, `"Refused":["ts h264"]`, `"SoundConverted":["audio eac3"]`, `"movies-cast":"test"`} {
+		if !strings.Contains(body, want) {
+			t.Errorf("missing %s in %s", want, body)
+		}
+	}
+	for _, leak := range []string{"192.0.2", "127.0.0.1", "uuid:", "tok-lib", "Demo"} {
+		if strings.Contains(body, leak) {
+			t.Errorf("diagnostics contain %q: %s", leak, body)
+		}
+	}
+}
+
+func TestSleepTimerStopsTheTVAndNothingFollows(t *testing.T) {
+	r, _ := newLibRig(t)
+	r.post("/api/play", map[string]any{"renderer": lg.ID, "movie": "E1"})
+	// Near the end: if the play outlived the timer, the next episode would follow.
+	r.tv.mu.Lock()
+	r.tv.state, r.tv.pos = "PLAYING", r.tv.media.Duration-5*time.Second
+	r.tv.mu.Unlock()
+	waitFor(t, "PLAYING seen", func() bool {
+		r.app.mu.Lock()
+		defer r.app.mu.Unlock()
+		p := r.app.byTV[lg.ID]
+		return p != nil && p.sawPlay
+	})
+	if code, _ := r.post("/api/control", map[string]any{"renderer": lg.ID, "action": "sleep", "seconds": 0.2}); code != 200 {
+		t.Fatal("sleep")
+	}
+	_, body := r.get("/api/status?renderer=" + url.QueryEscape(lg.ID))
+	if !strings.Contains(body, `"sleepSeconds":0`) {
+		t.Fatalf("status during the timer: %s", body)
+	}
+	waitFor(t, "the TV stopped by the timer", func() bool { _, st, _ := r.tv.get(); return st == "STOPPED" })
+	r.app.mu.Lock()
+	p := r.app.byTV[lg.ID]
+	r.app.mu.Unlock()
+	if p != nil {
+		t.Fatal("the play still runs after the sleep timer")
+	}
+	time.Sleep(100 * time.Millisecond)
+	if got := titleOnTV(r); got != "Pilot" {
+		t.Fatalf("after the sleep timer the TV got %q", got)
+	}
+	// A cleared timer does not fire.
+	r.post("/api/play", map[string]any{"renderer": lg.ID, "movie": "F1"})
+	r.tv.set("PLAYING")
+	r.post("/api/control", map[string]any{"renderer": lg.ID, "action": "sleep", "seconds": 0.1})
+	r.post("/api/control", map[string]any{"renderer": lg.ID, "action": "sleep", "seconds": 0})
+	time.Sleep(300 * time.Millisecond)
+	if _, st, _ := r.tv.get(); st != "PLAYING" {
+		t.Fatalf("a cleared timer stopped the TV: %s", st)
+	}
+}

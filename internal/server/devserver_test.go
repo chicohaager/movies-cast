@@ -1,15 +1,18 @@
 package server
 
 import (
+	"encoding/xml"
 	"net"
 	"net/http"
 	"os"
 	"os/signal"
 	"path/filepath"
+	"strings"
 	"syscall"
 	"testing"
 	"time"
 
+	"movies-cast/internal/dlna"
 	"movies-cast/internal/movies"
 )
 
@@ -30,6 +33,15 @@ func TestDevServer(t *testing.T) {
 	// MC_DEV_LIBRARY=../../docs/screenshots/demo shows public-domain films with
 	// their posters instead of the captured library (README screenshots).
 	fm := &fakeMovies{library: os.Getenv("MC_DEV_LIBRARY")}
+	// MC_DEV_HLS_LENGTH=94m makes "No sound?" convert a whole film (Movies
+	// answers with segments for the full length) instead of the tests' 18.5 s.
+	if v := os.Getenv("MC_DEV_HLS_LENGTH"); v != "" {
+		d, err := time.ParseDuration(v)
+		if err != nil {
+			t.Fatal(err)
+		}
+		fm.hlsLength = d
+	}
 	ms := &http.Server{Handler: fm.handler(t)}
 	mln, err := net.Listen("tcp", "127.0.0.1:0")
 	if err != nil {
@@ -39,6 +51,24 @@ func TestDevServer(t *testing.T) {
 	defer ms.Close()
 
 	tv := &fakeTV{state: "NO_MEDIA_PRESENT"}
+	// MC_DEV_SINK=../dlna/testdata/lg-protocolinfo.xml makes the fake TV list the
+	// formats of a real TV (GetProtocolInfo answer), so the format hint shows.
+	if p := os.Getenv("MC_DEV_SINK"); p != "" {
+		b, err := os.ReadFile(p)
+		if err != nil {
+			t.Fatal(err)
+		}
+		// Decoded as XML (entities, whitespace) like dlna.Client.Sink does.
+		var env struct {
+			Sink string `xml:"Body>GetProtocolInfoResponse>Sink"`
+		}
+		if err := xml.Unmarshal(b, &env); err != nil {
+			t.Fatalf("%s: %v", p, err)
+		}
+		if tv.sink = strings.TrimSpace(env.Sink); tv.sink == "" {
+			t.Fatalf("%s: no <Sink> list", p)
+		}
+	}
 	// The unit tests set the fake TV's state themselves; here it plays like a
 	// TV: TRANSITIONING becomes PLAYING after a second, and PLAYING counts up.
 	go func() {
@@ -54,7 +84,16 @@ func TestDevServer(t *testing.T) {
 		}
 	}()
 	state := filepath.Join(t.TempDir(), "sessions.json")
-	app := New(Config{PublicURL: "http://" + addr, StateFile: state}, movies.New("http://"+mln.Addr().String()+"/movies", "dev"), tv, staticRenderers{lg})
+	tvs := staticRenderers{lg}
+	// MC_DEV_SECOND_TV=1 adds a second TV, so "Manage TVs" can hide one, and
+	// gives both documentation addresses (RFC 5737) instead of 127.0.0.x, so a
+	// screen film shows LAN-like addresses.
+	if os.Getenv("MC_DEV_SECOND_TV") == "1" {
+		first := lg
+		first.Location = "http://192.0.2.52:1795/"
+		tvs = staticRenderers{first, dlna.Renderer{ID: "uuid:samsung", Name: "Samsung UE50MU6179", Location: "http://192.0.2.86:9197/"}}
+	}
+	app := New(Config{PublicURL: "http://" + addr, StateFile: state}, movies.New("http://"+mln.Addr().String()+"/movies", "dev"), tv, tvs)
 	ln, err := net.Listen("tcp", addr)
 	if err != nil {
 		t.Fatal(err)

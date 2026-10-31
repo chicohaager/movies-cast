@@ -36,6 +36,10 @@ type fakeMovies struct {
 	// counts them (TestParallelLoginGuessesAreThrottled).
 	loginDelay  time.Duration
 	wrongLogins int
+	// hlsLength, when set, makes the converted stream that long in 5 s
+	// segments, like Movies for a whole film (the dev server's
+	// MC_DEV_HLS_LENGTH); the tests keep their four segments (18.5 s).
+	hlsLength time.Duration
 }
 
 const movieID = "01000000000000000000000000000006"
@@ -165,6 +169,14 @@ func (f *fakeMovies) handler(t *testing.T) http.Handler {
 			_, _ = io.WriteString(w, `{"PlaySessionId":"ps-conv","MediaSources":[{"TranscodingUrl":"/movies/Videos/`+movieID+`/master.m3u8?MediaSourceId=x&PlaySessionId=ps-conv&api_key=tok-geheim"}]}`)
 		case r.URL.Path == "/movies/Videos/"+movieID+"/master.m3u8":
 			_, _ = io.WriteString(w, "#EXTM3U\n#EXT-X-STREAM-INF:BANDWIDTH=1\nmain.m3u8?api_key=tok-geheim\n")
+		case r.URL.Path == "/movies/Videos/"+movieID+"/main.m3u8" && f.hlsLength > 0:
+			var b strings.Builder
+			b.WriteString("#EXTM3U\n#EXT-X-TARGETDURATION:5\n")
+			for i := 0; time.Duration(i)*5*time.Second < f.hlsLength; i++ {
+				fmt.Fprintf(&b, "#EXTINF:5.000000, nodesc\nhls1/main/%d.ts?api_key=tok-geheim\n", i)
+			}
+			b.WriteString("#EXT-X-ENDLIST\n")
+			_, _ = io.WriteString(w, b.String())
 		case r.URL.Path == "/movies/Videos/"+movieID+"/main.m3u8":
 			_, _ = io.WriteString(w, "#EXTM3U\n#EXT-X-TARGETDURATION:5\n#EXTINF:5.000000, nodesc\nhls1/main/0.ts?api_key=tok-geheim\n#EXTINF:5.000000, nodesc\nhls1/main/1.ts?api_key=tok-geheim\n#EXTINF:5.000000, nodesc\nhls1/main/2.ts?api_key=tok-geheim\n#EXTINF:3.5, nodesc\nhls1/main/3.ts?api_key=tok-geheim\n#EXT-X-ENDLIST\n")
 		case strings.HasPrefix(r.URL.Path, "/movies/Videos/"+movieID+"/hls1/main/"):

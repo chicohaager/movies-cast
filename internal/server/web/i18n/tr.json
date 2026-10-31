@@ -186,5 +186,9 @@
  "kodi.off": "Oynatıcı: Movies-Cast",
  "kodi.starting": "Kodi başlatılıyor …",
  "kodi.none": "Kodi filmi kabul etmedi.",
- "p.pos": "Konum"
+ "p.pos": "Konum",
+ "s.diag": "Tanılamayı indir (hata veya TV raporu için)",
+ "p.sleep": "Uyku zamanlayıcısı",
+ "p.sleepOff": "Kapalı",
+ "p.sleepLeft": "{0} dk sonra durur"
 }
