@@ -190,5 +190,7 @@
  "s.diag": "Descargar diagnóstico (para un informe de error o de TV)",
  "p.sleep": "Temporizador de apagado",
  "p.sleepOff": "Desactivado",
- "p.sleepLeft": "se detiene en {0} min"
+ "p.sleepLeft": "se detiene en {0} min",
+ "s.latest": "Última versión",
+ "s.updateAvail": "{0} – hay una actualización disponible"
 }

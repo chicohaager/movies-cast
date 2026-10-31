@@ -190,5 +190,7 @@
  "s.diag": "진단 정보 다운로드 (오류 또는 TV 보고용)",
  "p.sleep": "취침 타이머",
  "p.sleepOff": "끔",
- "p.sleepLeft": "{0}분 후 정지"
+ "p.sleepLeft": "{0}분 후 정지",
+ "s.latest": "최신 버전",
+ "s.updateAvail": "{0} – 업데이트가 있습니다"
 }

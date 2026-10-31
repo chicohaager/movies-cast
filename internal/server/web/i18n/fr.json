@@ -190,5 +190,7 @@
  "s.diag": "Télécharger le diagnostic (pour un rapport de bug ou de TV)",
  "p.sleep": "Minuterie de veille",
  "p.sleepOff": "Désactivé",
- "p.sleepLeft": "arrêt dans {0} min"
+ "p.sleepLeft": "arrêt dans {0} min",
+ "s.latest": "Dernière version",
+ "s.updateAvail": "{0} – une mise à jour est disponible"
 }

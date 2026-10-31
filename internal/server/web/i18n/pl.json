@@ -190,5 +190,7 @@
  "s.diag": "Pobierz diagnostykę (do zgłoszenia błędu lub telewizora)",
  "p.sleep": "Wyłącznik czasowy",
  "p.sleepOff": "Wyłączony",
- "p.sleepLeft": "zatrzyma się za {0} min"
+ "p.sleepLeft": "zatrzyma się za {0} min",
+ "s.latest": "Najnowsza wersja",
+ "s.updateAvail": "{0} – dostępna jest aktualizacja"
 }

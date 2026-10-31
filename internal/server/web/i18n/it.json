@@ -190,5 +190,7 @@
  "s.diag": "Scarica la diagnostica (per una segnalazione di errore o TV)",
  "p.sleep": "Timer di spegnimento",
  "p.sleepOff": "Disattivato",
- "p.sleepLeft": "si ferma tra {0} min"
+ "p.sleepLeft": "si ferma tra {0} min",
+ "s.latest": "Ultima versione",
+ "s.updateAvail": "{0} – è disponibile un aggiornamento"
 }

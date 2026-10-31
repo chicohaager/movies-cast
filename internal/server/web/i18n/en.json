@@ -190,5 +190,7 @@
  "s.diag": "Download diagnostics (for a bug or TV report)",
  "p.sleep": "Sleep timer",
  "p.sleepOff": "Off",
- "p.sleepLeft": "stops in {0} min"
+ "p.sleepLeft": "stops in {0} min",
+ "s.latest": "Newest release",
+ "s.updateAvail": "{0} – an update is available"
 }

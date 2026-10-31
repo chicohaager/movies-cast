@@ -190,5 +190,7 @@
  "s.diag": "Diagnosztika letöltése (hiba- vagy tévéjelentéshez)",
  "p.sleep": "Elalvási időzítő",
  "p.sleepOff": "Ki",
- "p.sleepLeft": "{0} perc múlva leáll"
+ "p.sleepLeft": "{0} perc múlva leáll",
+ "s.latest": "Legújabb verzió",
+ "s.updateAvail": "{0} – frissítés érhető el"
 }

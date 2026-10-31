@@ -116,6 +116,7 @@ type Server struct {
 	pairings     map[string]*pairing    // TV-app pairings by secret ID
 	queue        map[string]*tvQueue    // what plays next, by renderer ID (library.go)
 	sleep        map[string]*sleepTimer // sleep timer by renderer ID
+	update       *updateCheck           // nil: no update notice (update.go)
 
 	browserSilence time.Duration
 

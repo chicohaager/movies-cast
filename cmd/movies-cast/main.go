@@ -9,6 +9,7 @@
 //	SSDP_PORT   local UDP port of the SSDP search (default 1901; 0 = any), so a firewall can allow the answers
 //	SSDP        "false" turns discovery off
 //	STATE_FILE  file that keeps sessions across restarts (holds Movies tokens, 0600)
+//	UPDATE_CHECK "true": the status card names the newest release (asks GitHub once a day)
 //	CAST        "false" turns the search for Google Cast devices off
 //	TLS_LISTEN  also serve HTTPS here (e.g. :8443); the TVs keep fetching films over HTTP
 //	TLS_CERT, TLS_KEY  certificate and key for HTTPS (e.g. from `tailscale cert`);
@@ -122,6 +123,9 @@ func main() {
 	}
 	srv := server.New(server.Config{PublicURL: os.Getenv("PUBLIC_URL"), Port: port, StateFile: os.Getenv("STATE_FILE")}, mc, transport, renderers)
 
+	if env("UPDATE_CHECK", "false") == "true" {
+		srv.UpdateCheck()
+	}
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 	// No WriteTimeout: a stream runs for hours. IdleTimeout closes kept-alive
