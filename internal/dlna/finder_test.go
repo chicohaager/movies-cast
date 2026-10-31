@@ -322,3 +322,36 @@ func TestFinderStatsTimeTheSearch(t *testing.T) {
 		t.Fatalf("describeMs %d, want the fetch time only (well under the SSDP wait)", st.DescribeMs)
 	}
 }
+
+// A TV seen before is asked while SSDP waits: one that is off answers only by
+// timeout, and asked after the wait it added 3 s to every search (.143).
+func TestFinderAsksKnownTVsDuringTheSSDPWait(t *testing.T) {
+	d, p := fixture(t, "lg-oled55b9-desc.xml"), fixture(t, "lg-protocolinfo.xml")
+	slow := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		time.Sleep(300 * time.Millisecond)
+		if r.Method == http.MethodPost {
+			_, _ = w.Write(p)
+			return
+		}
+		_, _ = w.Write(d)
+	}))
+	t.Cleanup(slow.Close)
+	f := NewFinder(nil, true, 0, NewClient())
+	f.allow = func(string) bool { return true }
+	f.search = func(context.Context, time.Duration) ([]string, int, error) {
+		time.Sleep(300 * time.Millisecond)
+		return nil, 0, nil
+	}
+	f.SetKnown([]string{slow.URL + "/"})
+	t0 := time.Now()
+	rs, err := f.Find(context.Background(), true)
+	took := time.Since(t0)
+	if len(rs) != 1 || err != nil {
+		t.Fatalf("got %+v, %v", rs, err)
+	}
+	// description 300 ms + protocol info 300 ms, next to the 300 ms wait:
+	// about 600 ms; one after the other would be about 900 ms.
+	if took >= 800*time.Millisecond {
+		t.Fatalf("search took %v, want the known TV asked during the SSDP wait", took)
+	}
+}

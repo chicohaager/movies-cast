@@ -194,14 +194,59 @@ func (f *Finder) Find(_ context.Context, refresh bool) ([]Renderer, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), f.Wait+15*time.Second)
 	defer cancel()
 
+	type result struct {
+		r     Renderer
+		ok    bool
+		err   error
+		known bool
+	}
+	// Buffered for the known TVs: they finish during the SSDP wait and must
+	// not hold a fetch slot until the results are read.
+	results := make(chan result, len(f.known))
+	slots := make(chan struct{}, maxFetches)
+	seen := map[string]bool{}
+	n := 0
+	fetch := func(loc string, known bool) {
+		if seen[loc] {
+			return
+		}
+		seen[loc] = true
+		n++
+		go func() {
+			slots <- struct{}{}
+			defer func() { <-slots }()
+			r, err := FetchRenderer(ctx, f.HTTP, loc)
+			if err != nil {
+				results <- result{err: err, known: known}
+				return
+			}
+			video, verr := f.video(ctx, r)
+			if verr != nil {
+				// Unknown is kept: hiding a TV because one query failed is worse
+				// than listing a speaker.
+				log.Printf("renderer %s (%s): protocol info: %v", r.Name, loc, verr)
+				video = true
+			}
+			results <- result{r: r, ok: video}
+		}()
+	}
+	// TVs seen before are asked while SSDP waits, not after it: one that is
+	// off answers only by timeout, and after the wait that added 3 s to
+	// every search (.143, 2026-10-31). One that answers the search too is
+	// fetched twice and listed once (by ID); a known address that moved
+	// fails like an off TV, and the search finds the new one.
+	for _, loc := range f.known {
+		fetch(loc, true)
+	}
+
 	locs := append([]string(nil), f.Static...)
 	var errs []error
 	hosts := f.hosts()
 	answers := 0
 	t0 := time.Now()
 	if f.SSDP || len(hosts) > 0 {
-		found, n, err := f.search(ctx, f.Wait)
-		answers = n
+		found, got, err := f.search(ctx, f.Wait)
+		answers = got
 		if err != nil {
 			errs = append(errs, err)
 		}
@@ -227,52 +272,10 @@ func (f *Finder) Find(_ context.Context, refresh bool) ([]Renderer, error) {
 			}
 		}
 	}
-	type result struct {
-		r     Renderer
-		ok    bool
-		err   error
-		known bool
-	}
-	seen := map[string]bool{}
-	fromSearch := map[string]bool{}
-	for _, loc := range locs {
-		fromSearch[hostOf(loc)] = true
-	}
-	var knownLocs []string
-	for _, loc := range f.known {
-		if !fromSearch[hostOf(loc)] {
-			knownLocs = append(knownLocs, loc)
-		}
-	}
 	ssdpTime := time.Since(t0)
 	t1 := time.Now()
-	results := make(chan result)
-	slots := make(chan struct{}, maxFetches)
-	n := 0
-	for i, loc := range append(locs, knownLocs...) {
-		if seen[loc] {
-			continue
-		}
-		seen[loc] = true
-		n++
-		known := i >= len(locs)
-		go func(loc string) {
-			slots <- struct{}{}
-			defer func() { <-slots }()
-			r, err := FetchRenderer(ctx, f.HTTP, loc)
-			if err != nil {
-				results <- result{err: err, known: known}
-				return
-			}
-			video, verr := f.video(ctx, r)
-			if verr != nil {
-				// Unknown is kept: hiding a TV because one query failed is worse
-				// than listing a speaker.
-				log.Printf("renderer %s (%s): protocol info: %v", r.Name, loc, verr)
-				video = true
-			}
-			results <- result{r: r, ok: video}
-		}(loc)
+	for _, loc := range locs {
+		fetch(loc, false)
 	}
 	byID := map[string]Renderer{}
 	for range n {
