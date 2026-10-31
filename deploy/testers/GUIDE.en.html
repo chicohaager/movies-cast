@@ -42,6 +42,7 @@ pre { white-space:pre-wrap; overflow-wrap:anywhere; margin:0; }
   <li><strong>Nothing is installed on the TV.</strong> The TV only has to understand DLNA ("Media Renderer"); Movies-Cast sends it the film, and the TV plays it itself.</li>
   <li>The <strong>TV app</strong> shown in the video (LG webOS, pairing code, library on the TV) is <strong>not part of this package</strong>. For <strong>Android TV</strong> (e.g. Nvidia Shield) there is a test app, see section 9.</li>
   <li><strong>Is my TV or box suitable?</strong> Install Movies-Cast and switch the device on: if it appears in the TV list on the phone, it answers as a DLNA video renderer. If not, the text below the list says what the search found.</li>
+  <li><strong>Apple TV:</strong> not supported in this version (AirPlay is planned for a later version).</li>
 </ul>
 
 <h2>1. Requirements</h2>
@@ -78,6 +79,7 @@ pre { white-space:pre-wrap; overflow-wrap:anywhere; margin:0; }
   <li>Under <strong>"Manage TVs"</strong> you can add the TV by its IP address.</li>
   <li>If ZimaOS runs a firewall, it has to allow <strong>UDP port 1901</strong> from the home network (the TVs' answers to the search).</li>
   <li>The <strong>"Status"</strong> card shows whether Movies is reachable, when the last search ran and what it found.</li>
+  <li><strong>"Search"</strong> next to the list starts the search again: the button shows "Searching …" for a few seconds, then the result appears at the top of the page.</li>
 </ul>
 </div>
 
@@ -145,6 +147,7 @@ Screenshot: yes/no</code></pre>
   <li>The <strong>TV app</strong> for LG webOS is not part of this package; this test is about the DLNA path.</li>
   <li>The <strong>translations</strong> other than German and English were made by an AI and have not been read by a native speaker yet – corrections are welcome.</li>
   <li>Playback has been checked with ZimaOS 1.8.0 and an LG OLED55B9. A Samsung UE50MU6179 was found; whether it plays is still open – reports about other TVs are especially valuable.</li>
+  <li><strong>Apple TV</strong> does not appear in the list: it is not a DLNA device, and playback over AirPlay is not in this version yet.</li>
   <li><strong>Updating from 0.24.0 or 0.25.0:</strong> an update via "Tag" brings only the new program, no change to the compose file. Movies-Cast then writes its log in UTC instead of local time – this is harmless. To change it: in "Verwalten" open <strong>"YAML"</strong>, delete the line <code>- TZ=$TZ</code>, add the <code>/etc/localtime</code> entry under <code>volumes:</code> as in this package's <code>docker-compose.yml</code>, and save (measured on ZimaOS 1.8.0; logins are kept).</li>
 </ul>
 <h2>9. Android TV app (test build)</h2>

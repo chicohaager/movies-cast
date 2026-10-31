@@ -47,7 +47,7 @@ The easiest way: add the Lintuxer app store to ZimaOS (App Store → add a sourc
 `https://chicohaager.github.io/zima-appstore/store.json`) and install **Movies-Cast** there. Or by hand:
 
 1. Download `movies-cast-<version>.zip` from the [latest release](https://github.com/chicohaager/movies-cast/releases/latest) and unpack it.
-2. Open `GUIDE.en.html` (German: `ANLEITUNG.de.html`) from the zip in a browser.
+2. Open `GUIDE.en.html` (German: `ANLEITUNG.de.html`, French: `GUIDE.fr.html`) from the zip in a browser.
 3. In the ZimaOS dashboard: "+" next to Apps → install a custom app → "Import" → "Docker Compose" →
    `docker-compose.yml` from the zip → install.
 4. On the phone open `http://<address-of-your-ZimaOS>:8097`, log in with the ZimaOS account, pick the TV
