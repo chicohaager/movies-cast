@@ -6,7 +6,7 @@
   </specVersion>
   <device>
     <deviceType>urn:schemas-upnp-org:device:ZonePlayer:1</deviceType>
-    <friendlyName>10.0.0.65 - Sonos Play:1 - RINCON_B8E937831B0A01400</friendlyName>
+    <friendlyName>10.0.0.40 - Sonos Play:1 - RINCON_B8E937831B0A01400</friendlyName>
     <manufacturer>Sonos, Inc.</manufacturer>
     <manufacturerURL>http://www.sonos.com</manufacturerURL>
     <modelNumber>S1</modelNumber>
@@ -112,7 +112,7 @@
     <deviceList>
       <device>
   <deviceType>urn:schemas-upnp-org:device:MediaServer:1</deviceType>
-  <friendlyName>10.0.0.65 - Sonos Play:1 Media Server - RINCON_B8E937831B0A01400</friendlyName>
+  <friendlyName>10.0.0.40 - Sonos Play:1 Media Server - RINCON_B8E937831B0A01400</friendlyName>
   <manufacturer>Sonos, Inc.</manufacturer>
   <manufacturerURL>http://www.sonos.com</manufacturerURL>
   <modelNumber>S1</modelNumber>

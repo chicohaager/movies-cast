@@ -173,7 +173,7 @@ type Movie struct {
 	HasPoster  bool   `json:"hasPoster"`
 	// Type is Movie, Series, Episode, MusicAlbum, Audio or Photo (Jellyfin's
 	// item types). Movies 0.3.0 lists Movie only (measured 2026-10-31: 0
-	// Series, Episode, Audio, Photo on .143); Jellyfin 10.11.0 all of them.
+	// Series, Episode, Audio, Photo on the test NAS); Jellyfin 10.11.0 all of them.
 	Type   string   `json:"type,omitempty"`
 	Genres []string `json:"genres,omitempty"`
 	Added  string   `json:"added,omitempty"`  // DateCreated, for "recently added"
@@ -367,7 +367,7 @@ func (c *Client) Next(ctx context.Context, s *Session, cur Movie) (Movie, bool, 
 }
 
 // Views returns the collection types of the user's libraries ("movies",
-// "tvshows", "music", "homevideos", "photos"). Movies 0.3.0 on .143 lists one
+// "tvshows", "music", "homevideos", "photos"). Movies 0.3.0 on the test NAS lists one
 // view, "movies" (measured 2026-10-31).
 func (c *Client) Views(ctx context.Context, s *Session) ([]string, error) {
 	var res struct {

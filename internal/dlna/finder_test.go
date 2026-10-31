@@ -36,11 +36,11 @@ func TestSinkHasVideo(t *testing.T) {
 }
 
 func TestParseSonosUsesRendererSubdeviceConnectionManager(t *testing.T) {
-	r, err := ParseDescription("http://10.0.0.65:1400/xml/device_description.xml", fixture(t, "sonos-desc.xml"))
+	r, err := ParseDescription("http://10.0.0.40:1400/xml/device_description.xml", fixture(t, "sonos-desc.xml"))
 	if err != nil {
 		t.Fatal(err)
 	}
-	if r.ConnMgr != "http://10.0.0.65:1400/MediaRenderer/ConnectionManager/Control" {
+	if r.ConnMgr != "http://10.0.0.40:1400/MediaRenderer/ConnectionManager/Control" {
 		t.Errorf("ConnMgr = %q (must be the MediaRenderer's, not the MediaServer's)", r.ConnMgr)
 	}
 }
@@ -84,15 +84,15 @@ func TestFinderDoesNotCacheEmptyResult(t *testing.T) {
 }
 
 func TestLANLocation(t *testing.T) {
-	own := []net.IP{net.ParseIP("10.0.0.143")}
+	own := []net.IP{net.ParseIP("10.0.0.10")}
 	for loc, want := range map[string]bool{
-		"http://10.0.0.252:1795/":                         true,
+		"http://10.0.0.20:1795/":                          true,
 		"http://10.0.0.5:1400/xml/device_description.xml": true,
 		"http://127.0.0.1:8080/":                          false, // loopback services of the NAS
-		"http://10.0.0.143:5000/v2/":                      false, // the NAS itself
+		"http://10.0.0.10:5000/v2/":                       false, // the NAS itself
 		"http://169.254.169.254/latest/":                  false, // link-local
 		"http://8.8.8.8/":                                 false, // not LAN
-		"https://10.0.0.252/":                             false,
+		"https://10.0.0.20/":                              false,
 		"http://tv.local:1795/":                           false, // names could resolve anywhere
 		"file:///etc/passwd":                              false,
 	} {
@@ -127,8 +127,8 @@ func TestControlURLMustStayOnDevice(t *testing.T) {
 	if _, err := ParseDescription("http://10.0.0.50:1400/d.xml", []byte(desc)); err == nil {
 		t.Fatal("AVTransport on another host was accepted")
 	}
-	r, err := ParseDescription("http://10.0.0.252:1795/", fixture(t, "lg-oled55b9-desc.xml"))
-	if err != nil || r.ID != "uuid:e5f75f8e-cf7f-e018-da71-5df259164b42@10.0.0.252" {
+	r, err := ParseDescription("http://10.0.0.20:1795/", fixture(t, "lg-oled55b9-desc.xml"))
+	if err != nil || r.ID != "uuid:e5f75f8e-cf7f-e018-da71-5df259164b42@10.0.0.20" {
 		t.Fatalf("id %q err %v", r.ID, err)
 	}
 }
@@ -149,7 +149,7 @@ func TestSearchIgnoresAnswerFromOtherHost(t *testing.T) {
 			return
 		}
 		// Answers from 127.0.0.1 but names another host.
-		_, _ = tv.WriteTo([]byte("HTTP/1.1 200 OK\r\nLOCATION: http://10.0.0.99:1795/\r\n\r\n"), from)
+		_, _ = tv.WriteTo([]byte("HTTP/1.1 200 OK\r\nLOCATION: http://10.0.0.60:1795/\r\n\r\n"), from)
 	}()
 	locs, _, err := Search(context.Background(), 400*time.Millisecond, 0, nil)
 	if err != nil || len(locs) != 0 {
@@ -302,7 +302,7 @@ func TestFinderAsksKnownTVsTheSearchMissed(t *testing.T) {
 }
 
 // The stats say where a search spent its time: the SSDP wait and the
-// description fetches (a search took 7 s on .143 and nobody could tell why).
+// description fetches (a search took 7 s on the test NAS and nobody could tell why).
 func TestFinderStatsTimeTheSearch(t *testing.T) {
 	lgSrv := fakeDevice(t, "lg-oled55b9-desc.xml", "lg-protocolinfo.xml")
 	f := NewFinder(nil, true, 0, NewClient())
@@ -324,7 +324,7 @@ func TestFinderStatsTimeTheSearch(t *testing.T) {
 }
 
 // A TV seen before is asked while SSDP waits: one that is off answers only by
-// timeout, and asked after the wait it added 3 s to every search (.143).
+// timeout, and asked after the wait it added 3 s to every search (the test NAS).
 func TestFinderAsksKnownTVsDuringTheSSDPWait(t *testing.T) {
 	d, p := fixture(t, "lg-oled55b9-desc.xml"), fixture(t, "lg-protocolinfo.xml")
 	slow := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -357,7 +357,7 @@ func TestFinderAsksKnownTVsDuringTheSSDPWait(t *testing.T) {
 }
 
 // A TV seen before that does not answer in time (off: the kernel's ARP wait
-// took 3.07 s on .143) is given up after knownFetchTimeout, so it does not
+// took 3.07 s on the test NAS) is given up after knownFetchTimeout, so it does not
 // outlast the SSDP wait; it is no error, the phone lists it as off.
 func TestFinderGivesUpOnASilentKnownTV(t *testing.T) {
 	old := knownFetchTimeout

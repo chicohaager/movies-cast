@@ -8,7 +8,7 @@
 # The installed compose holds the real values (passwords, tokens), so only
 # counts and the image lines are printed, never other lines. Lines are compared
 # with awk, not diff: ZimaOS had no diff until the admin tools brought one
-# (.143, 2026-10-31).
+# (the test NAS, 2026-10-31).
 #
 # Exit: 0 switched (or already on <image>); 2 bad arguments; 3 no compose or
 # not exactly one image line, nothing changed; 4 another line changed, the

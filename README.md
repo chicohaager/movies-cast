@@ -60,9 +60,9 @@ See [Requirements](#requirements). With a Jellyfin or Emby server instead of Mov
 The phone shows the same "Weiterschauen" row above all films; it reloads when a film on the TV ends
 or is stopped, so the new resume point appears.
 
-Open `http://<nas>:8097` on the phone — on .143: `http://10.0.0.143:8097` in the home Wi-Fi,
-`http://100.64.0.10:8097` (or `http://my-nas:8097`) via Tailscale from outside; .143
-advertises no subnet route, so the LAN address does not work over Tailscale. Log in with the **ZimaOS account**, pick a film, pick the TV,
+Open `http://<nas>:8097` on the phone — for example `http://10.0.0.10:8097` in the home Wi-Fi,
+`http://100.64.0.10:8097` (or `http://my-nas:8097`) via Tailscale from outside; if the NAS
+advertises no subnet route, the LAN address does not work over Tailscale. Log in with the **ZimaOS account**, pick a film, pick the TV,
 press play. Pause, ±30 s, seek bar, stop and "continue at" work; progress goes back to Movies, and
 each stop is logged with film, position and outcome (`report stopped <film> at 0:01:41: ok`).
 

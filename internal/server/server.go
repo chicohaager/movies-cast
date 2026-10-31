@@ -71,7 +71,7 @@ type Transport interface {
 }
 
 type Config struct {
-	PublicURL string // optional, e.g. http://10.0.0.143:8097; else derived per TV
+	PublicURL string // optional, e.g. http://10.0.0.10:8097; else derived per TV
 	Port      int    // port this server listens on, for the derived URL
 	StateFile string // optional; sessions survive restarts there (0600)
 }

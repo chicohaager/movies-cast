@@ -3,7 +3,7 @@
 The measurement log behind the [README](../README.md). Statements carry the date and device they were
 measured on; "not measured" says so.
 
-## Why it exists (measured 2026-10-28, .143, Movies 0.3.0, LG OLED55B97LA)
+## Why it exists (measured 2026-10-28, the test NAS, Movies 0.3.0, LG OLED55B97LA)
 
 - Movies imitates a Jellyfin server under `/movies` (`System/Info/Public` → `"ProductName":"Jellyfin Server"`),
   but serves no `/movies/web/` (404). The official Jellyfin app for LG webOS is a shell that loads
@@ -12,15 +12,15 @@ measured on; "not measured" says so.
 
 ## Search port and firewall
 
-On .143, SSDP from a random port finds nothing: ZFW drops the TV's answers (default-deny INPUT; the LG
+On the test NAS, SSDP from a random port finds nothing: ZFW drops the TV's answers (default-deny INPUT; the LG
 answers from a random source port, so neither a multicast nor a unicast query gets a reply through —
-0 replies measured on .143, replies on .250). The LG does **not** keep its port either: 1795 earlier,
+0 replies measured on the test NAS, replies on the development PC). The LG does **not** keep its port either: 1795 earlier,
 1626 after a later start (measured 2026-10-28), so a fixed URL breaks. Hence the fixed search port,
 held open from start-up: ZFW (v1.0.28+) treats it as a new app port, opens it to the LAN and asks
-once in its Exposure tab — answer *LAN only*. Measured on .143 with 0.16.0: port held, ZFW logged
+once in its Exposure tab — answer *LAN only*. Measured on the test NAS with 0.16.0: port held, ZFW logged
 "new app port … 1901 udp", a search found both TVs by host with 0 drops. (A socket open only for the
 2 s of a search was opened by ZFW and closed again 19 s later; the answers fell in between.) Then
-`RENDERERS` can name hosts (`10.0.0.252,10.0.0.86`) instead of URLs. The Samsung UE50MU6179 answers the multicast query
+`RENDERERS` can name hosts (`10.0.0.20,10.0.0.30`) instead of URLs. The Samsung UE50MU6179 answers the multicast query
 only, not a unicast one (measured), so it needs the multicast answer to come through as well.
 
 ## Format hint before sending
@@ -128,7 +128,7 @@ cd /var/lib/casaos/apps/movies-cast && sudo docker compose up -d --force-recreat
 ZimaOS rewrites the compose on install (environment as a map). Since 0.25.1 the compose sets no `TZ`
 and binds the host's `/etc/localtime` read-only: ZimaOS fills `$TZ` in on the first import only, and
 after an update in "Verwalten" the program ran in UTC (`TestComposeTimeZoneFromHost`). The installed
-file on .143 was edited by hand (`RENDERERS`, `TZ: Europe/Berlin`); backups under
+file on the test NAS was edited by hand (`RENDERERS`, `TZ: Europe/Berlin`); backups under
 `/DATA/AppData/ssh-sudo-backups/movies-cast-compose-*.yml`. A reinstall via ZimaOS overwrites it.
 
 ## TV app (webOS, stage 2)
@@ -153,7 +153,7 @@ with the server; the TV gets no Movies token.
   for the first segment), although the TV plays the original file; flags or a device profile in the
   request only gave `NoCompatibleStream` or still a transcode (measured 2026-10-28). Embedded subtitles
   are extracted by Movies on first use (30 s for one track of a 37 GiB MKV).
-  **On request:** for 3 of the 4 films on .143 the item answer listed no subtitle and no video width (Shelter: none,
+  **On request:** for 3 of the 4 films on the test NAS the item answer listed no subtitle and no video width (Shelter: none,
   while PlaybackInfo lists en and fr). Such a play answers `subtitlesOnRequest`; the TV asks `/api/tv/subs-probe`
   only when someone wants subtitles (▼, or a remembered language), and the server then asks PlaybackInfo once per
   film and keeps the answer. Measured on the LG: Shelter starts without PlaybackInfo, ▼ loads en/fr (1276 cues).
@@ -225,7 +225,7 @@ Device setup pitfalls (measured): log in to the Developer Mode app with the **e-
 
 **Developer-mode session:** about 1000 h (Remain Session 999h:58m after a renewal). Apps installed in
 developer mode are removed after a reboot past expiry, and an expired session cannot be extended
-(LG docs). `deploy/webos/renew-devmode.sh` renews it daily from .143
+(LG docs). `deploy/webos/renew-devmode.sh` renews it daily from the test NAS
 (`movies-cast-devmode.timer`, data in `/DATA/AppData/movies-cast-devmode`); check with
 `journalctl -u movies-cast-devmode.service -n 3` → `renewed: result=success`.
 

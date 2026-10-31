@@ -3,7 +3,7 @@ package dlna
 // Wake-on-LAN for a TV in standby. A TV that is off answers neither SSDP
 // nor its description URL, so its MAC address has to be learned while it
 // is on: the host's ARP table holds it right after the description was
-// fetched (on .143 the LG was there as REACHABLE, 2026-10-28). Whether a
+// fetched (on the test NAS the LG was there as REACHABLE, 2026-10-28). Whether a
 // TV wakes from a magic packet depends on the TV and its settings (LG:
 // "Mobile TV On"); that is measured per TV, not assumed here.
 

@@ -11,7 +11,7 @@ import (
 )
 
 // A stopped report that reached Movies wrote no line, so after a play nobody
-// could tell whether Movies got the resume point (2026-10-29, .143).
+// could tell whether Movies got the resume point (2026-10-29, the test NAS).
 func TestStoppedReportIsLogged(t *testing.T) {
 	buf := &syncBuf{}
 	log.SetOutput(buf)

@@ -185,9 +185,9 @@ func FetchRenderer(ctx context.Context, hc *http.Client, location string) (Rende
 // answered within wait.
 //
 // port fixes the local UDP port (0 = any). Behind a default-deny INPUT chain
-// (ZFW on .143) a random port gets nothing back: the LG answers from a random
+// (ZFW on the test NAS) a random port gets nothing back: the LG answers from a random
 // source port, so conntrack ties the reply neither to a multicast nor to a
-// unicast query (measured 2026-10-28, 0 replies on .143, replies on .250).
+// unicast query (measured 2026-10-28, 0 replies on the test NAS, replies on the development PC).
 // A fixed port can be allowed in the firewall. The Samsung UE50MU6179 answers
 // the multicast query only, not a unicast one (measured 2026-10-28).
 func Search(ctx context.Context, wait time.Duration, port int, hosts []string) ([]string, int, error) {

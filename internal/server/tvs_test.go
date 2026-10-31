@@ -88,10 +88,10 @@ func TestAddTVByHost(t *testing.T) {
 	ff := &fakeFinder{rs: []dlna.Renderer{lg}}
 	r.app.renderers = ff
 	r.login()
-	if code, out := r.post("/api/tvs/hosts", map[string]any{"host": "10.0.0.86"}); code != 200 {
+	if code, out := r.post("/api/tvs/hosts", map[string]any{"host": "10.0.0.30"}); code != 200 {
 		t.Fatalf("add: %d %v", code, out)
 	}
-	if len(ff.extra) != 1 || ff.extra[0] != "10.0.0.86" {
+	if len(ff.extra) != 1 || ff.extra[0] != "10.0.0.30" {
 		t.Fatalf("finder got %v", ff.extra)
 	}
 	for _, bad := range []string{"8.8.8.8", "127.0.0.1", "tv.local", "fe80::1", ""} {
@@ -99,10 +99,10 @@ func TestAddTVByHost(t *testing.T) {
 			t.Errorf("host %q accepted", bad)
 		}
 	}
-	if !validTVHost("10.0.0.86", nil) || validTVHost("10.0.0.143", []net.IP{net.ParseIP("10.0.0.143")}) {
+	if !validTVHost("10.0.0.30", nil) || validTVHost("10.0.0.10", []net.IP{net.ParseIP("10.0.0.10")}) {
 		t.Error("validTVHost: own address must be refused, LAN address accepted")
 	}
-	if code, _ := r.post("/api/tvs/hosts", map[string]any{"host": "10.0.0.86", "remove": true}); code != 200 || len(ff.extra) != 0 {
+	if code, _ := r.post("/api/tvs/hosts", map[string]any{"host": "10.0.0.30", "remove": true}); code != 200 || len(ff.extra) != 0 {
 		t.Fatalf("remove: %d %v", code, ff.extra)
 	}
 }

@@ -80,14 +80,14 @@ test("TV list fails: the old TV is not used any more", async ({ page }) => {
   await page.unroute("**/api/renderers*");
 });
 
-// "Search" waited 7 s on .143 (2026-10-31) without a sign and came back with
+// "Search" waited 7 s on the test NAS (2026-10-31) without a sign and came back with
 // the same list: it looked dead. While searching the button says so and is
 // locked; afterwards the line under the header names the outcome.
 test("TV search shows that it searches and what it found", async ({ page }) => {
   await login(page);
   const off = [
-    { id: "a", name: "Gästezimmer", model: "x", host: "192.0.2.86", off: true },
-    { id: "b", name: "Wohnzimmer", model: "y", host: "192.0.2.252", off: true },
+    { id: "a", name: "Gästezimmer", model: "x", host: "192.0.2.30", off: true },
+    { id: "b", name: "Wohnzimmer", model: "y", host: "192.0.2.20", off: true },
   ];
   let answer = off;
   await page.route("**/api/renderers*", async (route) => {

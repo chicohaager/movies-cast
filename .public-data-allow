@@ -16,27 +16,27 @@ docs/TECHNICAL.md:/Users/AuthenticateByName
 
 # Invented LAN addresses of the test fakes and doc examples (the real ones were replaced
 # 2026-10-28); the code under test needs private-range addresses.
-internal/dlna/dlna_test.go:10.0.0.252
+internal/dlna/dlna_test.go:10.0.0.20
 internal/dlna/dlna_test.go:10.0.0.9
-internal/dlna/finder_test.go:10.0.0.143
-internal/dlna/finder_test.go:10.0.0.252
+internal/dlna/finder_test.go:10.0.0.10
+internal/dlna/finder_test.go:10.0.0.20
 internal/dlna/finder_test.go:10.0.0.5
 internal/dlna/finder_test.go:10.0.0.50
-internal/dlna/finder_test.go:10.0.0.65
-internal/dlna/finder_test.go:10.0.0.99
-internal/server/tvs_test.go:10.0.0.86
-internal/server/tvs_test.go:10.0.0.143
-internal/dlna/testdata/lg-positioninfo-stopped.xml:10.0.0.143
-internal/dlna/testdata/sonos-desc.xml:10.0.0.65
-internal/server/server.go:10.0.0.143
-README.md:10.0.0.143
+internal/dlna/finder_test.go:10.0.0.40
+internal/dlna/finder_test.go:10.0.0.60
+internal/server/tvs_test.go:10.0.0.30
+internal/server/tvs_test.go:10.0.0.10
+internal/dlna/testdata/lg-positioninfo-stopped.xml:10.0.0.10
+internal/dlna/testdata/sonos-desc.xml:10.0.0.40
+internal/server/server.go:10.0.0.10
+README.md:10.0.0.10
 # copyright holder in the MIT license (owner decision 2026-10-29)
 LICENSE:Kuehn
 
 # Invented example address of the Android TV start page (hint text and a code comment).
 deploy/androidtv/assets/start.html:10.20.30.40
-docs/TECHNICAL.md:10.0.0.252
-docs/TECHNICAL.md:10.0.0.86
+docs/TECHNICAL.md:10.0.0.20
+docs/TECHNICAL.md:10.0.0.30
 docs/TECHNICAL.md:10.20.30.40
 deploy/webos/store-index.html:10.20.30.40
 docs/WEBOS-STORE.md:10.20.30.40

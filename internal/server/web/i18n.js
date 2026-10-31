@@ -6,7 +6,7 @@
 var I18N = (function () {
   "use strict";
   var ALL = window.I18N_STRINGS || { en: {} };
-  // Native names for the language picker, in ZimaOS' set (assets on .143, 2026-10-28).
+  // Native names for the language picker, in ZimaOS' set (assets on the test NAS, 2026-10-28).
   var NAMES = {
     en: "English", de: "Deutsch", fr: "Français", es: "Español", it: "Italiano", nl: "Nederlands",
     pl: "Polski", cs: "Čeština", hu: "Magyar", sv: "Svenska", tr: "Türkçe", ru: "Русский",

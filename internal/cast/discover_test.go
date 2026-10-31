@@ -51,7 +51,7 @@ func TestParseAnswerOfACastDevice(t *testing.T) {
 	p = append(p, record(inst, 33, srv)...)
 	p = append(p, record(inst, 16, txt("id=abc123", "fn=Wohnzimmer", "md=Chromecast Ultra", "ve=05"))...)
 	p = append(p, record("abc123.local", 1, []byte{192, 0, 2, 77})...)
-	got := parseAnswer(p, net.ParseIP("192.0.2.99"))
+	got := parseAnswer(p, net.ParseIP("192.0.2.60"))
 	if len(got) != 1 {
 		t.Fatalf("got %+v", got)
 	}

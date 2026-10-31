@@ -21,19 +21,19 @@ func fixture(t *testing.T, name string) []byte {
 	return b
 }
 
-// Description captured from the LG OLED55B97LA at 10.0.0.252:1795.
+// Description captured from the LG OLED55B97LA at 10.0.0.20:1795.
 func TestParseDescriptionLG(t *testing.T) {
-	r, err := ParseDescription("http://10.0.0.252:1795/", fixture(t, "lg-oled55b9-desc.xml"))
+	r, err := ParseDescription("http://10.0.0.20:1795/", fixture(t, "lg-oled55b9-desc.xml"))
 	if err != nil {
 		t.Fatal(err)
 	}
-	if want := "http://10.0.0.252:1795/AVTransport/e5f75f8e-cf7f-e018-da71-5df259164b42/control.xml"; r.AVTransport != want {
+	if want := "http://10.0.0.20:1795/AVTransport/e5f75f8e-cf7f-e018-da71-5df259164b42/control.xml"; r.AVTransport != want {
 		t.Errorf("AVTransport = %q, want %q", r.AVTransport, want)
 	}
-	if want := "http://10.0.0.252:1795/RenderingControl/e5f75f8e-cf7f-e018-da71-5df259164b42/control.xml"; r.RenderingCtl != want {
+	if want := "http://10.0.0.20:1795/RenderingControl/e5f75f8e-cf7f-e018-da71-5df259164b42/control.xml"; r.RenderingCtl != want {
 		t.Errorf("RenderingCtl = %q, want %q", r.RenderingCtl, want)
 	}
-	if r.Name != "[LG] webOS TV OLED55B97LA" || r.Host() != "10.0.0.252" || r.ID != "uuid:e5f75f8e-cf7f-e018-da71-5df259164b42@10.0.0.252" {
+	if r.Name != "[LG] webOS TV OLED55B97LA" || r.Host() != "10.0.0.20" || r.ID != "uuid:e5f75f8e-cf7f-e018-da71-5df259164b42@10.0.0.20" {
 		t.Errorf("got name=%q host=%q id=%q", r.Name, r.Host(), r.ID)
 	}
 }
@@ -123,8 +123,8 @@ func TestDIDLMarksSeekable(t *testing.T) {
 }
 
 func TestSSDPLocation(t *testing.T) {
-	resp := "HTTP/1.1 200 OK\r\nCACHE-CONTROL: max-age=1800\r\nLocation: http://10.0.0.252:1795/\r\nST: urn:schemas-upnp-org:service:AVTransport:1\r\n\r\n"
-	if got := ParseSSDPLocation([]byte(resp)); got != "http://10.0.0.252:1795/" {
+	resp := "HTTP/1.1 200 OK\r\nCACHE-CONTROL: max-age=1800\r\nLocation: http://10.0.0.20:1795/\r\nST: urn:schemas-upnp-org:service:AVTransport:1\r\n\r\n"
+	if got := ParseSSDPLocation([]byte(resp)); got != "http://10.0.0.20:1795/" {
 		t.Errorf("got %q", got)
 	}
 	if got := ParseSSDPLocation([]byte("HTTP/1.1 200 OK\r\n\r\n")); got != "" {

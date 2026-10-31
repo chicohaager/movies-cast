@@ -56,7 +56,7 @@ type SearchStats struct {
 	Err       string    `json:"error,omitempty"`
 	Port      int       `json:"port"`     // local SSDP port, 0 = random
 	PortHeld  bool      `json:"portHeld"` // the fixed port is bound now
-	// Where the time went (a search took 7 s on .143, 2026-10-31, and
+	// Where the time went (a search took 7 s on the test NAS, 2026-10-31, and
 	// nobody could tell why): the SSDP wait, then fetching the description
 	// of every TV found or known (a TV that is off answers by timeout).
 	SSDPMs     int64 `json:"ssdpMs"`
@@ -180,7 +180,7 @@ func (f *Finder) Open(ctx context.Context) error {
 const maxFetches = 8
 
 // knownFetchTimeout bounds asking a TV seen before at its last address. On
-// .143 (2026-10-31) the LG, switched on, gave description and protocol info
+// the test NAS (2026-10-31) the LG, switched on, gave description and protocol info
 // within 0.3 s; a device that is off costs the kernel's ARP wait, 3.07 s
 // measured, which then outlasted the 2 s SSDP wait. A TV the search finds
 // keeps the search's own limit. A variable for the tests.
@@ -245,7 +245,7 @@ func (f *Finder) Find(_ context.Context, refresh bool) ([]Renderer, error) {
 	}
 	// TVs seen before are asked while SSDP waits, not after it: one that is
 	// off answers only by timeout, and after the wait that added 3 s to
-	// every search (.143, 2026-10-31). One that answers the search too is
+	// every search (the test NAS, 2026-10-31). One that answers the search too is
 	// fetched twice and listed once (by ID); a known address that moved
 	// fails like an off TV, and the search finds the new one.
 	for _, loc := range f.known {

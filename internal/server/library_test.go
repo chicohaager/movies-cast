@@ -381,7 +381,7 @@ func TestADLNAPlayCarriesTheChosenSubtitleAsSRT(t *testing.T) {
 func TestDiagnosticsListFormatsPerTVWithoutAddresses(t *testing.T) {
 	r, _ := newLibRig(t)
 	tv := lg
-	tv.ID = "uuid:abc@192.0.2.252"
+	tv.ID = "uuid:abc@192.0.2.20"
 	tv.Model = "LG TV"
 	r.app.renderers = staticRenderers{tv}
 	r.app.mu.Lock()

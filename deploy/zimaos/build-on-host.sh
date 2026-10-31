@@ -51,7 +51,7 @@ fi
 remote_docker='export DOCKER_CONFIG=/tmp/dc-$USER; mkdir -p "$DOCKER_CONFIG";'
 
 # Only a committed state is built, and -version names its commit: 0.20.2 ran on
-# .143 from an uncommitted tree, and nothing said which code it was (2026-10-29).
+# the test NAS from an uncommitted tree, and nothing said which code it was (2026-10-29).
 # check.sh and go build run in a worktree of HEAD, so uncommitted files (another
 # session's, say) are neither tested nor shipped; they are listed.
 dirty="$(cd "$repo" && git status --porcelain --untracked-files=normal)"

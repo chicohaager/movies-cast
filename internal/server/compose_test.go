@@ -32,7 +32,7 @@ func TestComposeIconIsTheLogo(t *testing.T) {
 
 // The time zone comes from the host's /etc/localtime, read-only, not from
 // TZ=$TZ: ZimaOS fills $TZ in on the first import only, and after an update
-// in "Verwalten" the program ran in UTC (log 09:04:30 at 10:04 CET, .184,
+// in "Verwalten" the program ran in UTC (log 09:04:30 at 10:04 CET, a second test NAS,
 // 29.10.2026). Go reads /etc/localtime when TZ is unset; a set but empty or
 // unknown TZ would mean UTC, so TZ must not be there at all.
 func TestComposeTimeZoneFromHost(t *testing.T) {

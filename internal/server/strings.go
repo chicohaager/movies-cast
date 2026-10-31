@@ -2,7 +2,7 @@ package server
 
 // The page texts live in web/i18n/<lang>.json, one file per language, English
 // the reference (owner's choice 2026-10-28: English is the default). The
-// languages are the ones the ZimaOS UI ships (assets/<lang>-*.js on .143,
+// languages are the ones the ZimaOS UI ships (assets/<lang>-*.js on the test NAS,
 // measured 2026-10-28). /strings.js hands all of them to both pages as one
 // script: the TV runs Chrome 53, so no modules and no fetch before the first
 // paint.

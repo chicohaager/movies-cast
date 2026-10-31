@@ -35,7 +35,7 @@ func (f *slowFinder) LastSearch() dlna.SearchStats {
 }
 
 // mDNS runs next to the DLNA search: one after the other added 2 s to every
-// "Search" on the phone (7 s measured on .143, 2026-10-31).
+// "Search" on the phone (7 s measured on the test NAS, 2026-10-31).
 func TestCastSearchRunsNextToTheDLNASearch(t *testing.T) {
 	inner := &slowFinder{delay: 300 * time.Millisecond}
 	cr := &castRenderers{inner: inner, ttl: time.Minute,

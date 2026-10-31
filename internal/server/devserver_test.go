@@ -91,7 +91,7 @@ func TestDevServer(t *testing.T) {
 	if os.Getenv("MC_DEV_SECOND_TV") == "1" {
 		first := lg
 		first.Location = "http://192.0.2.52:1795/"
-		tvs = staticRenderers{first, dlna.Renderer{ID: "uuid:samsung", Name: "Samsung UE50MU6179", Location: "http://192.0.2.86:9197/"}}
+		tvs = staticRenderers{first, dlna.Renderer{ID: "uuid:samsung", Name: "Samsung UE50MU6179", Location: "http://192.0.2.30:9197/"}}
 	}
 	app := New(Config{PublicURL: "http://" + addr, StateFile: state}, movies.New("http://"+mln.Addr().String()+"/movies", "dev"), tv, tvs)
 	ln, err := net.Listen("tcp", addr)

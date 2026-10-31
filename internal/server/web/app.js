@@ -348,7 +348,7 @@ $("tv").addEventListener("change", (ev) => {
   localSet("tv", state.tv);
   pollOnce();
 });
-// A search waits several seconds for answers (7 s measured on .143,
+// A search waits several seconds for answers (7 s measured on the test NAS,
 // 2026-10-31) and the list often comes back the same, so the button says it
 // is searching and the line under the header what the search found.
 $("refresh").addEventListener("click", async () => {

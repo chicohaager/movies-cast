@@ -60,7 +60,7 @@ func TestEveryFailMessageHasEnglish(t *testing.T) {
 	}
 }
 
-// zimaosLanguages is the set the ZimaOS UI ships (assets/<lang>-*.js on .143,
+// zimaosLanguages is the set the ZimaOS UI ships (assets/<lang>-*.js on the test NAS,
 // 2026-10-28; en_GB folded into en). A language file outside it is a typo.
 var zimaosLanguages = map[string]bool{
 	"en": true, "de": true, "fr": true, "es": true, "it": true, "nl": true, "pl": true, "cs": true, "hu": true,
