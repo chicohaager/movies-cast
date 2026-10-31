@@ -179,5 +179,7 @@
  "q.added": "已加入队列：{0}",
  "srv:choose an episode or a track": "请选择一集或一首曲目",
  "srv:100 entries in the queue at most": "队列最多 100 项",
- "login.hintServer": "使用你在 {0} 上的账户。"
+ "login.hintServer": "使用你在 {0} 上的账户。",
+ "d.sub": "字幕",
+ "d.subOff": "关闭"
 }

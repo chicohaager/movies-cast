@@ -179,5 +179,7 @@
  "q.added": "Přidáno do fronty: {0}",
  "srv:choose an episode or a track": "vyberte díl nebo skladbu",
  "srv:100 entries in the queue at most": "nejvýše 100 položek ve frontě",
- "login.hintServer": "Svým účtem na serveru {0}."
+ "login.hintServer": "Svým účtem na serveru {0}.",
+ "d.sub": "Titulky",
+ "d.subOff": "Vypnuto"
 }

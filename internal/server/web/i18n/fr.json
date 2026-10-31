@@ -179,5 +179,7 @@
  "q.added": "Ajouté à la file : {0}",
  "srv:choose an episode or a track": "choisissez un épisode ou un titre",
  "srv:100 entries in the queue at most": "100 éléments au plus dans la file",
- "login.hintServer": "Avec votre compte sur le {0}."
+ "login.hintServer": "Avec votre compte sur le {0}.",
+ "d.sub": "Sous-titres",
+ "d.subOff": "Désactivés"
 }

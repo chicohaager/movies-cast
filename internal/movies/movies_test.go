@@ -273,3 +273,19 @@ func TestPing(t *testing.T) {
 		t.Fatal("404 reported as reachable")
 	}
 }
+
+// Jellyfin 10.11.0's item answer (measured 2026-10-31) has no DeliveryMethod;
+// a text track says IsTextSubtitleStream. Image tracks say false.
+func TestSubtitlesOfAJellyfinItem(t *testing.T) {
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, _ = io.WriteString(w, `{"MediaSources":[{"Id":"M","MediaStreams":[
+{"Type":"Subtitle","Index":0,"Codec":"subrip","Language":"deu","DisplayTitle":"German - SUBRIP - External","IsExternal":true,"IsTextSubtitleStream":true},
+{"Type":"Subtitle","Index":4,"Codec":"PGSSUB","Language":"eng","IsTextSubtitleStream":false},
+{"Type":"Video","Index":1,"Codec":"h264","Width":640}]}]}`)
+	}))
+	defer srv.Close()
+	subs, msID, listed, err := New(srv.URL+"/movies", "t").Subtitles(context.Background(), &Session{Token: "t", UserID: "u"}, "X")
+	if err != nil || len(subs) != 1 || subs[0].Index != 0 || subs[0].Language != "deu" || msID != "M" || !listed {
+		t.Fatalf("got %+v %q %v %v", subs, msID, listed, err)
+	}
+}

@@ -486,6 +486,10 @@ type Media struct {
 	Duration time.Duration
 	// Class is the upnp:class; empty means a film (object.item.videoItem.movie).
 	Class string
+	// SubtitleURL is an external SRT subtitle (roadmap 16): a second res
+	// with text/srt and Samsung's sec:CaptionInfoEx, which other TVs read
+	// too. Empty = no subtitles.
+	SubtitleURL string
 	// Converted is a stream joined from Movies' conversion segments: no size,
 	// no byte ranges; the TV may ask for a start time (TimeSeekRange).
 	Converted bool
@@ -518,10 +522,16 @@ func DIDL(m Media) string {
 	if class == "" {
 		class = "object.item.videoItem.movie"
 	}
-	return `<DIDL-Lite xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/">` +
+	var sub, subRes, secNS string
+	if m.SubtitleURL != "" {
+		secNS = ` xmlns:sec="http://www.sec.co.kr/"`
+		sub = `<sec:CaptionInfoEx sec:type="srt">` + xmlEscape(m.SubtitleURL) + `</sec:CaptionInfoEx>`
+		subRes = `<res protocolInfo="http-get:*:text/srt:*">` + xmlEscape(m.SubtitleURL) + `</res>`
+	}
+	return `<DIDL-Lite xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/"` + secNS + `>` +
 		`<item id="0" parentID="-1" restricted="1"><dc:title>` + xmlEscape(m.Title) + `</dc:title>` +
-		`<upnp:class>` + xmlEscape(class) + `</upnp:class>` +
-		`<res protocolInfo="http-get:*:` + xmlEscape(mime) + `:` + m.Flags() + `"` + resAttrs(m) + `>` + xmlEscape(m.URL) + `</res></item></DIDL-Lite>`
+		`<upnp:class>` + xmlEscape(class) + `</upnp:class>` + sub +
+		`<res protocolInfo="http-get:*:` + xmlEscape(mime) + `:` + m.Flags() + `"` + resAttrs(m) + `>` + xmlEscape(m.URL) + `</res>` + subRes + `</item></DIDL-Lite>`
 }
 
 func resAttrs(m Media) string {
