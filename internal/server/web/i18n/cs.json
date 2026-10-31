@@ -178,5 +178,6 @@
  "q.removeName": "Odebrat {0} z fronty",
  "q.added": "Přidáno do fronty: {0}",
  "srv:choose an episode or a track": "vyberte díl nebo skladbu",
- "srv:100 entries in the queue at most": "nejvýše 100 položek ve frontě"
+ "srv:100 entries in the queue at most": "nejvýše 100 položek ve frontě",
+ "login.hintServer": "Svým účtem na serveru {0}."
 }

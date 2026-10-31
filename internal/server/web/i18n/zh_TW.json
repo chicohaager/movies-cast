@@ -178,5 +178,6 @@
  "q.removeName": "從佇列中移除 {0}",
  "q.added": "已加入佇列：{0}",
  "srv:choose an episode or a track": "請選擇一集或一首曲目",
- "srv:100 entries in the queue at most": "佇列最多 100 項"
+ "srv:100 entries in the queue at most": "佇列最多 100 項",
+ "login.hintServer": "使用你在 {0} 上的帳號。"
 }

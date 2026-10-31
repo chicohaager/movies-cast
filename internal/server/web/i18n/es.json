@@ -178,5 +178,6 @@
  "q.removeName": "Quitar {0} de la cola",
  "q.added": "Añadido a la cola: {0}",
  "srv:choose an episode or a track": "elige un episodio o una canción",
- "srv:100 entries in the queue at most": "100 elementos como máximo en la cola"
+ "srv:100 entries in the queue at most": "100 elementos como máximo en la cola",
+ "login.hintServer": "Con tu cuenta en el {0}."
 }

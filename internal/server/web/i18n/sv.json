@@ -178,5 +178,6 @@
  "q.removeName": "Ta bort {0} från kön",
  "q.added": "Tillagd i kön: {0}",
  "srv:choose an episode or a track": "välj ett avsnitt eller ett spår",
- "srv:100 entries in the queue at most": "högst 100 poster i kön"
+ "srv:100 entries in the queue at most": "högst 100 poster i kön",
+ "login.hintServer": "Med ditt konto på {0}."
 }

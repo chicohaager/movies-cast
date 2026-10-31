@@ -178,5 +178,6 @@
  "q.removeName": "Usuń {0} z kolejki",
  "q.added": "Dodano do kolejki: {0}",
  "srv:choose an episode or a track": "wybierz odcinek lub utwór",
- "srv:100 entries in the queue at most": "najwyżej 100 pozycji w kolejce"
+ "srv:100 entries in the queue at most": "najwyżej 100 pozycji w kolejce",
+ "login.hintServer": "Kontem na serwerze {0}."
 }

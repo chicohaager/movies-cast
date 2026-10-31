@@ -178,5 +178,6 @@
  "q.removeName": "Remover {0} da fila",
  "q.added": "Adicionado à fila: {0}",
  "srv:choose an episode or a track": "escolha um episódio ou uma faixa",
- "srv:100 entries in the queue at most": "no máximo 100 itens na fila"
+ "srv:100 entries in the queue at most": "no máximo 100 itens na fila",
+ "login.hintServer": "Com sua conta no {0}."
 }

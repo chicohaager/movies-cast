@@ -31,8 +31,9 @@ var libItems = map[string]map[string]any{
 }
 
 type libMovies struct {
-	mu      sync.Mutex
-	fetched []string // upstream file paths the server asked for
+	headStatus int // answer to HEAD on /Items/ (405 Jellyfin, 404 Emby)
+	mu         sync.Mutex
+	fetched    []string // upstream file paths the server asked for
 }
 
 func (f *libMovies) handler() http.Handler {
@@ -77,9 +78,10 @@ func (f *libMovies) handler() http.Handler {
 		case strings.HasPrefix(p, "/Sessions/"):
 			w.WriteHeader(http.StatusNoContent)
 		case strings.HasPrefix(p, "/Items/") && r.Method == http.MethodHead:
-			// Jellyfin 10.11.0 answers HEAD on /Items/{id}/Download with 405
-			// (measured 2026-10-31; the LG then refused the photo with 716).
-			w.WriteHeader(http.StatusMethodNotAllowed)
+			// Jellyfin 10.11.0 answers HEAD on /Items/{id}/Download with 405,
+			// Emby 4.10.2.0 with 404 (measured 2026-10-31; the LG then refused
+			// the photo with UPnP 716).
+			w.WriteHeader(f.headStatus)
 		case strings.HasPrefix(p, "/Videos/"), strings.HasPrefix(p, "/Items/"):
 			w.Header().Set("Content-Type", "image/jpeg")
 			f.mu.Lock()
@@ -93,7 +95,7 @@ func (f *libMovies) handler() http.Handler {
 }
 
 func newLibRig(t *testing.T) (*rig, *libMovies) {
-	fm := &libMovies{}
+	fm := &libMovies{headStatus: http.StatusMethodNotAllowed}
 	ms := httptest.NewServer(fm.handler())
 	t.Cleanup(ms.Close)
 	tv := &fakeTV{state: "NO_MEDIA_PRESENT"}
@@ -230,7 +232,14 @@ func TestTheNextTrackOfAnAlbumFollows(t *testing.T) {
 }
 
 func TestAPhotoIsSentAsAnImageFromDownload(t *testing.T) {
+	for _, head := range []int{http.StatusMethodNotAllowed, http.StatusNotFound} {
+		t.Run(http.StatusText(head), func(t *testing.T) { photoFromDownload(t, head) })
+	}
+}
+
+func photoFromDownload(t *testing.T, headStatus int) {
 	r, fm := newLibRig(t)
+	fm.headStatus = headStatus
 	if code, out := r.post("/api/play", map[string]any{"renderer": lg.ID, "movie": "P1"}); code != 200 {
 		t.Fatalf("play photo: %d %v", code, out)
 	}
@@ -282,5 +291,32 @@ func TestASeriesIsNotSentButListsItsEpisodes(t *testing.T) {
 	}
 	if code, _ := r.get("/api/library?kind=../x"); code != 400 {
 		t.Fatalf("unknown kind: %d", code)
+	}
+}
+
+func TestSourceNamesTheAccountsServer(t *testing.T) {
+	info := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/jf/System/Info/Public":
+			_, _ = io.WriteString(w, `{"ProductName":"Jellyfin Server","Version":"10.11.0"}`)
+		case "/emby/System/Info/Public": // Emby 4.10.2.0 sends no ProductName
+			_, _ = io.WriteString(w, `{"Version":"4.10.2.0"}`)
+		default:
+			w.WriteHeader(http.StatusNotFound)
+		}
+	})
+	up := httptest.NewServer(info)
+	defer up.Close()
+	for base, want := range map[string]string{
+		"/movies": `{"zimaos":true}`,
+		"/jf":     `{"product":"Jellyfin Server","zimaos":false}`,
+		"/emby":   `{"product":"Emby Server","zimaos":false}`,
+	} {
+		app := New(Config{}, movies.New(up.URL+base, "test"), &fakeTV{}, staticRenderers{})
+		rec := httptest.NewRecorder()
+		app.Handler().ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/api/source", nil))
+		if got := strings.TrimSpace(rec.Body.String()); rec.Code != 200 || got != want {
+			t.Errorf("%s: %d %s, want %s", base, rec.Code, got, want)
+		}
 	}
 }
