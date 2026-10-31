@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Everything that must pass before a build leaves this machine:
 #
-#   ./check.sh            go vet, go tests, browser tests (e2e/), public-data scan
+#   ./check.sh            go vet, go tests (+ switch-image.sh), browser tests (e2e/), public-data scan
 #   ./check.sh --no-e2e   without the browser tests (no Node/Chromium at hand)
 #
 # deploy/zimaos/build-on-host.sh and deploy/testers/make-package.sh run it
@@ -24,6 +24,7 @@ go vet ./...
 
 echo "== check 2/4: go test"
 go test -count=1 ./...
+deploy/zimaos/test-switch-image.sh
 
 echo "== check 3/4: browser tests"
 if [[ "$e2e" == 1 ]]; then
