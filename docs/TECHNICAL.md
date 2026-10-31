@@ -117,7 +117,11 @@ SSHPASS_FILE=/path/to/pw deploy/zimaos/build-on-host.sh <user>@<nas> 0.22.0
 # builds only a committed tree; -version then prints 0.22.0+<commit>
 # first install:
 ZIMA_USER=… ZIMA_PASS=… python3 ~/dev/zimapp/zimapp.py install --host <nas> --ssh-user <user> deploy/zimaos/docker-compose.yml
-# update after a rebuild, on the host:
+# test a build on an install from the store (image ghcr.io/…): --switch points the installed compose
+# at the local image (backup in /DATA/AppData/movies-cast-build/compose-backups, proof that only the
+# image line changed; deploy/zimaos/switch-image.sh), recreates the container and checks -version in it
+SSHPASS_FILE=/path/to/pw deploy/zimaos/build-on-host.sh <user>@<nas> 0.27.0 --switch
+# update after a rebuild when the compose already names the local image, on the host:
 cd /var/lib/casaos/apps/movies-cast && sudo docker compose up -d --force-recreate movies-cast
 ```
 

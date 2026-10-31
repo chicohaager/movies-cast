@@ -2,7 +2,7 @@
 # Build the movies-cast image on a ZimaOS host and put it into the host-local
 # registry, where the ZimaOS installer pulls it from (ZIMAOS-KNOWLEDGE "Weg 3").
 #
-#   deploy/zimaos/build-on-host.sh <ssh-user>@<host> [version]   (-version prints <version>+<commit>)
+#   deploy/zimaos/build-on-host.sh <ssh-user>@<host> [version] [--switch]   (-version prints <version>+<commit>)
 #
 # Steps, each with its witness:
 #   1. check.sh (vet, tests, browser tests, public-data scan; CHECK_ARGS=--no-e2e
@@ -11,16 +11,28 @@
 #      never inside, /DATA/AppData/movies-cast (a ZimaOS uninstall deletes that)
 #   3. sha256 compared on the host before the build
 #   4. docker build, push to 127.0.0.1:5000, rmi, pull back (the installer's path)
+#   5. only with --switch: as root (sudo), switch-image.sh points the installed
+#      compose (/var/lib/casaos/apps/movies-cast) at this image, with a backup in
+#      /DATA/AppData/movies-cast-build/compose-backups and proof that no other
+#      line changed (it prints counts and the image lines, never other lines:
+#      the installed compose holds the real values); then the container is
+#      recreated and -version in it must name this build. Back to a release:
+#      the tile's "Manage" -> image and tag, or the backup.
 #
 # SSHPASS_FILE may name a file with the ssh password (sshpass -f); otherwise
 # plain ssh (keys). The script never prints it.
 #
-# Update of a running install afterwards, on the host:
-#   cd /var/lib/casaos/apps/movies-cast && sudo docker compose up -d --force-recreate movies-cast
+# sudo reads the password from SSHPASS_FILE on stdin; the root script travels as
+# a base64 argument, never on that stdin. Without SSHPASS_FILE: sudo -n.
 set -euo pipefail
 
-target="${1:?usage: build-on-host.sh <ssh-user>@<host> [version]}"
-version="${2:-0.1.0}"
+switch=0
+args=()
+for a in "$@"; do
+  if [[ "$a" == "--switch" ]]; then switch=1; else args+=("$a"); fi
+done
+target="${args[0]:?usage: build-on-host.sh <ssh-user>@<host> [version] [--switch]}"
+version="${args[1]:-0.1.0}"
 build_dir="/DATA/AppData/movies-cast-build"
 image="127.0.0.1:5000/movies-cast:local"
 repo="$(cd "$(dirname "$0")/../.." && pwd)"
@@ -51,31 +63,34 @@ version="$version+$(cd "$repo" && git rev-parse --short=12 HEAD)"
 git -C "$repo" worktree add --detach "$wt" HEAD >/dev/null
 [[ -d "$repo/e2e/node_modules" ]] && ln -s "$repo/e2e/node_modules" "$wt/e2e/node_modules"
 
-echo "== 1/4 check.sh + static build ($version, worktree of HEAD)"
+echo "== 1/5 check.sh + static build ($version, worktree of HEAD)"
 # shellcheck disable=SC2086 # CHECK_ARGS is empty or one flag
 "$wt/check.sh" ${CHECK_ARGS:-}
 (cd "$wt" && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -ldflags "-s -w -X main.version=$version" -o "$out/movies-cast" ./cmd/movies-cast)
 cp "$wt/Dockerfile" "$out/Dockerfile"
+cp "$wt/deploy/zimaos/switch-image.sh" "$out/switch-image.sh"
 chmod 0755 "$out/movies-cast"
-chmod 0644 "$out/Dockerfile"
+chmod 0644 "$out/Dockerfile" "$out/switch-image.sh"
 local_sum="$(sha256sum "$out/movies-cast" | cut -d' ' -f1)"
 echo "binary sha256 $local_sum"
 "$out/movies-cast" -version
 
-echo "== 2/4 docker usable as $target?"
+echo "== 2/5 docker usable as $target?"
 "${ssh_cmd[@]}" "$target" "$remote_docker docker info --format '{{.ServerVersion}} {{.Architecture}}'"
 
-echo "== 3/4 upload to $target:$build_dir/"
+echo "== 3/5 upload to $target:$build_dir/"
 "${ssh_cmd[@]}" "$target" "mkdir -p $build_dir"
-"${scp_cmd[@]}" "$out/movies-cast" "$out/Dockerfile" "$target:$build_dir/"
-remote_sum="$("${ssh_cmd[@]}" "$target" "sha256sum $build_dir/movies-cast | cut -d' ' -f1")"
-if [[ "$remote_sum" != "$local_sum" ]]; then
-  echo "sha256 mismatch on host: $remote_sum" >&2
+"${scp_cmd[@]}" "$out/movies-cast" "$out/Dockerfile" "$out/switch-image.sh" "$target:$build_dir/"
+local_sums="$(cd "$out" && sha256sum movies-cast Dockerfile switch-image.sh)"
+remote_sums="$("${ssh_cmd[@]}" "$target" "cd $build_dir && sha256sum movies-cast Dockerfile switch-image.sh")"
+if [[ "$remote_sums" != "$local_sums" ]]; then
+  echo "sha256 mismatch on host:" >&2
+  echo "$remote_sums" >&2
   exit 1
 fi
-echo "sha256 on host matches"
+echo "sha256 on host matches (binary, Dockerfile, switch-image.sh)"
 
-echo "== 4/4 build, push, pull back"
+echo "== 4/5 build, push, pull back"
 "${ssh_cmd[@]}" "$target" "$remote_docker
   set -e
   cd $build_dir
@@ -90,3 +105,33 @@ echo "== 4/4 build, push, pull back"
   # Same restrictions as the compose: a plain docker run passed while the
   # container under cap_drop ALL could not exec a 0700 binary.
   docker run --rm --user 65534:65534 --cap-drop ALL --security-opt no-new-privileges:true --read-only $image -version"
+
+if [[ "$switch" != 1 ]]; then
+  echo "== 5/5 switch skipped (without --switch the install keeps its image)"
+  exit 0
+fi
+echo "== 5/5 switch the install to $image and recreate"
+app_dir="/var/lib/casaos/apps/movies-cast"
+root_script="exec </dev/null
+set -e
+export DOCKER_CONFIG=/tmp/dc-root; mkdir -p \"\$DOCKER_CONFIG\"
+sh $build_dir/switch-image.sh $app_dir/docker-compose.yml $image $build_dir/compose-backups
+cd $app_dir
+docker compose up -d --force-recreate movies-cast > $build_dir/switch.log 2>&1 || { tail -20 $build_dir/switch.log; exit 1; }
+s=none
+for i in \$(seq 1 30); do
+  s=\$(docker inspect -f '{{.State.Health.Status}}' movies-cast 2>/dev/null || echo none)
+  [ \"\$s\" = healthy ] && break
+  sleep 2
+done
+echo \"health \$s after \$i tries\"
+v=\$(docker exec movies-cast /movies-cast -version)
+echo \"running: \$v\"
+[ \"\$s\" = healthy ] && [ \"\$v\" = 'movies-cast $version' ]"
+b64="$(printf '%s' "$root_script" | base64 -w0)"
+if [[ -n "${SSHPASS_FILE:-}" ]]; then
+  "${ssh_cmd[@]}" "$target" "sudo -S -p '' sh -c \"\$(printf %s $b64 | base64 -d)\"" < "$SSHPASS_FILE"
+else
+  "${ssh_cmd[@]}" "$target" "sudo -n sh -c \"\$(printf %s $b64 | base64 -d)\"" < /dev/null
+fi
+echo "switched: $target runs $version"
