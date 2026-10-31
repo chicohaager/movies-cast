@@ -106,6 +106,10 @@ pre { white-space:pre-wrap; overflow-wrap:anywhere; margin:0; }
 <tr><td>10</td><td>Fernseher in den Standby, dann einen Film senden</td><td>„aus“ und „Einschalten und abspielen“; wacht er auf?</td></tr>
 <tr><td>11</td><td>Sprache und Darstellung ändern, an einem zweiten Gerät anmelden</td><td>dort dieselbe Wahl</td></tr>
 <tr><td>12</td><td>ZimaOS neu starten</td><td>Movies-Cast läuft wieder, du bist noch angemeldet</td></tr>
+<tr><td>13</td><td>Oben „Suchen“, „Sortieren“ und „Filter“ (z. B. „Ungesehen“) ausprobieren</td><td>die Liste zeigt nur passende Filme</td></tr>
+<tr><td>14</td><td>Film mit Untertiteln öffnen, im Film-Fenster unter „Untertitel“ eine Sprache wählen, abspielen</td><td>der Fernseher zeigt die Untertitel (nicht jeder Fernseher kann das – bitte Modell nennen)</td></tr>
+<tr><td>15</td><td>Im Film-Fenster „In die Warteschlange“ bei zwei Filmen, den ersten bis zum Ende laufen lassen (oder nahe ans Ende springen)</td><td>der zweite startet von selbst</td></tr>
+<tr><td>16</td><td>Nur mit Android-TV-App und Kodi: siehe Abschnitt 9</td><td>Film läuft in Kodi mit Ton, Handy zeigt die Zeit</td></tr>
 </table>
 
 <h2>5. Rückmeldung</h2>
@@ -116,7 +120,7 @@ ZimaOS-Version:
 Gerät (ZimaBoard/Cube/PC …):
 Fernseher (Hersteller, Modell):
 Handy/Browser:
-Testliste: 1 … 12 (geht / geht nicht + was passiert ist)
+Testliste: 1 … 16 (geht / geht nicht + was passiert ist)
 Film, bei dem es hakte (Zeile unter dem Titel, z. B. „HEVC · AC3“):
 Was ich erwartet hatte / was passiert ist:
 Bildschirmfoto: ja/nein</code></pre>
@@ -151,8 +155,9 @@ Bildschirmfoto: ja/nein</code></pre>
   <li>Der Fernseher zeigt einen sechsstelligen Code. Am Handy in Movies-Cast „Fernseher-App koppeln“ öffnen und den Code eingeben (oder den QR-Code scannen).</li>
   <li>Fernbedienung: Pfeile und OK zum Auswählen; im Film OK = Pause, ◀ −10 s, ▶ +30 s, ▼ Untertitel; Zurück = beenden. Die Tonspur wählen (▲) geht auf Android TV nicht: dessen WebView hat kein <code>audioTracks</code> (Chromium: experimentell, standardmäßig aus) – welche Tonspur läuft, entscheidet die WebView.</li>
 </ol>
+<p><strong>Neu in {{VERSION}}: „Abspielen mit: Kodi“.</strong> Ist Kodi auf dem Gerät installiert, zeigt die App auf der Seite eines Films den Knopf „Abspielen mit: Movies-Cast“. OK darauf schaltet auf „Abspielen mit: Kodi“ um (die Wahl bleibt auf dem Gerät gespeichert). Dann spielt Kodi den Film mit seinem eigenen Player und Ton. Sind in Kodi die UPnP-Schalter unten eingeschaltet, schickt Movies-Cast den Film per DLNA an Kodi: Fortsetzen, Zeit am Handy und Pause/Weiter vom Handy gehen dann. Ohne diese Schalter übergibt die App den Film direkt an Kodi, er startet dann von vorn. Bitte melden: startet Kodi, läuft der Film mit Ton (AAC und E-AC3), zeigt das Handy die Zeit, geht „Fortsetzen“?</p>
 <p><strong>Ohne diese App:</strong> Kodi auf der Shield arbeitet als DLNA-Fernseher – in Kodi unter Settings → Services → UPnP / DLNA „Enable UPnP support“ und „Allow remote control via UPnP“ einschalten (Bezeichnungen der englischen Kodi-Oberfläche); dann steht es in der Fernseher-Liste und spielt mit dem Player von Kodi (ein Tester, Nvidia Shield TV Pro, 30.10.2026).</p>
-<p><strong>Bitte den Ton prüfen:</strong> Im Android-Emulator liefen Filme mit AC3- oder E-AC3-Ton ohne Ton (AAC ging). Ob eine Shield sie mit Ton abspielt, ist noch offen. Bitte einen Film probieren, dessen Zeile unter dem Titel AC3 oder E-AC3 zeigt, und einen mit AAC, und je „Ton ja/nein“ melden.</p>
+<p><strong>Ton:</strong> Auf einer Nvidia Shield (Rückmeldung 30.10.2026) lief E-AC3 in der App mit Ton, AAC ohne Ton. Darum gibt es „Abspielen mit: Kodi“. Bitte einen Film mit AAC und einen mit E-AC3 (Zeile unter dem Titel) je mit Movies-Cast und mit Kodi probieren und „Ton ja/nein“ melden.</p>
 
 <p class="muted">Movies-Cast {{VERSION}} · Image <code>{{IMAGE}}</code></p>
 </main>
