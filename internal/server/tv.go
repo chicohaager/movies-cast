@@ -211,6 +211,10 @@ func (s *Server) tvPlay(w http.ResponseWriter, r *http.Request, sid string, sess
 		s.moviesErr(w, sid, err)
 		return
 	}
+	if !m.Playable() {
+		fail(w, http.StatusBadRequest, "Eine Folge oder einen Titel wählen")
+		return
+	}
 	// Subtitles are a bonus: without them the film still plays.
 	subs, msID, listed, err := s.movies.Subtitles(r.Context(), sess.ms, m.ID)
 	if err != nil {

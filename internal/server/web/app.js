@@ -341,18 +341,104 @@ $("tv").addEventListener("change", (ev) => {
 });
 $("refresh").addEventListener("click", () => loadTVs(true));
 
+// The library: films (and series) always; series, music and photos as tabs
+// when the server has them (/api/views; Movies 0.3.0 has films only).
+// Search, sort and filter run on the phone over the whole list (Movies
+// ignores IsPlayed and Genres as filters, measured 2026-10-31); at most
+// PAGE tiles are drawn at a time, "Show more" adds the next PAGE.
+const PAGE = 120;
+const lib = { kind: "films", views: {}, lists: {}, shown: PAGE };
+
 async function loadMovies() {
   try {
-    const [movies, resume] = await Promise.all([
+    const [movies, resume, views] = await Promise.all([
       api("/api/movies"),
       api("/api/resume").catch(() => []), // the row is extra; the list must not depend on it
+      api("/api/views").catch(() => ({})),
     ]);
     state.movies = movies;
     state.resume = resume || [];
+    lib.views = views || {};
+    lib.lists.films = movies.filter((m) => m.type !== "Series");
+    lib.lists.series = movies.filter((m) => m.type === "Series");
+    setupTabs();
     renderMovies();
   } catch (err) {
     showError(err.message);
   }
+}
+
+function setupTabs() {
+  const has = { films: true, series: lib.lists.series.length > 0, music: !!lib.views.music, photos: !!lib.views.photos };
+  let shown = 0;
+  for (const b of document.querySelectorAll("#tabs [data-kind]")) {
+    b.hidden = !has[b.dataset.kind];
+    if (!b.hidden) shown++;
+  }
+  $("tabs").hidden = shown < 2;
+  if (!has[lib.kind]) lib.kind = "films";
+  for (const b of document.querySelectorAll("#tabs [data-kind]")) b.setAttribute("aria-selected", String(b.dataset.kind === lib.kind));
+}
+
+for (const b of document.querySelectorAll("#tabs [data-kind]")) {
+  b.addEventListener("click", async () => {
+    lib.kind = b.dataset.kind;
+    lib.shown = PAGE;
+    for (const x of document.querySelectorAll("#tabs [data-kind]")) x.setAttribute("aria-selected", String(x === b));
+    if ((lib.kind === "music" || lib.kind === "photos") && !lib.lists[lib.kind]) {
+      try { lib.lists[lib.kind] = await api("/api/library?kind=" + lib.kind); } catch (err) { showError(err.message); lib.lists[lib.kind] = []; }
+    }
+    renderMovies();
+  });
+}
+for (const id of ["q", "sort", "filter"]) {
+  $(id).addEventListener("input", () => { lib.shown = PAGE; renderMovies(); });
+}
+$("more").addEventListener("click", () => { lib.shown += PAGE; renderMovies(); });
+
+// genreOptions refills the filter's genres from the current list, keeping the choice.
+function genreOptions(list) {
+  const sel = $("filter"), keep = sel.value;
+  for (const o of [...sel.options]) if (o.value.startsWith("g:")) o.remove();
+  const genres = [...new Set(list.flatMap((m) => m.genres || []))].sort((a, b) => a.localeCompare(b));
+  for (const g of genres) sel.append(new Option(t("f.genre", g), "g:" + g));
+  sel.value = [...sel.options].some((o) => o.value === keep) ? keep : "";
+}
+
+function filtered(list) {
+  const q = $("q").value.trim().toLowerCase();
+  const f = $("filter").value;
+  let out = list.filter((m) => {
+    if (q && !(`${m.name} ${m.seriesName || ""} ${m.year || ""}`.toLowerCase().includes(q))) return false;
+    if (f === "unwatched" && m.played) return false;
+    if (f === "started" && !(m.resumeSeconds > 0)) return false;
+    if (f.startsWith("g:") && !(m.genres || []).includes(f.slice(2))) return false;
+    return true;
+  });
+  const by = $("sort").value;
+  const name = (a, b) => a.name.localeCompare(b.name, I18N.lang.replace("_", "-"), { numeric: true });
+  const cmp = {
+    name,
+    added: (a, b) => (b.added || "").localeCompare(a.added || "") || name(a, b),
+    year: (a, b) => (b.year || 0) - (a.year || 0) || name(a, b),
+    score: (a, b) => (b.score || 0) - (a.score || 0) || name(a, b),
+  }[by] || name;
+  return out.slice().sort(cmp);
+}
+
+function renderMovies() {
+  const all = lib.lists[lib.kind] || [];
+  genreOptions(all);
+  const list = filtered(all);
+  const searching = $("q").value.trim() !== "" || $("filter").value !== "";
+  $("resume-wrap").hidden = state.resume.length === 0 || lib.kind !== "films" || searching;
+  renderTiles($("resume-list"), state.resume);
+  renderTiles($("list"), list.slice(0, lib.shown));
+  $("count").textContent = all.length ? t("f.count", list.length, all.length) : "";
+  $("more-row").hidden = list.length <= lib.shown;
+  $("more").textContent = t("f.more", list.length - lib.shown);
+  $("empty").hidden = list.length > 0;
+  $("empty").textContent = all.length ? t("f.none") : t("empty");
 }
 
 function posterImg(m) {
@@ -368,21 +454,25 @@ function posterImg(m) {
   return img;
 }
 
+function epLabel(m) {
+  const two = (n) => String(n || 0).padStart(2, "0");
+  return m.type === "Episode" ? `S${two(m.season)}E${two(m.episode)}` : (m.type === "Audio" && m.episode ? String(m.episode) : "");
+}
+
 function metaLine(m) {
   const parts = [];
+  if (m.type === "Series") parts.push(t("d.nEpisodes", m.count || 0));
+  if (m.type === "MusicAlbum") parts.push(t("d.nTracks", m.count || 0));
+  if (m.type === "Episode") parts.push(`${m.seriesName || ""} ${epLabel(m)}`.trim());
   if (m.year) parts.push(m.year);
-  if (m.runtimeSeconds) parts.push(`${Math.round(m.runtimeSeconds / 60)} min`);
+  if (m.runtimeSeconds && m.type !== "Audio") parts.push(`${Math.round(m.runtimeSeconds / 60)} min`);
+  if (m.runtimeSeconds && m.type === "Audio") parts.push(hms(m.runtimeSeconds));
+  if (m.rating) parts.push(m.rating);
   if (m.width >= 3800) parts.push("4K");
   if (m.videoCodec) parts.push(m.videoCodec.toUpperCase());
   if (m.audio) parts.push(m.audio.toUpperCase());
+  if (m.genres && m.genres.length) parts.push(m.genres.slice(0, 3).join(", "));
   return parts.join(" · ");
-}
-
-function renderMovies() {
-  $("resume-wrap").hidden = state.resume.length === 0;
-  renderTiles($("resume-list"), state.resume);
-  renderTiles($("list"), state.movies);
-  $("empty").hidden = state.movies.length > 0;
 }
 
 function renderTiles(list, movies) {
@@ -390,12 +480,17 @@ function renderTiles(list, movies) {
   for (const m of movies) {
     const b = document.createElement("button");
     b.className = "tile";
+    b.type = "button";
     b.append(posterImg(m));
     if (m.resumeSeconds > 0 && m.runtimeSeconds > 0) {
       const bar = document.createElement("div");
       bar.className = "bar";
+      bar.setAttribute("role", "progressbar");
+      bar.setAttribute("aria-label", t("d.watched"));
+      const pct = Math.min(100, Math.round((100 * m.resumeSeconds) / m.runtimeSeconds));
+      bar.setAttribute("aria-valuenow", String(pct));
       const i = document.createElement("i");
-      i.style.width = `${Math.min(100, (100 * m.resumeSeconds) / m.runtimeSeconds)}%`;
+      i.style.width = `${pct}%`;
       bar.append(i);
       b.append(bar);
     }
@@ -403,7 +498,7 @@ function renderTiles(list, movies) {
     cap.className = "cap";
     cap.textContent = m.name;
     const small = document.createElement("small");
-    small.textContent = m.year || "";
+    small.textContent = m.type === "Series" ? t("d.nEpisodes", m.count || 0) : (m.year || "");
     cap.append(small);
     b.append(cap);
     b.addEventListener("click", () => openDetail(m));
@@ -419,21 +514,108 @@ function openDetail(m) {
   const img = $("d-poster");
   img.src = m.hasPoster ? `/api/poster/${encodeURIComponent(m.id)}` : "";
   img.hidden = !m.hasPoster;
+  const folder = m.type === "Series" || m.type === "MusicAlbum";
   const r = $("d-resume");
-  r.hidden = !(m.resumeSeconds > 0);
+  r.hidden = folder || !(m.resumeSeconds > 0);
   r.textContent = t("d.resume", hms(m.resumeSeconds));
+  $("d-start").hidden = folder;
+  $("d-start").textContent = m.type === "Photo" ? t("d.show") : t("d.start");
+  $("d-queue").hidden = folder || m.type === "Photo";
+  $("d-children-wrap").hidden = !folder;
+  $("d-children").textContent = "";
+  if (folder) loadChildren(m);
   $("detail").showModal();
+}
+
+// loadChildren lists a series' episodes or an album's tracks; each one is a
+// button that closes the dialog with "ep:<id>". The first unwatched episode
+// is marked "Continue with …" and gets the focus.
+async function loadChildren(m) {
+  $("d-children-h").textContent = m.type === "Series" ? t("d.episodes") : t("d.tracks");
+  try {
+    const kids = await api(`/api/children/${encodeURIComponent(m.id)}`);
+    if (state.selected !== m) return;
+    state.children = kids;
+    const next = kids.find((k) => k.resumeSeconds > 0) || kids.find((k) => !k.played);
+    const box = $("d-children");
+    box.textContent = "";
+    for (const k of kids) {
+      const b = document.createElement("button");
+      b.value = "ep:" + k.id;
+      b.textContent = `${epLabel(k)} ${k.name}`.trim();
+      const small = document.createElement("small");
+      const bits = [];
+      if (k === next) bits.push(t("d.nextUp"));
+      if (k.played) bits.push(t("d.seen"));
+      if (k.resumeSeconds > 0) bits.push(t("d.resume", hms(k.resumeSeconds)));
+      else if (k.runtimeSeconds) bits.push(hms(k.runtimeSeconds));
+      small.textContent = bits.join(" · ");
+      b.append(small);
+      box.append(b);
+      if (k === next) setTimeout(() => b.focus(), 0);
+    }
+  } catch (err) {
+    showError(err.message);
+  }
 }
 
 $("detail").addEventListener("close", async () => {
   const v = $("detail").returnValue;
-  if (v !== "resume" && v !== "start") return;
+  let m = state.selected, resume = v === "resume";
+  if (v && v.startsWith("ep:")) {
+    m = (state.children || []).find((k) => "ep:" + k.id === v);
+    if (!m) return;
+    resume = m.resumeSeconds > 0;
+  } else if (v !== "resume" && v !== "start" && v !== "queue") {
+    return;
+  }
   if (!state.tv) {
     showError(t("play.chooseTv"));
     return;
   }
   showError("");
-  play({ renderer: state.tv, movie: state.selected.id, resume: v === "resume" });
+  if (v === "queue") {
+    try {
+      await api("/api/queue", { renderer: state.tv, movie: m.id, action: "add" });
+      showNotice(t("q.added", m.name));
+      loadQueue();
+    } catch (err) {
+      showError(err.message);
+    }
+    return;
+  }
+  play({ renderer: state.tv, movie: m.id, resume });
+});
+
+// The queue of the chosen TV, shown in the player card.
+async function loadQueue() {
+  if (!state.tv) return;
+  try {
+    const q = await api(`/api/queue?renderer=${encodeURIComponent(state.tv)}`);
+    const ol = $("q-list");
+    ol.textContent = "";
+    for (const it of q.items) {
+      const li = document.createElement("li");
+      const rm = document.createElement("button");
+      rm.type = "button";
+      rm.className = "ghost";
+      rm.textContent = t("q.remove");
+      rm.setAttribute("aria-label", t("q.removeName", it.name));
+      rm.addEventListener("click", async () => {
+        try { await api("/api/queue", { renderer: state.tv, movie: it.id, action: "remove" }); loadQueue(); } catch (err) { showError(err.message); }
+      });
+      li.append(it.name, rm);
+      ol.append(li);
+    }
+    $("q-auto").checked = q.autoplay !== false;
+    state.queueLen = q.items.length;
+    $("q-wrap").hidden = $("player").hidden;
+  } catch (err) {
+    showError(err.message);
+  }
+}
+$("q-auto").addEventListener("change", async (ev) => {
+  try { await api("/api/queue", { renderer: state.tv, action: ev.target.checked ? "auto" : "noauto" }); } catch (err) { showError(err.message); }
 });
 
 // The server answers 409 + "unlisted" when the TV's format list lacks this
@@ -584,6 +766,8 @@ async function pollOnce() {
     $("player").hidden = !active;
     // A film just ended or was stopped: its new resume point belongs in the row.
     if (state.wasPlaying && !active) loadMovies();
+    if (active && (!state.wasPlaying || st.movie !== state.lastMovie)) loadQueue();
+    state.lastMovie = st.movie;
     state.wasPlaying = active;
     if (!active) return;
     $("p-state").textContent = t("st." + st.state) === "st." + st.state ? st.state : t("st." + st.state);

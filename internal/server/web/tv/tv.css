@@ -59,3 +59,8 @@ video::cue { font-size: 2.4vw; background: rgba(0, 0, 0, .6); color: #fff; }
 .spinner { position: absolute; top: 45%; width: 100%; text-align: center; font-size: 2vw; color: var(--muted); }
 .pair-row { display: flex; align-items: center; justify-content: center; }
 .pair-qr { width: 14vw; height: 14vw; margin-right: 4vw; image-rendering: pixelated; background: #fff; border-radius: .6vw; }
+/* Episodes of a series (roadmap 12): one focusable row each, below the buttons. */
+.eps { margin-top: 1.5vw; max-height: 22vw; overflow-y: auto; }
+.eps .btn { display: block; width: 100%; text-align: left; margin: 0 0 0.6vw; }
+.eps .btn small { color: var(--muted, #9aa0ad); margin-left: 1vw; }
+.eps .btn.focus small { color: #111; }

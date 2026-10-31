@@ -12,6 +12,8 @@
 :root[data-theme="dark"] { --bg: #111318; --card: #1b1e25; --text: #eceef3; --muted: #9aa0ad; --line: #2c303a;
   --accent: #fb923c; --accent-text: #111318; --danger: #f87171; --error-bg: #3b1416; color-scheme: dark; }
 * { box-sizing: border-box; }
+/* hidden wins over every display rule below (.tabs is flex: its hidden attribute did nothing, browser test 2026-10-31). */
+[hidden] { display: none !important; }
 body { margin: 0; background: var(--bg); color: var(--text);
   font: 16px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
 header { display: flex; align-items: center; justify-content: space-between; gap: 12px;
@@ -89,3 +91,26 @@ dialog::backdrop { background: rgba(0,0,0,.55); }
 .notice { background: var(--card, #fff); color: var(--text); border-bottom: 1px solid var(--line); padding: 10px 16px; font-weight: 600; }
 .player .sound { margin: 10px 0 0; text-align: right; }
 button.link { background: none; border: none; padding: 4px 0; color: var(--muted, var(--text)); text-decoration: underline; font-weight: 500; width: auto; }
+/* Library: tabs, search, sort and filter (roadmap 12, 13, 19). */
+.tabs { display: flex; gap: 6px; margin: 4px 0 10px; overflow-x: auto; }
+.tabs button { background: transparent; color: var(--text); border: 1px solid var(--line); font-weight: 500; white-space: nowrap; }
+.tabs button[aria-selected="true"] { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
+.filters { display: grid; grid-template-columns: 1fr auto auto; gap: 8px; align-items: center; }
+.filters input, .filters select { margin-top: 0; }
+.filters label.inline { margin: 0; }
+@media (max-width: 520px) { .filters { grid-template-columns: 1fr 1fr; } .filters input { grid-column: 1 / -1; } }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+#count { margin: 6px 0 0; }
+#more-row { text-align: center; }
+.eps { display: grid; gap: 6px; max-height: 40vh; overflow: auto; margin-bottom: 8px; }
+.eps button { text-align: left; background: transparent; color: var(--text); border: 1px solid var(--line); font-weight: 500; }
+.eps button small { display: block; color: var(--muted); font-weight: 400; }
+.detail h3, .queue h3 { font-size: .95rem; margin: 10px 0 6px; color: var(--muted); }
+.queue ol { margin: 0 0 6px; padding-left: 1.2rem; }
+.queue li { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.queue li button { min-height: 32px; padding: 4px 10px; }
+.queue .chk { display: flex; align-items: center; gap: 8px; color: var(--text); margin: 4px 0 0; }
+.queue .chk input { width: auto; margin: 0; }
+.tile:focus-visible, button:focus-visible, select:focus-visible, input:focus-visible, summary:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+/* No poster (series and episodes often have none): the text takes the whole dialog, not the 120 px poster column. */
+.detail:has(#d-poster[hidden]) { grid-template-columns: 1fr; }
