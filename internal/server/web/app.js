@@ -129,6 +129,12 @@ function langFromAccount(me) {
   }
 }
 
+// The login hint names the account: ZimaOS for Movies, else the Jellyfin
+// or Emby server movies-cast reads from (/api/source, roadmap 20).
+fetch("/api/source").then((r) => r.json()).then((src) => {
+  if (!src.zimaos) $("login-hint").textContent = t("login.hintServer", src.product || "Jellyfin");
+}).catch(() => { /* the ZimaOS hint stays */ });
+
 async function boot() {
   try {
     const me = await api("/api/me");

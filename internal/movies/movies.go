@@ -56,6 +56,30 @@ func (c *Client) Ping(ctx context.Context) error {
 	return nil
 }
 
+// Info is what /System/Info/Public tells without a login.
+type Info struct {
+	Product string // "Jellyfin Server" (Movies 0.3.0 and Jellyfin say so), "Emby Server"
+	Version string
+}
+
+// PublicInfo asks /System/Info/Public. Emby 4.10.2.0 sends no ProductName
+// (measured 2026-10-31); a server whose base path is /emby is taken as Emby.
+func (c *Client) PublicInfo(ctx context.Context) (Info, error) {
+	var res struct{ ProductName, Version string }
+	if err := c.do(ctx, nil, http.MethodGet, "/System/Info/Public", nil, &res); err != nil {
+		return Info{}, err
+	}
+	if res.ProductName == "" && strings.HasSuffix(c.Base, "/emby") {
+		res.ProductName = "Emby Server"
+	}
+	return Info{Product: res.ProductName, Version: res.Version}, nil
+}
+
+// ZimaOS says whether the client talks to IceWhale Movies behind the ZimaOS
+// gateway (base path /movies; accounts are ZimaOS accounts), not to a
+// Jellyfin or Emby server of its own.
+func (c *Client) ZimaOS() bool { return strings.HasSuffix(c.Base, "/movies") }
+
 // Session is one login at Movies.
 type Session struct {
 	Token    string

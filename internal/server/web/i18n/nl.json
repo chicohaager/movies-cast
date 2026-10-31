@@ -178,5 +178,6 @@
  "q.removeName": "{0} uit de wachtrij verwijderen",
  "q.added": "Aan de wachtrij toegevoegd: {0}",
  "srv:choose an episode or a track": "kies een aflevering of een nummer",
- "srv:100 entries in the queue at most": "hoogstens 100 items in de wachtrij"
+ "srv:100 entries in the queue at most": "hoogstens 100 items in de wachtrij",
+ "login.hintServer": "Met je account op de {0}."
 }

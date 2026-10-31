@@ -242,6 +242,7 @@ func (s *Server) Handler() http.Handler {
 	})
 	mux.HandleFunc("GET /strings.js", s.stringsJS)
 	mux.HandleFunc("POST /api/login", s.login)
+	mux.HandleFunc("GET /api/source", s.source)
 	mux.HandleFunc("POST /api/logout", s.withSession(s.logout))
 	mux.HandleFunc("GET /api/me", s.withSession(s.me))
 	mux.HandleFunc("POST /api/theme", s.withSession(s.setAccountPref("theme")))
@@ -1304,10 +1305,11 @@ func (s *Server) serveStream(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	resp, err := s.stream.Do(req)
-	// Jellyfin answers HEAD on /Items/{id}/Download (photos) with 405
-	// (measured 2026-10-31, 10.11.0); the LG asks HEAD first and refused the
-	// photo (UPnP 716). Ask GET then and send the TV the headers only.
-	if err == nil && r.Method == http.MethodHead && resp.StatusCode == http.StatusMethodNotAllowed {
+	// HEAD on /Items/{id}/Download (photos): Jellyfin 10.11.0 answers 405,
+	// Emby 4.10.2.0 404, both serve GET (measured 2026-10-31); the LG asks
+	// HEAD first and refused the photo (UPnP 716). Ask GET then and send the
+	// TV the headers only.
+	if err == nil && r.Method == http.MethodHead && resp.StatusCode/100 != 2 {
 		resp.Body.Close()
 		if req, err = s.movies.FileRequest(ctx, ms, http.MethodGet, p.movie); err == nil {
 			resp, err = s.stream.Do(req)

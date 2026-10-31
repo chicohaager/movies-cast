@@ -178,5 +178,6 @@
  "q.removeName": "{0} öğesini sıradan kaldır",
  "q.added": "Sıraya eklendi: {0}",
  "srv:choose an episode or a track": "bir bölüm veya parça seçin",
- "srv:100 entries in the queue at most": "sırada en fazla 100 öğe olabilir"
+ "srv:100 entries in the queue at most": "sırada en fazla 100 öğe olabilir",
+ "login.hintServer": "{0} hesabınızla."
 }

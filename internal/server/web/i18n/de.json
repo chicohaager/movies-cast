@@ -178,5 +178,6 @@
  "q.removeName": "{0} aus der Warteschlange entfernen",
  "q.added": "In der Warteschlange: {0}",
  "srv:choose an episode or a track": "Eine Folge oder einen Titel wählen",
- "srv:100 entries in the queue at most": "höchstens 100 Einträge in der Warteschlange"
+ "srv:100 entries in the queue at most": "höchstens 100 Einträge in der Warteschlange",
+ "login.hintServer": "Mit deinem Konto auf dem {0}."
 }

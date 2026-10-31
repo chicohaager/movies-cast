@@ -178,5 +178,6 @@
  "q.removeName": "Remove {0} from the queue",
  "q.added": "Added to the queue: {0}",
  "srv:choose an episode or a track": "choose an episode or a track",
- "srv:100 entries in the queue at most": "100 entries in the queue at most"
+ "srv:100 entries in the queue at most": "100 entries in the queue at most",
+ "login.hintServer": "With your account on the {0}."
 }

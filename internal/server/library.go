@@ -225,3 +225,18 @@ func (s *Server) playNext(p *play) {
 	s.startPlay(rec, req, "", p.sess)
 	log.Printf("autoplay %s after %s on %s: HTTP %d", id, p.movie.Name, p.tv.Name, rec.Code)
 }
+
+// source tells the login page whose account it asks for: the ZimaOS account
+// for Movies, else the account on the Jellyfin or Emby server (roadmap 20).
+// No login needed; it says only what /System/Info/Public says anyway.
+func (s *Server) source(w http.ResponseWriter, r *http.Request) {
+	out := map[string]any{"zimaos": s.movies.ZimaOS()}
+	if !s.movies.ZimaOS() {
+		ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+		defer cancel()
+		if in, err := s.movies.PublicInfo(ctx); err == nil {
+			out["product"] = in.Product
+		}
+	}
+	writeJSON(w, http.StatusOK, out)
+}

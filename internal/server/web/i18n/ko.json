@@ -178,5 +178,6 @@
  "q.removeName": "대기열에서 {0} 제거",
  "q.added": "대기열에 추가됨: {0}",
  "srv:choose an episode or a track": "에피소드나 곡을 선택하세요",
- "srv:100 entries in the queue at most": "대기열에는 최대 100개까지 넣을 수 있습니다"
+ "srv:100 entries in the queue at most": "대기열에는 최대 100개까지 넣을 수 있습니다",
+ "login.hintServer": "{0} 계정으로."
 }
