@@ -484,6 +484,8 @@ type Media struct {
 	MimeType string // e.g. video/x-matroska
 	Size     int64
 	Duration time.Duration
+	// Class is the upnp:class; empty means a film (object.item.videoItem.movie).
+	Class string
 	// Converted is a stream joined from Movies' conversion segments: no size,
 	// no byte ranges; the TV may ask for a start time (TimeSeekRange).
 	Converted bool
@@ -512,9 +514,13 @@ func DIDL(m Media) string {
 	if mime == "" {
 		mime = "video/x-matroska"
 	}
+	class := m.Class
+	if class == "" {
+		class = "object.item.videoItem.movie"
+	}
 	return `<DIDL-Lite xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/">` +
 		`<item id="0" parentID="-1" restricted="1"><dc:title>` + xmlEscape(m.Title) + `</dc:title>` +
-		`<upnp:class>object.item.videoItem.movie</upnp:class>` +
+		`<upnp:class>` + xmlEscape(class) + `</upnp:class>` +
 		`<res protocolInfo="http-get:*:` + xmlEscape(mime) + `:` + m.Flags() + `"` + resAttrs(m) + `>` + xmlEscape(m.URL) + `</res></item></DIDL-Lite>`
 }
 

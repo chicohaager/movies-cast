@@ -147,17 +147,55 @@ type Movie struct {
 	Audio      string `json:"audio,omitempty"`
 	Size       int64  `json:"size,omitempty"`
 	HasPoster  bool   `json:"hasPoster"`
+	// Type is Movie, Series, Episode, MusicAlbum, Audio or Photo (Jellyfin's
+	// item types). Movies 0.3.0 lists Movie only (measured 2026-10-31: 0
+	// Series, Episode, Audio, Photo on .143); Jellyfin 10.11.0 all of them.
+	Type   string   `json:"type,omitempty"`
+	Genres []string `json:"genres,omitempty"`
+	Added  string   `json:"added,omitempty"`  // DateCreated, for "recently added"
+	Rating string   `json:"rating,omitempty"` // OfficialRating, e.g. PG-13
+	Score  float64  `json:"score,omitempty"`  // CommunityRating
+	// Episodes: the series and the place in it; Series and albums: how many
+	// items they hold.
+	SeriesID   string `json:"seriesId,omitempty"`
+	SeriesName string `json:"seriesName,omitempty"`
+	AlbumID    string `json:"albumId,omitempty"`
+	Season     int    `json:"season,omitempty"`
+	Episode    int    `json:"episode,omitempty"`
+	Count      int    `json:"count,omitempty"`
 }
 
+// Playable says whether the item is a file that can be sent (a series or an
+// album is a folder of them).
+func (m Movie) Playable() bool { return m.Type != "Series" && m.Type != "MusicAlbum" }
+
+// IsPhoto: a still image; it has no duration and no resume point.
+func (m Movie) IsPhoto() bool { return m.Type == "Photo" }
+
+// IsAudio: a music track.
+func (m Movie) IsAudio() bool { return m.Type == "Audio" }
+
 type item struct {
-	Id             string
-	Name           string
-	ProductionYear int
-	Overview       string
-	RunTimeTicks   int64
-	Container      string
-	ImageTags      map[string]string
-	UserData       struct {
+	Id                 string
+	Name               string
+	Type               string
+	Genres             []string
+	DateCreated        string
+	OfficialRating     string
+	CommunityRating    float64
+	SeriesId           string
+	SeriesName         string
+	AlbumId            string
+	ParentIndexNumber  int
+	IndexNumber        int
+	RecursiveItemCount int
+	ChildCount         int
+	ProductionYear     int
+	Overview           string
+	RunTimeTicks       int64
+	Container          string
+	ImageTags          map[string]string
+	UserData           struct {
 		PlaybackPositionTicks int64
 		Played                bool
 	}
@@ -176,6 +214,17 @@ func (it item) movie() Movie {
 		ID: it.Id, Name: it.Name, Year: it.ProductionYear, Overview: it.Overview,
 		Runtime: it.RunTimeTicks / ticksPerSecond, Resume: it.UserData.PlaybackPositionTicks / ticksPerSecond,
 		Played: it.UserData.Played, Container: it.Container, HasPoster: it.ImageTags["Primary"] != "",
+		Type: it.Type, Genres: it.Genres, Added: it.DateCreated, Rating: it.OfficialRating, Score: it.CommunityRating,
+		SeriesID: it.SeriesId, SeriesName: it.SeriesName, AlbumID: it.AlbumId,
+	}
+	if it.Type == "Episode" {
+		m.Season, m.Episode = it.ParentIndexNumber, it.IndexNumber
+	}
+	if it.Type == "Audio" {
+		m.Episode = it.IndexNumber // track number
+	}
+	if m.Count = it.RecursiveItemCount; m.Count == 0 {
+		m.Count = it.ChildCount
 	}
 	if len(it.MediaSources) > 0 {
 		ms := it.MediaSources[0]
@@ -195,27 +244,119 @@ func (it item) movie() Movie {
 	return m
 }
 
-// Movies lists every movie of the user, sorted by name.
+// pageSize is how many items one request asks for. Measured 2026-10-31:
+// Movies 0.3.0 honours StartIndex and Limit (StartIndex=1&Limit=2 of 2 films
+// answered 1 item of 2), so a large library is read in pages instead of one
+// answer of unknown size.
+const pageSize = 200
+
+// libraryFields are asked with every list; DateCreated, Genres and the
+// counts are not in the default answer.
+const libraryFields = "Overview,MediaSources,Genres,DateCreated,RecursiveItemCount,ChildCount"
+
+// items reads every page of an Items query.
+func (c *Client) items(ctx context.Context, s *Session, path string, q url.Values) ([]Movie, error) {
+	var out []Movie
+	seen := map[string]bool{}
+	for start := 0; ; {
+		q.Set("StartIndex", fmt.Sprint(start))
+		q.Set("Limit", fmt.Sprint(pageSize))
+		var res struct {
+			Items            []item
+			TotalRecordCount int
+		}
+		if err := c.do(ctx, s, http.MethodGet, path+"?"+q.Encode(), nil, &res); err != nil {
+			return nil, err
+		}
+		fresh := 0
+		for _, it := range res.Items {
+			if seen[it.Id] {
+				continue
+			}
+			seen[it.Id] = true
+			fresh++
+			out = append(out, it.movie())
+		}
+		start += len(res.Items)
+		// A server that ignores StartIndex answers the first page again: stop
+		// instead of listing it twice.
+		if fresh == 0 && len(res.Items) > 0 {
+			return out, fmt.Errorf("movies: got %d of %d items (paging not honoured)", len(out), res.TotalRecordCount)
+		}
+		if len(res.Items) == 0 || start >= res.TotalRecordCount {
+			if res.TotalRecordCount > len(out) {
+				return out, fmt.Errorf("movies: got %d of %d items", len(out), res.TotalRecordCount)
+			}
+			return out, nil
+		}
+	}
+}
+
+// Movies lists every film and series of the user, sorted by name.
 func (c *Client) Movies(ctx context.Context, s *Session) ([]Movie, error) {
+	return c.Library(ctx, s, "Movie,Series")
+}
+
+// Library lists every item of the given Jellyfin item types (comma
+// separated, e.g. "MusicAlbum" or "Photo"), sorted by name.
+func (c *Client) Library(ctx context.Context, s *Session, types string) ([]Movie, error) {
 	q := url.Values{
 		"Recursive":        {"true"},
-		"IncludeItemTypes": {"Movie"},
+		"IncludeItemTypes": {types},
 		"SortBy":           {"SortName"},
-		"Fields":           {"Overview,MediaSources"},
+		"Fields":           {libraryFields},
 	}
+	return c.items(ctx, s, "/Users/"+url.PathEscape(s.UserID)+"/Items", q)
+}
+
+// Children lists what a series or an album holds: the episodes of a series
+// in order (Jellyfin /Shows/{id}/Episodes, measured 2026-10-31 on 10.11.0:
+// 3 episodes, season and episode number), the tracks of an album by number.
+func (c *Client) Children(ctx context.Context, s *Session, parent Movie) ([]Movie, error) {
+	if parent.Type == "Series" {
+		q := url.Values{"UserId": {s.UserID}, "Fields": {libraryFields}}
+		return c.items(ctx, s, "/Shows/"+url.PathEscape(parent.ID)+"/Episodes", q)
+	}
+	q := url.Values{"ParentId": {parent.ID}, "SortBy": {"ParentIndexNumber,IndexNumber,SortName"}, "Fields": {libraryFields}}
+	return c.items(ctx, s, "/Users/"+url.PathEscape(s.UserID)+"/Items", q)
+}
+
+// Next returns the item after cur in its series or album, if there is one.
+func (c *Client) Next(ctx context.Context, s *Session, cur Movie) (Movie, bool, error) {
+	parent := Movie{ID: cur.SeriesID, Type: "Series"}
+	if cur.IsAudio() {
+		parent = Movie{ID: cur.AlbumID, Type: "MusicAlbum"}
+	}
+	if parent.ID == "" || (cur.Type != "Episode" && !cur.IsAudio()) {
+		return Movie{}, false, nil
+	}
+	list, err := c.Children(ctx, s, parent)
+	if err != nil {
+		return Movie{}, false, err
+	}
+	for i, m := range list {
+		if m.ID == cur.ID && i+1 < len(list) {
+			return list[i+1], true, nil
+		}
+	}
+	return Movie{}, false, nil
+}
+
+// Views returns the collection types of the user's libraries ("movies",
+// "tvshows", "music", "homevideos", "photos"). Movies 0.3.0 on .143 lists one
+// view, "movies" (measured 2026-10-31).
+func (c *Client) Views(ctx context.Context, s *Session) ([]string, error) {
 	var res struct {
-		Items            []item
-		TotalRecordCount int
+		Items []struct{ CollectionType string }
 	}
-	if err := c.do(ctx, s, http.MethodGet, "/Users/"+url.PathEscape(s.UserID)+"/Items?"+q.Encode(), nil, &res); err != nil {
+	if err := c.do(ctx, s, http.MethodGet, "/Users/"+url.PathEscape(s.UserID)+"/Views", nil, &res); err != nil {
 		return nil, err
 	}
-	out := make([]Movie, 0, len(res.Items))
-	for _, it := range res.Items {
-		out = append(out, it.movie())
-	}
-	if res.TotalRecordCount > len(out) {
-		return out, fmt.Errorf("movies: got %d of %d items", len(out), res.TotalRecordCount)
+	var out []string
+	for _, v := range res.Items {
+		if v.CollectionType != "" {
+			out = append(out, v.CollectionType)
+		}
 	}
 	return out, nil
 }
@@ -234,8 +375,23 @@ func (c *Client) Movie(ctx context.Context, s *Session, id string) (Movie, error
 
 // StreamRequest builds the request for the original file; the token goes in
 // a header, never in the URL.
+// Music goes the same way: Jellyfin 10.11.0 answers /Videos/{id}/stream for
+// an Audio item with audio/mpeg (measured 2026-10-31). A photo is the file
+// itself from /Items/{id}/Download (image/jpeg, same measurement).
 func (c *Client) StreamRequest(ctx context.Context, s *Session, method, id string) (*http.Request, error) {
-	req, err := http.NewRequestWithContext(ctx, method, c.Base+"/Videos/"+url.PathEscape(id)+"/stream?static=true", nil)
+	return c.streamRequest(ctx, s, method, "/Videos/"+url.PathEscape(id)+"/stream?static=true")
+}
+
+// FileRequest is StreamRequest for any item: photos come from Download.
+func (c *Client) FileRequest(ctx context.Context, s *Session, method string, m Movie) (*http.Request, error) {
+	if m.IsPhoto() {
+		return c.streamRequest(ctx, s, method, "/Items/"+url.PathEscape(m.ID)+"/Download")
+	}
+	return c.StreamRequest(ctx, s, method, m.ID)
+}
+
+func (c *Client) streamRequest(ctx context.Context, s *Session, method, path string) (*http.Request, error) {
+	req, err := http.NewRequestWithContext(ctx, method, c.Base+path, nil)
 	if err != nil {
 		return nil, err
 	}

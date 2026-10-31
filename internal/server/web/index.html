@@ -61,6 +61,11 @@
         <input id="p-vol" type="range" min="0" max="100">
       </div>
       <p id="p-refused" class="hint" role="status" hidden></p>
+      <div id="q-wrap" class="queue" hidden>
+        <h3 data-i18n="q.h">Als Nächstes</h3>
+        <ol id="q-list"></ol>
+        <label class="chk"><input id="q-auto" type="checkbox" checked> <span data-i18n="q.auto">Nächste Folge oder nächsten Titel automatisch</span></label>
+      </div>
       <p class="sound"><button id="p-sound" type="button" class="link" data-i18n="p.noSound">Kein Ton?</button></p>
     </div>
 
@@ -90,12 +95,38 @@
       <dl id="s-list" class="kv"></dl>
     </details>
 
+    <div id="tabs" class="tabs" role="tablist" hidden>
+      <button type="button" role="tab" data-kind="films" aria-selected="true" data-i18n="tab.films">Filme</button>
+      <button type="button" role="tab" data-kind="series" aria-selected="false" data-i18n="tab.series" hidden>Serien</button>
+      <button type="button" role="tab" data-kind="music" aria-selected="false" data-i18n="tab.music" hidden>Musik</button>
+      <button type="button" role="tab" data-kind="photos" aria-selected="false" data-i18n="tab.photos" hidden>Fotos</button>
+    </div>
+
+    <div class="filters">
+      <input id="q" type="search" autocomplete="off" placeholder="Suchen" aria-label="Suchen" data-i18n-attr="placeholder:f.search;aria-label:f.search">
+      <label class="inline"><span class="sr" data-i18n="f.sortLabel">Sortieren</span>
+        <select id="sort" aria-label="Sortieren" data-i18n-attr="aria-label:f.sortLabel">
+          <option value="name" data-i18n="f.sortName">Name</option>
+          <option value="added" data-i18n="f.sortAdded">Zuletzt hinzugefügt</option>
+          <option value="year" data-i18n="f.sortYear">Jahr</option>
+          <option value="score" data-i18n="f.sortScore">Bewertung</option>
+        </select></label>
+      <label class="inline"><span class="sr" data-i18n="f.filterLabel">Filter</span>
+        <select id="filter" aria-label="Filter" data-i18n-attr="aria-label:f.filterLabel">
+          <option value="" data-i18n="f.all">Alle</option>
+          <option value="unwatched" data-i18n="f.unwatched">Ungesehen</option>
+          <option value="started" data-i18n="f.started">Angefangen</option>
+        </select></label>
+    </div>
+    <p id="count" class="hint" role="status"></p>
+
     <div id="resume-wrap" hidden>
       <h2 class="section" data-i18n="row.resume">Weiterschauen</h2>
       <div id="resume-list" class="grid"></div>
       <h2 class="section" data-i18n="row.all">Alle Filme</h2>
     </div>
-    <div id="list" class="grid" aria-live="polite"></div>
+    <div id="list" class="grid"></div>
+    <p id="more-row" hidden><button id="more" type="button" class="ghost"></button></p>
     <p id="empty" class="hint" hidden data-i18n="empty">Keine Filme in Movies gefunden.</p>
   </section>
 </main>
@@ -107,9 +138,14 @@
       <h2 id="d-title"></h2>
       <p id="d-meta" class="hint"></p>
       <p id="d-overview"></p>
+      <div id="d-children-wrap" hidden>
+        <h3 id="d-children-h"></h3>
+        <div id="d-children" class="eps"></div>
+      </div>
       <div class="controls">
         <button id="d-resume" value="resume" hidden>Fortsetzen</button>
         <button id="d-start" value="start" data-i18n="d.start">Von vorn abspielen</button>
+        <button id="d-queue" value="queue" class="ghost" data-i18n="d.queue">In die Warteschlange</button>
         <button value="cancel" class="ghost" data-i18n="d.close">Schließen</button>
       </div>
     </div>

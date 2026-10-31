@@ -190,7 +190,49 @@ function renderTiles(grid, list) {
 function findMovie(id) {
   var m = null;
   state.movies.forEach(function (x) { if (x.id === id) m = x; });
+  (state.episodes || []).forEach(function (x) { if (x.id === id) m = x; });
   return m;
+}
+
+function two(n) { return (n < 10 ? "0" : "") + (n || 0); }
+function epLabel(m) { return m.type === "Episode" ? "S" + two(m.season) + "E" + two(m.episode) + " " : ""; }
+
+// A series opens its episodes (roadmap 12); the first one not watched to the
+// end gets the focus. state.episodes keeps them for findMovie and for the
+// next episode at the end of one.
+function showEpisodes(series) {
+  var box = $("d-eps");
+  box.innerHTML = "";
+  box.hidden = false;
+  return api("/api/children/" + encodeURIComponent(series.id)).then(function (eps) {
+    state.episodes = eps;
+    var next = null;
+    eps.forEach(function (e) { if (!next && (e.resumeSeconds > 0 || !e.played)) next = e; });
+    var focusEl = null;
+    eps.forEach(function (e) {
+      var b = document.createElement("button");
+      b.className = "btn ghost focusable";
+      b.setAttribute("data-ep", e.id);
+      b.textContent = epLabel(e) + e.name;
+      var small = document.createElement("small");
+      small.textContent = e === next ? tr("d.nextUp") : (e.played ? tr("d.seen") : hms(e.runtimeSeconds));
+      b.appendChild(small);
+      box.appendChild(b);
+      if (e === next) focusEl = b;
+    });
+    setFocus(focusEl || box.querySelector(".btn") || $("d-back"));
+  });
+}
+
+// nextAfter finds the episode (or album track) after m, or null.
+function nextAfter(m) {
+  var parent = m.type === "Episode" ? m.seriesId : (m.type === "Audio" ? m.albumId : "");
+  if (!parent) return Promise.resolve(null);
+  return api("/api/children/" + encodeURIComponent(parent)).then(function (list) {
+    state.episodes = list;
+    for (var i = 0; i < list.length - 1; i++) if (list[i].id === m.id) return list[i + 1];
+    return null;
+  }).catch(function () { return null; });
 }
 
 function metaLine(m) {
@@ -213,9 +255,26 @@ function openDetail(id) {
   $("d-overview").textContent = m.overview || "";
   $("d-poster").src = m.hasPoster ? posterURL(m) : "";
   var r = $("d-resume");
-  r.hidden = !(m.resumeSeconds > 0);
+  var series = m.type === "Series";
+  r.hidden = series || !(m.resumeSeconds > 0);
   r.textContent = tr("d.resume", hms(m.resumeSeconds));
+  $("d-start").hidden = series;
+  $("d-eps").hidden = true;
+  if (series) {
+    $("d-meta").textContent = tr("d.nEpisodes", m.count || 0);
+    setFocus($("d-back"));
+    showEpisodes(m).catch(function (e) { showMsg(e.message); });
+    return;
+  }
   setFocus(r.hidden ? $("d-start") : r);
+}
+
+function playEpisode(id) {
+  var e = findMovie(id);
+  if (!e) return;
+  state.series = state.selected;
+  state.selected = e;
+  startPlay(e.resumeSeconds > 0);
 }
 
 // ---- player -------------------------------------------------------------
@@ -396,7 +455,21 @@ video.addEventListener("timeupdate", function () {
   if (state.screen === "player") updateOSD();
   if (Date.now() - state.lastBeat > 10000) report();
 });
-video.addEventListener("ended", stopPlay);
+// At the end of an episode the next one follows (like the phone's autoplay
+// for DLNA); a film, or the last episode, goes back to the library.
+video.addEventListener("ended", function () {
+  var m = state.selected;
+  if (!state.play || !m) { stopPlay(); return; }
+  var done = report({ stopped: true });
+  nextAfter(m).then(function (n) {
+    if (!n) { done.then(function () { state.play = null; openLibrary(m.seriesId || m.id); }); return; }
+    done.then(function () {
+      state.play = null;
+      state.selected = n;
+      startPlay(false);
+    });
+  });
+});
 video.addEventListener("error", function () {
   var e = video.error;
   showMsg(tr("play.fail") + (e ? " (Code " + e.code + ")" : ""));
@@ -523,6 +596,7 @@ function handleKey(k) {
     var c = current();
     if (!c) return true;
     if (state.screen === "lib") openDetail(c.getAttribute("data-id"));
+    else if (c.getAttribute("data-ep")) playEpisode(c.getAttribute("data-ep"));
     else if (c.id === "d-resume") startPlay(true);
     else if (c.id === "d-start") startPlay(false);
     else if (c.id === "d-back") openLibrary(state.selected && state.selected.id);
@@ -551,6 +625,7 @@ document.addEventListener("click", function (ev) {
   if (!el) return;
   setFocus(el);
   if (state.screen === "lib") openDetail(el.getAttribute("data-id"));
+  else if (el.getAttribute("data-ep")) playEpisode(el.getAttribute("data-ep"));
   else if (el.id === "d-resume") startPlay(true);
   else if (el.id === "d-start") startPlay(false);
   else if (el.id === "d-back") openLibrary(state.selected && state.selected.id);

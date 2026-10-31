@@ -110,6 +110,7 @@ type Server struct {
 	loginPending map[string]int         // logins waiting for Movies, by client IP
 	newPairCode  func() string          // pairCode; a fixed sequence in tests
 	pairings     map[string]*pairing    // TV-app pairings by secret ID
+	queue        map[string]*tvQueue    // what plays next, by renderer ID (library.go)
 
 	browserSilence time.Duration
 
@@ -177,6 +178,7 @@ func New(cfg Config, mc *movies.Client, tv Transport, r Renderers) *Server {
 		loginFails:     map[string][]time.Time{},
 		loginPending:   map[string]int{},
 		pairings:       map[string]*pairing{},
+		queue:          map[string]*tvQueue{},
 		newPairCode:    pairCode,
 		now:            time.Now,
 		pollEvery:      time.Second,
@@ -265,6 +267,11 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /api/tv/subs/{play}/{file}", s.withSession(s.tvSubtitle))
 	mux.HandleFunc("POST /api/tv/subs-probe", s.withSession(s.tvSubsProbe))
 	mux.HandleFunc("GET /api/resume", s.withSession(s.listResume))
+	mux.HandleFunc("GET /api/children/{id}", s.withSession(s.children))
+	mux.HandleFunc("GET /api/library", s.withSession(s.library))
+	mux.HandleFunc("GET /api/views", s.withSession(s.views))
+	mux.HandleFunc("GET /api/queue", s.withSession(s.queueGet))
+	mux.HandleFunc("POST /api/queue", s.withSession(s.queueSet))
 	mux.HandleFunc("GET /s/{play}/{name}", s.serveStream)
 	mux.HandleFunc("HEAD /s/{play}/{name}", s.serveStream)
 	return securityHeaders(sameOrigin(mux))
@@ -387,6 +394,8 @@ var errorsEn = map[string]string{
 	"Weckpaket konnte nicht gesendet werden":                      "the wake-up packet could not be sent",
 	"Der Fernseher ist aus oder nicht erreichbar":                 "the TV is off or not reachable",
 	"Movies konnte den Film nicht umwandeln":                      "Movies could not convert the film",
+	"Eine Folge oder einen Titel wählen":                          "choose an episode or a track",
+	"höchstens 100 Einträge in der Warteschlange":                 "100 entries in the queue at most",
 }
 
 // english translates msg; a renderer suffix " (UPnP-Fehler N)" from faultCode
@@ -813,6 +822,10 @@ func (s *Server) startPlay(w http.ResponseWriter, r *http.Request, sid string, s
 		s.moviesErr(w, sid, err)
 		return
 	}
+	if !m.Playable() {
+		fail(w, http.StatusBadRequest, "Eine Folge oder einen Titel wählen")
+		return
+	}
 	// DLNA is the way; the app only when the phone asks for it, after DLNA
 	// failed and the answer said the app is open (appAvailable).
 	if in.App {
@@ -886,7 +899,7 @@ func (s *Server) startPlay(w http.ResponseWriter, r *http.Request, sid string, s
 	s.mu.Unlock()
 
 	media := dlna.Media{URL: base + "/s/" + p.id + "/movie." + url.PathEscape(ext), Title: m.Name, MimeType: mimeFor(ext),
-		Size: m.Size, Duration: time.Duration(m.Runtime) * time.Second}
+		Size: m.Size, Duration: time.Duration(m.Runtime) * time.Second, Class: upnpClass(m)}
 	ctx := r.Context()
 	if err := s.tv.SetURI(ctx, tv, media); err != nil {
 		s.abortPlay(p.id)
@@ -931,7 +944,11 @@ func (s *Server) startPlay(w http.ResponseWriter, r *http.Request, sid string, s
 		return
 	}
 	log.Printf("Play %s: answered after %v (%s %s)", tv.Name, s.now().Sub(t0).Round(time.Millisecond), ext, m.VideoCodec)
-	go s.watch(p.ctx, p, resume)
+	// A photo has no position to report and no end: it stays until the next
+	// item replaces it (or playMaxAge).
+	if !m.IsPhoto() {
+		go s.watch(p.ctx, p, resume)
+	}
 	writeJSON(w, http.StatusOK, map[string]any{"ok": true, "title": m.Name, "resumeSeconds": int64(resume / time.Second)})
 }
 
@@ -952,8 +969,37 @@ func formatKey(tv dlna.Renderer, container, codec string) string {
 	return tv.ID + "|" + strings.ToLower(container) + "|" + strings.ToLower(codec)
 }
 
+// upnpClass tells the renderer what kind of item it gets.
+func upnpClass(m movies.Movie) string {
+	switch {
+	case m.IsAudio():
+		return "object.item.audioItem.musicTrack"
+	case m.IsPhoto():
+		return "object.item.imageItem.photo"
+	}
+	return "object.item.videoItem.movie"
+}
+
 func mimeFor(ext string) string {
 	switch strings.ToLower(ext) {
+	case "mp3":
+		return "audio/mpeg"
+	case "flac":
+		return "audio/flac"
+	case "m4a", "aac":
+		return "audio/mp4"
+	case "ogg", "oga", "opus":
+		return "audio/ogg"
+	case "wav":
+		return "audio/wav"
+	case "jpg", "jpeg":
+		return "image/jpeg"
+	case "png":
+		return "image/png"
+	case "gif":
+		return "image/gif"
+	case "webp":
+		return "image/webp"
 	case "mp4", "m4v", "mov":
 		return "video/mp4"
 	case "ts", "m2ts":
@@ -1080,9 +1126,19 @@ func (s *Server) watch(ctx context.Context, p *play, resume time.Duration) {
 		s.mu.Unlock()
 
 		switch {
-		case !mine && sawPlay, // the TV plays something else now
-			mine && sawPlay && !restarting && (st.State == "STOPPED" || st.State == "NO_MEDIA_PRESENT"):
+		case !mine && sawPlay: // the TV plays something else now
 			s.abortPlay(p.id)
+			return
+		case mine && sawPlay && !restarting && (st.State == "STOPPED" || st.State == "NO_MEDIA_PRESENT"):
+			s.mu.Lock()
+			last := p.lastPos
+			s.mu.Unlock()
+			s.abortPlay(p.id)
+			// Ran to the end (not Stop on the phone, which ends the play
+			// first): the queue or the next episode follows.
+			if finished(p.movie, last) {
+				go s.playNext(p)
+			}
 			return
 		}
 		// The LG ignores Seek until it plays; seek once, right after PLAYING.
@@ -1237,7 +1293,7 @@ func (s *Server) serveStream(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithCancel(r.Context())
 	defer cancel()
 	defer context.AfterFunc(pctx, cancel)()
-	req, err := s.movies.StreamRequest(ctx, ms, r.Method, id)
+	req, err := s.movies.FileRequest(ctx, ms, r.Method, p.movie)
 	if err != nil {
 		http.Error(w, "bad request", http.StatusBadRequest)
 		return
@@ -1248,6 +1304,15 @@ func (s *Server) serveStream(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	resp, err := s.stream.Do(req)
+	// Jellyfin answers HEAD on /Items/{id}/Download (photos) with 405
+	// (measured 2026-10-31, 10.11.0); the LG asks HEAD first and refused the
+	// photo (UPnP 716). Ask GET then and send the TV the headers only.
+	if err == nil && r.Method == http.MethodHead && resp.StatusCode == http.StatusMethodNotAllowed {
+		resp.Body.Close()
+		if req, err = s.movies.FileRequest(ctx, ms, http.MethodGet, p.movie); err == nil {
+			resp, err = s.stream.Do(req)
+		}
+	}
 	if err != nil {
 		if ctx.Err() == nil {
 			log.Printf("stream %s: %v", id, err)
