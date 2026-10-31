@@ -56,10 +56,10 @@ pre { white-space:pre-wrap; overflow-wrap:anywhere; margin:0; }
 
 <h2>2. Installation</h2>
 <ol>
-  <li>Dans le tableau de bord ZimaOS, cliquez sur <strong>«&nbsp;+&nbsp;»</strong> à côté d’<em>Apps</em>, puis sur l’entrée pour installer une <strong>application personnalisée</strong>. Le même bouton se trouve aussi sur la page d’accueil de l’<em>App Store</em>.</li>
-  <li>En haut de la fenêtre, choisissez <strong>«&nbsp;Import&nbsp;»</strong> → <strong>«&nbsp;Docker Compose&nbsp;»</strong> et sélectionnez le fichier <code>docker-compose.yml</code> de ce paquet. ZimaOS confirme l’import et affiche le logo, l’image <code>ghcr.io/chicohaager/movies-cast</code> et le port 8097.</li>
-  <li>Cliquez sur le bouton d’installation en bas (<strong>«&nbsp;Installieren&nbsp;»</strong> dans l’interface allemande). ZimaOS télécharge le programme (environ 9 Mo) et ajoute la tuile <strong>«&nbsp;Movies-Cast&nbsp;»</strong> avec le logo de Movies-Cast.</li>
-  <li>Si le pare-feu <strong>ZFW</strong> est actif, il affiche deux cartes «&nbsp;nouveau port d’application&nbsp;» (8097/tcp et 1901/udp, «&nbsp;depuis votre réseau local uniquement&nbsp;»). Le réseau local suffit pour Movies-Cast.</li>
+  <li>Dans le tableau de bord ZimaOS, cliquez sur <strong>«&nbsp;+&nbsp;»</strong> à côté d’<em>Applications</em>, puis sur <strong>«&nbsp;Installer une application personnalisée&nbsp;»</strong>.</li>
+  <li>En haut de la fenêtre, choisissez <strong>«&nbsp;Importer&nbsp;»</strong> → <strong>«&nbsp;Docker Compose&nbsp;»</strong> et sélectionnez le fichier <code>docker-compose.yml</code> de ce paquet. ZimaOS confirme l’import et affiche le logo, l’image <code>ghcr.io/chicohaager/movies-cast</code> et le port 8097.</li>
+  <li>Cliquez sur <strong>«&nbsp;Installer&nbsp;»</strong> en bas. ZimaOS télécharge le programme (environ 9 Mo) et ajoute la tuile <strong>«&nbsp;Movies-Cast&nbsp;»</strong> avec le logo de Movies-Cast.</li>
+  <li>Si le pare-feu <strong>ZFW</strong> est actif, il affiche deux cartes pour les nouveaux ports de l’application (8097/tcp et 1901/udp), avec le choix de les ouvrir au réseau local seulement. Le réseau local suffit pour Movies-Cast.</li>
 </ol>
 <p class="muted">L’application garde ses données dans <code>/DATA/AppData/movies-cast/state</code> (connexions, noms des téléviseurs, formats éprouvés, vos réglages).</p>
 
@@ -130,14 +130,14 @@ Capture d’écran : oui/non</code></pre>
 </div>
 
 <h2>6. Passer à une nouvelle version</h2>
-<p>Une mise à jour ne demande ni désinstallation ni nouvel import. Les libellés ci-dessous sont ceux de l’interface allemande, où cela a été mesuré :</p>
+<p>Une mise à jour ne demande ni désinstallation ni nouvel import. Les libellés ci-dessous sont ceux de l’interface française de ZimaOS (relevés le 31/10/2026) :</p>
 <ol>
-  <li>Dans le tableau de bord ZimaOS, ouvrez le menu <strong>«&nbsp;…&nbsp;»</strong> de la tuile et choisissez <strong>«&nbsp;Verwalten&nbsp;»</strong> (gérer).</li>
+  <li>Dans le tableau de bord ZimaOS, ouvrez le menu <strong>«&nbsp;…&nbsp;»</strong> de la tuile et choisissez <strong>«&nbsp;Gérer&nbsp;»</strong>.</li>
   <li>Dans le champ <strong>«&nbsp;Tag&nbsp;»</strong>, saisissez le nouveau numéro de version, pour ce paquet <code>{{VERSION}}</code>.</li>
-  <li>Si le champ <strong>«&nbsp;App-Titel&nbsp;»</strong> (titre de l’application) contient encore l’ancien nom «&nbsp;Movies auf dem Fernseher&nbsp;» ou «&nbsp;Movies Cast&nbsp;» (jusqu’à 0.24.0), saisissez <strong>«&nbsp;Movies-Cast&nbsp;»</strong> – sinon la tuile garde son ancien nom.</li>
-  <li>Cliquez sur <strong>«&nbsp;Speichern&nbsp;»</strong> (enregistrer). ZimaOS télécharge le nouveau programme («&nbsp;Aktualisieren …&nbsp;%&nbsp;») et redémarre Movies-Cast.</li>
+  <li>Si le champ <strong>«&nbsp;Titre de l’application&nbsp;»</strong> (en haut de la fenêtre) contient encore l’ancien nom «&nbsp;Movies auf dem Fernseher&nbsp;» ou «&nbsp;Movies Cast&nbsp;» (jusqu’à 0.24.0), saisissez <strong>«&nbsp;Movies-Cast&nbsp;»</strong> – sinon la tuile garde son ancien nom.</li>
+  <li>Cliquez sur <strong>«&nbsp;Enregistrer&nbsp;»</strong>. ZimaOS télécharge le nouveau programme et redémarre Movies-Cast.</li>
 </ol>
-<p class="muted">L’enregistrement écrit ce que contiennent les champs – si vous ouvrez plus tard «&nbsp;Verwalten&nbsp;» pour autre chose, vérifiez avant d’enregistrer que «&nbsp;Tag&nbsp;» indique toujours la version en cours. Les connexions et les réglages sont conservés. La carte «&nbsp;État&nbsp;» affiche ensuite la nouvelle version. Mesuré sur ZimaOS 1.8.0, lors du passage de 0.24.0 à 0.25.0.</p>
+<p class="muted">L’enregistrement écrit ce que contiennent les champs – si vous ouvrez plus tard «&nbsp;Gérer&nbsp;» pour autre chose, vérifiez avant d’enregistrer que «&nbsp;Tag&nbsp;» indique toujours la version en cours. Les connexions et les réglages sont conservés. La carte «&nbsp;État&nbsp;» affiche ensuite la nouvelle version. Mesuré sur ZimaOS 1.8.0, lors du passage de 0.24.0 à 0.25.0.</p>
 
 <h2>7. Désinstaller</h2>
 <p>Désinstallez la tuile dans le tableau de bord ZimaOS. <strong>Attention :</strong> ZimaOS supprime alors aussi <code>/DATA/AppData/movies-cast</code> – toutes les connexions et tous les réglages de Movies-Cast. Vos films et Movies lui-même ne sont pas touchés.</p>
@@ -148,7 +148,7 @@ Capture d’écran : oui/non</code></pre>
   <li>Les <strong>traductions</strong> autres que l’allemand et l’anglais – y compris <strong>ce guide en français</strong> – ont été faites par une IA et n’ont pas encore été relues par une personne de langue maternelle. Les corrections sont les bienvenues.</li>
   <li>La lecture a été vérifiée avec ZimaOS 1.8.0 et un LG OLED55B9. Un Samsung UE50MU6179 a été trouvé ; s’il lit les films reste à voir – les retours sur d’autres téléviseurs sont particulièrement précieux.</li>
   <li><strong>Apple TV</strong> n’apparaît pas dans la liste : ce n’est pas un appareil DLNA, et la lecture par AirPlay n’est pas encore dans cette version.</li>
-  <li><strong>Mise à jour depuis 0.24.0 ou 0.25.0 :</strong> une mise à jour via «&nbsp;Tag&nbsp;» n’apporte que le nouveau programme, sans modifier le fichier compose. Movies-Cast écrit alors son journal en UTC au lieu de l’heure locale – c’est sans gravité. Pour le changer : dans «&nbsp;Verwalten&nbsp;», ouvrez <strong>«&nbsp;YAML&nbsp;»</strong>, supprimez la ligne <code>- TZ=$TZ</code>, ajoutez l’entrée <code>/etc/localtime</code> sous <code>volumes:</code> comme dans le <code>docker-compose.yml</code> de ce paquet, et enregistrez (mesuré sur ZimaOS 1.8.0 ; les connexions sont conservées).</li>
+  <li><strong>Mise à jour depuis 0.24.0 ou 0.25.0 :</strong> une mise à jour via «&nbsp;Tag&nbsp;» n’apporte que le nouveau programme, sans modifier le fichier compose. Movies-Cast écrit alors son journal en UTC au lieu de l’heure locale – c’est sans gravité. Pour le changer : dans «&nbsp;Gérer&nbsp;», ouvrez <strong>«&nbsp;YAML&nbsp;»</strong>, supprimez la ligne <code>- TZ=$TZ</code>, ajoutez l’entrée <code>/etc/localtime</code> sous <code>volumes:</code> comme dans le <code>docker-compose.yml</code> de ce paquet, et enregistrez (mesuré sur ZimaOS 1.8.0 ; les connexions sont conservées).</li>
 </ul>
 <h2>9. Application Android TV (version de test)</h2>
 <p>Pour les appareils Android TV comme la Nvidia Shield : le fichier <code>movies-cast-tv-{{VERSION}}.apk</code> sur la page des versions (<a href="https://github.com/chicohaager/movies-cast/releases">https://github.com/chicohaager/movies-cast/releases</a>). Elle affiche la bibliothèque sur le téléviseur et se pilote avec la télécommande du téléviseur, comme l’application LG de la vidéo. Elle nécessite Movies-Cast {{VERSION}} sur ZimaOS.</p>
