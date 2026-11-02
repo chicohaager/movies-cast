@@ -40,7 +40,7 @@ phone ──HTTP(S)──> Movies-Cast :8097 ──Jellyfin API──> Movies / 
 
 Movies-Cast is a second app on ZimaOS next to IceWhale Movies. **Your phone is the remote; nothing is
 installed on the TV** — the TV only has to be a DLNA media renderer and plays the file itself. The TV app
-in the video (LG webOS) is not part of the testers' package; for Android TV (Shield) there is a test APK in the
+for LG webOS (pairing code, library on the TV) is not part of the testers' package; for Android TV (Shield) there is a test APK in the
 release, see [TVs and boxes](#tvs-and-boxes) and [docs/TECHNICAL.md](docs/TECHNICAL.md#android-tv-app-shield-google-tv-test-build).
 
 The easiest way: add the Lintuxer app store to ZimaOS (App Store → add a source →

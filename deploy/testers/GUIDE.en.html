@@ -40,7 +40,7 @@ pre { white-space:pre-wrap; overflow-wrap:anywhere; margin:0; }
   <li><strong>Movies-Cast is a second app on your ZimaOS</strong>, next to Movies. You install it from the file <code>docker-compose.yml</code> in this package (section 2).</li>
   <li><strong>Your phone is the remote.</strong> You open the Movies-Cast page in the phone's browser, pick a film and a TV, and press play. Pause, jump and stop are on the phone too.</li>
   <li><strong>Nothing is installed on the TV.</strong> The TV only has to understand DLNA ("Media Renderer"); Movies-Cast sends it the film, and the TV plays it itself.</li>
-  <li>The <strong>TV app</strong> shown in the video (LG webOS, pairing code, library on the TV) is <strong>not part of this package</strong>. For <strong>Android TV</strong> (e.g. Nvidia Shield) there is a test app, see section 9.</li>
+  <li>The <strong>TV app</strong> for LG webOS (pairing code, library on the TV) is <strong>not part of this package</strong>. For <strong>Android TV</strong> (e.g. Nvidia Shield) there is a test app, see section 9.</li>
   <li><strong>Is my TV or box suitable?</strong> Install Movies-Cast and switch the device on: if it appears in the TV list on the phone, it answers as a DLNA video renderer. If not, the text below the list says what the search found.</li>
   <li><strong>Apple TV:</strong> not supported in this version (AirPlay is planned for a later version).</li>
 </ul>
@@ -151,7 +151,7 @@ Screenshot: yes/no</code></pre>
   <li><strong>Updating from 0.24.0 or 0.25.0:</strong> an update via "Tag" brings only the new program, no change to the compose file. Movies-Cast then writes its log in UTC instead of local time – this is harmless. To change it: in "Verwalten" open <strong>"YAML"</strong>, delete the line <code>- TZ=$TZ</code>, add the <code>/etc/localtime</code> entry under <code>volumes:</code> as in this package's <code>docker-compose.yml</code>, and save (measured on ZimaOS 1.8.0; logins are kept).</li>
 </ul>
 <h2>9. Android TV app (test build)</h2>
-<p>For Android TV devices such as the Nvidia Shield: the file <code>movies-cast-tv-{{VERSION}}.apk</code> from the release page (<a href="https://github.com/chicohaager/movies-cast/releases">https://github.com/chicohaager/movies-cast/releases</a>). It shows the library on the TV and is operated with the TV remote, like the LG app in the video. It needs Movies-Cast {{VERSION}} on ZimaOS.</p>
+<p>For Android TV devices such as the Nvidia Shield: the file <code>movies-cast-tv-{{VERSION}}.apk</code> from the release page (<a href="https://github.com/chicohaager/movies-cast/releases">https://github.com/chicohaager/movies-cast/releases</a>). It shows the library on the TV and is operated with the TV remote. It needs Movies-Cast {{VERSION}} on ZimaOS.</p>
 <ol>
   <li>Install the APK on the TV device. One way: on the device enable the developer options and network debugging, then on a computer <code>adb connect &lt;address-of-the-device&gt;</code> and <code>adb install movies-cast-tv-{{VERSION}}.apk</code>.</li>
   <li>Open "Movies-Cast" on the device and enter the address of your ZimaOS (the address your browser shows for the ZimaOS dashboard, without "http://"; port 8097 is added).</li>
