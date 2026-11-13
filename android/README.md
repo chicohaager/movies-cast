@@ -460,3 +460,14 @@ SDK 30), 32-bit only (`armeabi-v7a`), reached by `adb connect` over the network.
   passed, and the Pixel locked within 15 s once the script had put the values back. The whole output of
   each run is kept in `android/build/device-test-<serial>.log`.
 - The release APK 0.2.0 installs on the stick, appears in the TV launcher and starts on the login page.
+- Logged in with the remote (OK on each field, then the on-screen keyboard); "Search the network for
+  servers" found the Movies box. Played from Movies, each about 15 s (resume points saved before and
+  put back after, all 8 match):
+  - AV1 3840×1606 with AAC: `OMX.MTK.VIDEO.DECODER.AV1`, `c2.android.aac.decoder`, first frame 1431 ms.
+  - HEVC 3840×2160 with DTS-HD 5.1: `OMX.MTK.VIDEO.DECODER.HEVC`, first frame 1241 ms; the sound went
+    out unchanged over HDMI (`dumpsys media.audio_flinger`: a DIRECT output with `AUDIO_FORMAT_DTS_HD`),
+    not through FFmpeg. `AudioTrack` logged "disabled due to previous underrun, restarting" twice at the start.
+  - Dolby Vision profile 7 with TrueHD 7.1: "no decoder, playing the HEVC base layer", first frame
+    913 ms; TrueHD went out unchanged (`AUDIO_FORMAT_DOLBY_TRUEHD`).
+  The stick's own audio decoders (`/vendor/etc/media_codecs*.xml`): AC3, E-AC3, E-AC3-JOC, AC4; none
+  for DTS or TrueHD. What the device behind the HDMI port made of the sound was not heard from here.
