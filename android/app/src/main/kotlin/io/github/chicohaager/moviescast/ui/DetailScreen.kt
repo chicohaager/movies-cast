@@ -181,13 +181,13 @@ private fun trackLine(track: Track): String {
     }
 }
 
-/** The poster on the film's page, with a halo in the planet's colours behind it. */
+/** The poster on the film's page, with a halo in the planet's gold behind it. */
 @Composable
 private fun GlowingPoster(item: MediaItem, modifier: Modifier) {
     Box(modifier, contentAlignment = Alignment.Center) {
         Box(
             Modifier.matchParentSize().padding(4.dp)
-                .background(Brush.radialGradient(listOf(Brand.Rose.copy(alpha = 0.45f), Brand.Violet.copy(alpha = 0.18f), Color.Transparent)), RoundedCornerShape(24.dp)),
+                .background(Brush.radialGradient(listOf(Brand.Gold.copy(alpha = 0.30f), Brand.Bronze.copy(alpha = 0.12f), Color.Transparent)), RoundedCornerShape(24.dp)),
         )
         Poster(
             item,

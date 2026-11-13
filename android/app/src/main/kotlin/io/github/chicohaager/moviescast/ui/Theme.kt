@@ -55,19 +55,17 @@ import io.github.chicohaager.moviescast.R
 import kotlin.random.Random
 
 /**
- * The look: deep space with a nebula, the logo's planet gradient (amber → rose → violet) and its orbit's cyan.
- * The masters of logo and banner are in android/art; their colours are these.
+ * The look ("eclipse"): a near-black night like a cinema, a warm glow at its edge, the logo's planet in gold and
+ * its orbit in silver white. The masters of logo and banner are in android/art; their colours are these.
  */
 object Brand {
-    val Amber = Color(0xFFFFC56B)
-    val Rose = Color(0xFFFB6F92)
-    val Violet = Color(0xFF8B5CF6)
-    val Cyan = Color(0xFF22D3EE)
-    val Ice = Color(0xFFE0F2FE)
-    val Night = Color(0xFF07071A)
-    /** The planet of the logo, for the wordmark, focus frames and progress. */
-    val Planet = Brush.linearGradient(listOf(Amber, Rose, Violet))
-    val Orbit = Brush.linearGradient(listOf(Cyan, Violet))
+    val Light = Color(0xFFFFF3C4)
+    val Gold = Color(0xFFF5C451)
+    val Bronze = Color(0xFFD4912A)
+    val Silver = Color(0xFFE2E8F0)
+    val Night = Color(0xFF0B0B0E)
+    /** The planet of the logo, for the wordmark, focus frames and the main buttons. */
+    val Planet = Brush.linearGradient(listOf(Light, Gold, Bronze))
 }
 
 /** Space Grotesk (SIL OFL 1.1, res/font): headings and the wordmark; Cyrillic and CJK fall back to the system font. */
@@ -77,53 +75,53 @@ private fun grotesk(weight: Int) = Font(R.font.space_grotesk, FontWeight(weight)
 val SpaceGrotesk = FontFamily(grotesk(400), grotesk(500), grotesk(600), grotesk(700))
 
 private val Dark = darkColorScheme(
-    primary = Color(0xFFFF8FAB),
-    onPrimary = Color(0xFF2A0614),
-    primaryContainer = Color(0xFF5B1B47),
-    onPrimaryContainer = Color(0xFFFFD9E3),
-    secondary = Color(0xFF67E8F9),
-    onSecondary = Color(0xFF00222A),
-    tertiary = Brand.Amber,
-    // The screens lie on the starry sky of [SpaceBackground]: the scaffolds and bars are see-through.
+    primary = Brand.Gold,
+    onPrimary = Color(0xFF2A1E05),
+    primaryContainer = Color(0xFF4A3810),
+    onPrimaryContainer = Color(0xFFFFE9B0),
+    secondary = Brand.Silver,
+    onSecondary = Color(0xFF1E1E24),
+    tertiary = Brand.Light,
+    // The screens lie on the sky of [SpaceBackground]: the scaffolds and bars are see-through.
     background = Color.Transparent,
-    onBackground = Color(0xFFEDEBFF),
+    onBackground = Color(0xFFF5F5F4),
     surface = Color.Transparent,
-    onSurface = Color(0xFFEDEBFF),
-    surfaceVariant = Color(0xFF1E1B45),
-    onSurfaceVariant = Color(0xFFB8B4E0),
-    surfaceContainerLowest = Color(0xFF07071A),
-    surfaceContainerLow = Color(0xFF0E0D27),
-    surfaceContainer = Color(0xFF15133A),
-    surfaceContainerHigh = Color(0xFF1C1946),
-    surfaceContainerHighest = Color(0xFF242054),
-    outline = Color(0xFF4A4590),
-    outlineVariant = Color(0xFF2E2A63),
-    inverseSurface = Color(0xFFEDEBFF),
-    inverseOnSurface = Color(0xFF15133A),
+    onSurface = Color(0xFFF5F5F4),
+    surfaceVariant = Color(0xFF24242B),
+    onSurfaceVariant = Color(0xFFA8A29E),
+    surfaceContainerLowest = Color(0xFF050507),
+    surfaceContainerLow = Color(0xFF111115),
+    surfaceContainer = Color(0xFF18181D),
+    surfaceContainerHigh = Color(0xFF1F1F25),
+    surfaceContainerHighest = Color(0xFF27272E),
+    outline = Color(0xFF55555F),
+    outlineVariant = Color(0xFF34343C),
+    inverseSurface = Color(0xFFF5F5F4),
+    inverseOnSurface = Color(0xFF18181D),
     error = Color(0xFFFCA5A5),
 )
 
 private val Light = lightColorScheme(
-    primary = Color(0xFFB4235A),
+    primary = Color(0xFF805300),
     onPrimary = Color.White,
-    primaryContainer = Color(0xFFFFD9E3),
-    onPrimaryContainer = Color(0xFF3E0420),
-    secondary = Color(0xFF0E7490),
+    primaryContainer = Color(0xFFFFEFC7),
+    onPrimaryContainer = Color(0xFF3A2700),
+    secondary = Color(0xFF475569),
     onSecondary = Color.White,
-    tertiary = Color(0xFFB45309),
+    tertiary = Color(0xFF9A6B12),
     background = Color.Transparent,
-    onBackground = Color(0xFF16133A),
+    onBackground = Color(0xFF1C1917),
     surface = Color.Transparent,
-    onSurface = Color(0xFF16133A),
-    surfaceVariant = Color(0xFFE9E5FB),
-    onSurfaceVariant = Color(0xFF4A4672),
+    onSurface = Color(0xFF1C1917),
+    surfaceVariant = Color(0xFFEEEAE3),
+    onSurfaceVariant = Color(0xFF57534E),
     surfaceContainerLowest = Color.White,
-    surfaceContainerLow = Color(0xFFFBFAFF),
-    surfaceContainer = Color(0xFFF4F1FF),
-    surfaceContainerHigh = Color(0xFFEEEAFE),
-    surfaceContainerHighest = Color(0xFFE7E2FC),
-    outline = Color(0xFF8A84B8),
-    outlineVariant = Color(0xFFD3CEF0),
+    surfaceContainerLow = Color(0xFFFFFDF8),
+    surfaceContainer = Color(0xFFF8F5EE),
+    surfaceContainerHigh = Color(0xFFF2EEE6),
+    surfaceContainerHighest = Color(0xFFEBE6DC),
+    outline = Color(0xFFA8A29E),
+    outlineVariant = Color(0xFFDDD6CC),
 )
 
 private fun typography(): Typography {
@@ -170,9 +168,9 @@ fun MoviesCastTheme(content: @Composable () -> Unit) {
 private class Star(val x: Float, val y: Float, val radius: Float, val alpha: Float)
 
 /**
- * The sky behind every page: a deep blue-violet night with two nebulae (rose bottom right, cyan top left) and
+ * The sky behind every page: a near-black night with a warm glow bottom right and a faint light top left, and
  * about 140 stars, always in the same places (a fixed seed), drawn once per size; nothing moves, so it costs
- * nothing while a film list scrolls. By day (a phone in light mode) the same sky at dawn.
+ * nothing while a film list scrolls. By day (a phone in light mode) a warm ivory with faint stars.
  */
 @Composable
 fun SpaceBackground(dark: Boolean) {
@@ -185,22 +183,20 @@ fun SpaceBackground(dark: Boolean) {
         val h = size.height
         val long = maxOf(w, h)
         if (dark) {
-            drawRect(Brush.verticalGradient(listOf(Color(0xFF0D0B2B), Brand.Night, Color(0xFF05050F))))
-            drawRect(Brush.radialGradient(listOf(Color(0x66C026D3), Color.Transparent), center = Offset(w * 0.95f, h * 1.02f), radius = long * 0.6f))
-            drawRect(Brush.radialGradient(listOf(Color(0x3322D3EE), Color.Transparent), center = Offset(w * 0.02f, 0f), radius = long * 0.5f))
-            drawRect(Brush.radialGradient(listOf(Color(0x332B1C66), Color.Transparent), center = Offset(w * 0.5f, h * 0.35f), radius = long * 0.55f))
+            drawRect(Brush.verticalGradient(listOf(Color(0xFF16161B), Brand.Night, Color(0xFF050507))))
+            drawRect(Brush.radialGradient(listOf(Color(0x2EF59E0B), Color.Transparent), center = Offset(w * 0.95f, h * 1.02f), radius = long * 0.6f))
+            drawRect(Brush.radialGradient(listOf(Color(0x12E5E7EB), Color.Transparent), center = Offset(w * 0.02f, 0f), radius = long * 0.5f))
         } else {
-            drawRect(Brush.verticalGradient(listOf(Color(0xFFF3F0FF), Color(0xFFFBFAFF), Color(0xFFFFF1F5))))
-            drawRect(Brush.radialGradient(listOf(Color(0x33FB6F92), Color.Transparent), center = Offset(w * 0.95f, h * 1.02f), radius = long * 0.6f))
-            drawRect(Brush.radialGradient(listOf(Color(0x2222D3EE), Color.Transparent), center = Offset(w * 0.02f, 0f), radius = long * 0.5f))
+            drawRect(Brush.verticalGradient(listOf(Color(0xFFF7F5F0), Color(0xFFFFFDF9), Color(0xFFFFF6E3))))
+            drawRect(Brush.radialGradient(listOf(Color(0x26F59E0B), Color.Transparent), center = Offset(w * 0.95f, h * 1.02f), radius = long * 0.6f))
         }
-        val starColor = if (dark) Color.White else Color(0xFF8B5CF6)
+        val starColor = if (dark) Color.White else Color(0xFFB45309)
         val scale = if (dark) 1f else 0.35f
         for (s in stars) drawCircle(starColor.copy(alpha = s.alpha * scale), radius = s.radius * density, center = Offset(s.x * w, s.y * h))
     }
 }
 
-/** The logo: the planet with its orbit, and "Movies" over "CAST" in the planet's colours. Read out as the app's name. */
+/** The logo: the planet with its orbit, and "Movies" over "CAST" in the planet's gold. Read out as the app's name. */
 @Composable
 fun Wordmark(name: String, modifier: Modifier = Modifier, markSize: Dp = 44.dp, textSize: Int = 20) {
     Row(
@@ -233,7 +229,7 @@ fun GlowButton(onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Bool
         enabled = enabled,
         colors = ButtonDefaults.buttonColors(
             containerColor = Color.Transparent,
-            contentColor = Color(0xFF160B2E),
+            contentColor = Color(0xFF1C1505),
             disabledContainerColor = Color.Transparent,
             disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.45f),
         ),
