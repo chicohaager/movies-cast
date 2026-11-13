@@ -5,6 +5,7 @@ What changed in each version; the "why" with its measurements is in
 
 ## Unreleased
 
+- Phone page and TV page in the logo's colours: a deep-sea blue night with stars and an orange glow (dark mode, the TV page), a pale morning sky (light mode), orange gradient buttons, sky-blue progress bars, a see-through header. The red Stop button in dark mode had white text at 2.8 to 1; it has a dark text now (axe now checks the dark library, film dialog and player, and a check of its own measures text on gradient buttons, which axe cannot). README screenshots taken again.
 - Android app: needs Android 7 or newer (minSdk 24). On Android 6 0.2.0 died at its start, as the trust manager of the login (ScopedTrust) uses a class Android has from 7 on; `check-android.sh` now fails on an APK that allows less.
 - Android app: the privacy policy and a licence's text scroll with a remote's ↑/↓ (on a TV they did not move, as they hold nothing to focus).
 - New logo for every part of movies-cast: a play sign as an orange sun-planet with a sky-blue orbit and a sending satellite, on a deep-sea blue night (Android app icon with themed-icon layer, Android TV banner, the TV starter app, the webOS icons, the phone page's icons, the ZimaOS tile). Masters and render scripts in `android/art/`.

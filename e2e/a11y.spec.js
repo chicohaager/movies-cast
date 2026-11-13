@@ -13,6 +13,33 @@ async function check(page, name) {
   expect(found, `${name}: ${found.join("\n")}`).toEqual([]);
 }
 
+// axe cannot measure text on a gradient (it reports such a button as "incomplete", not as a violation; the
+// gradient buttons of the dark mode stayed green with an unreadable text colour, 2026-11-13). Here every visible
+// button with a gradient has its text colour measured against each colour stop: at least 4.5 to 1 (WCAG AA).
+async function checkGradientButtons(page, name) {
+  const bad = await page.evaluate(() => {
+    const lum = ([r, g, b]) => [r, g, b].map((v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); })
+      .reduce((s, v, i) => s + v * [0.2126, 0.7152, 0.0722][i], 0);
+    const rgb = (t) => t.match(/[\d.]+/g).slice(0, 3).map(Number);
+    const out = [];
+    let seen = 0;
+    for (const b of document.querySelectorAll("button")) {
+      const st = getComputedStyle(b);
+      if (!st.backgroundImage.includes("gradient") || b.getBoundingClientRect().width === 0) continue;
+      seen++;
+      const fg = lum(rgb(st.color));
+      for (const stop of st.backgroundImage.match(/rgba?\([^)]*\)/g) || []) {
+        const bg = lum(rgb(stop));
+        const ratio = (Math.max(fg, bg) + 0.05) / (Math.min(fg, bg) + 0.05);
+        if (ratio < 4.5) out.push(`${b.textContent.trim()}: ${st.color} on ${stop} = ${ratio.toFixed(2)}`);
+      }
+    }
+    return { seen, out };
+  });
+  expect(bad.out, `${name}: ${bad.out.join("\n")}`).toEqual([]);
+  return bad.seen;
+}
+
 test("phone page: login, library, film dialog pass axe (WCAG 2.1 AA)", async ({ page }) => {
   await page.goto("/");
   await expect(page.locator("#login-view, #logout").locator("visible=true").first()).toBeVisible();
@@ -35,11 +62,33 @@ test("phone page: login, library, film dialog pass axe (WCAG 2.1 AA)", async ({ 
   await check(page, "cards open");
 });
 
+// The dark mode is the night sky of the logo (blue cards, orange gradient buttons): checked on the login page,
+// the library and the film dialog, not on the login page alone.
 test("dark mode passes the contrast rules too", async ({ page }) => {
   await page.emulateMedia({ colorScheme: "dark" });
   await page.goto("/");
   await expect(page.locator("#login-view, #logout").locator("visible=true").first()).toBeVisible();
-  await check(page, "dark");
+  if (await page.locator("#logout").isVisible()) {
+    await page.locator("#logout").click();
+    await page.goto("/");
+  }
+  await expect(page.locator("#login-form")).toBeVisible();
+  await check(page, "dark login");
+  await page.locator('#login-form input[name="user"]').fill("Demo");
+  await page.locator('#login-form input[name="password"]').fill("richtig");
+  await page.locator('#login-form button[type="submit"]').click();
+  await expect(page.locator("#list .tile")).toHaveCount(4);
+  await check(page, "dark library");
+  await page.locator("#list .tile").first().click();
+  await expect(page.locator("#detail")).toBeVisible();
+  await check(page, "dark film dialog");
+  // the dialog's play buttons carry the gradient: there must be some to measure
+  expect(await checkGradientButtons(page, "dark film dialog")).toBeGreaterThan(0);
+  // the player card (Stop is the red button there)
+  await page.locator("#d-start").click();
+  await expect(page.locator("#p-toggle")).toBeVisible({ timeout: 10_000 });
+  await check(page, "dark player");
+  await page.locator("#p-stop").click();
 });
 
 test("TV page (pairing screen) passes axe", async ({ browser }) => {

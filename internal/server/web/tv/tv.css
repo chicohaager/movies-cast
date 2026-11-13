@@ -1,7 +1,11 @@
 /* TV (webOS 4.x, Chrome 53): no CSS grid, no flex gap, no aspect-ratio. Sizes in vw. */
-:root { --bg: #0d0f14; --card: #1a1d26; --text: #eef0f5; --muted: #9aa0ad; --accent: #fb923c; --danger: #f87171; }
+/* Deep-sea blue and sun orange, the colours of the logo and the Android app (android/art). */
+:root { --bg: #060d1f; --card: #0f1b3b; --text: #eaf2ff; --muted: #a9b8d6; --accent: #fb923c; --sky: #38bdf8; --danger: #f87171; }
 * { box-sizing: border-box; }
-html, body { margin: 0; height: 100%; background: var(--bg); color: var(--text);
+html, body { margin: 0; height: 100%; color: var(--text); background-color: var(--bg);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='420' height='420'%3E%3Cg fill='%23fff'%3E%3Ccircle cx='194' cy='231' r='0.81' opacity='0.34'/%3E%3Ccircle cx='378' cy='303' r='0.93' opacity='0.50'/%3E%3Ccircle cx='274' cy='84' r='0.46' opacity='0.57'/%3E%3Ccircle cx='82' cy='5' r='0.58' opacity='0.85'/%3E%3Ccircle cx='132' cy='327' r='1.07' opacity='0.82'/%3E%3Ccircle cx='4' cy='90' r='0.51' opacity='0.93'/%3E%3Ccircle cx='82' cy='22' r='0.89' opacity='0.94'/%3E%3Ccircle cx='396' cy='340' r='0.66' opacity='0.55'/%3E%3Ccircle cx='67' cy='93' r='0.63' opacity='0.94'/%3E%3Ccircle cx='227' cy='280' r='0.68' opacity='0.40'/%3E%3Ccircle cx='270' cy='259' r='0.65' opacity='0.74'/%3E%3Ccircle cx='166' cy='417' r='0.86' opacity='0.75'/%3E%3Ccircle cx='122' cy='240' r='1.11' opacity='0.92'/%3E%3Ccircle cx='141' cy='412' r='0.68' opacity='0.93'/%3E%3Ccircle cx='67' cy='188' r='0.46' opacity='0.55'/%3E%3Ccircle cx='143' cy='204' r='0.96' opacity='0.58'/%3E%3Ccircle cx='371' cy='207' r='1.16' opacity='0.75'/%3E%3Ccircle cx='136' cy='24' r='1.14' opacity='0.91'/%3E%3Ccircle cx='7' cy='285' r='1.03' opacity='0.47'/%3E%3Ccircle cx='332' cy='99' r='0.48' opacity='0.48'/%3E%3Ccircle cx='194' cy='66' r='1.04' opacity='0.92'/%3E%3Ccircle cx='223' cy='233' r='0.45' opacity='0.84'/%3E%3Ccircle cx='303' cy='32' r='0.55' opacity='0.70'/%3E%3Ccircle cx='362' cy='98' r='1.16' opacity='0.67'/%3E%3Ccircle cx='104' cy='333' r='0.61' opacity='0.56'/%3E%3Ccircle cx='279' cy='374' r='0.59' opacity='0.63'/%3E%3Ccircle cx='257' cy='89' r='0.48' opacity='0.73'/%3E%3Ccircle cx='408' cy='270' r='0.97' opacity='0.69'/%3E%3Ccircle cx='393' cy='100' r='0.58' opacity='0.50'/%3E%3Ccircle cx='237' cy='120' r='0.48' opacity='0.77'/%3E%3Ccircle cx='178' cy='219' r='0.46' opacity='0.53'/%3E%3Ccircle cx='375' cy='341' r='0.68' opacity='0.66'/%3E%3Ccircle cx='143' cy='278' r='0.48' opacity='0.42'/%3E%3Ccircle cx='176' cy='226' r='1.16' opacity='0.58'/%3E%3C/g%3E%3C/svg%3E"),
+    radial-gradient(70% 60% at 100% 100%, rgba(249, 115, 22, .22), transparent 70%),
+    radial-gradient(55% 50% at 0% 0%, rgba(56, 189, 248, .18), transparent 70%), linear-gradient(#0c1a38, #060d1f 55%, #03060f);
   font-family: "LG Smart UI", "Segoe UI", Roboto, Arial, sans-serif; font-size: 1.6vw; overflow: hidden; }
 [hidden] { display: none !important; }
 h1 { font-size: 2.6vw; margin: 0; }
@@ -23,25 +27,25 @@ h1 .logo { width: 2.6vw; height: 2.6vw; vertical-align: -0.45vw; margin-right: 0
 /* Seen on the TV screenshot: visible scrollbars, and the focus zoom cut off at the left edge. */
 .lib-scroll { height: 86vh; overflow-y: auto; overflow-x: hidden; padding: 0 1.2vw 4vw; }
 .lib-scroll::-webkit-scrollbar { width: 0; height: 0; }
-h2 { font-size: 1.8vw; font-weight: 500; color: var(--muted); margin: 0.6vw 0 0.4vw; }
+h2 { font-size: 1.8vw; font-weight: 600; color: var(--text); margin: 0.6vw 0 0.4vw; padding-left: 0.9vw; border-left: 0.35vw solid var(--accent); }
 .grid { display: flex; flex-wrap: wrap; align-content: flex-start; align-items: flex-start;
   margin: 0 -0.8vw; padding: 1.2vw 0 0.5vw; }
 .tile { width: 14.4vw; margin: 0 0.8vw 2vw; border-radius: 0.8vw; background: var(--card); overflow: hidden;
   outline: none; border: 0.3vw solid transparent; transition: transform .12s; }
-.tile.focus { border-color: var(--accent); transform: scale(1.06); }
-.tile .poster { width: 100%; height: 21.6vw; object-fit: cover; display: block; background: #2a2e3a; }
-.tile .bar2 { height: 0.4vw; background: #2a2e3a; }
-.tile .bar2 i { display: block; height: 100%; background: var(--accent); }
+.tile.focus { border-color: var(--accent); transform: scale(1.06); box-shadow: 0 0 2.4vw rgba(251, 146, 60, .45); }
+.tile .poster { width: 100%; height: 21.6vw; object-fit: cover; display: block; background: #16264a; }
+.tile .bar2 { height: 0.4vw; background: #1b2b52; }
+.tile .bar2 i { display: block; height: 100%; background: var(--sky); }
 .tile .cap { padding: 0.6vw 0.8vw 0.9vw; font-size: 1.3vw; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 .detail { display: flex; align-items: flex-start; }
-#d-poster { width: 22vw; height: 33vw; object-fit: cover; border-radius: 1vw; background: #2a2e3a; flex: none; }
+#d-poster { width: 22vw; height: 33vw; object-fit: cover; border-radius: 1vw; background: #16264a; flex: none; box-shadow: 0 0 3vw rgba(249, 115, 22, .25); }
 .d-text { margin-left: 3vw; flex: 1; }
 .overview { font-size: 1.5vw; line-height: 1.5; max-height: 18vw; overflow: hidden; }
 .buttons { display: flex; margin-top: 2vw; }
 .btn { font: inherit; font-size: 1.7vw; border: 0.3vw solid transparent; border-radius: 0.8vw; padding: 1vw 2vw;
-  margin-right: 1.2vw; background: var(--card); color: var(--text); }
-.btn.focus { border-color: var(--accent); background: var(--accent); color: #111; }
+  margin-right: 1.2vw; background: var(--card); color: var(--text); border-radius: 3vw; }
+.btn.focus { border-color: #fff; background: #fb923c; background: linear-gradient(90deg, #ffd27a, #fb923c, #ea580c); color: #2a1203; }
 
 .player { padding: 0; background: #000; }
 #video { width: 100%; height: 100%; background: #000; }
@@ -63,4 +67,4 @@ video::cue { font-size: 2.4vw; background: rgba(0, 0, 0, .6); color: #fff; }
 .eps { margin-top: 1.5vw; max-height: 22vw; overflow-y: auto; }
 .eps .btn { display: block; width: 100%; text-align: left; margin: 0 0 0.6vw; }
 .eps .btn small { color: var(--muted, #9aa0ad); margin-left: 1vw; }
-.eps .btn.focus small { color: #111; }
+.eps .btn.focus small { color: #2a1203; }

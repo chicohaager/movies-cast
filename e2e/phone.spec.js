@@ -43,7 +43,7 @@ test("colour mode follows the account, Log out forgets it on the device", async 
   const b = await device(browser); // another address: an empty localStorage
   await login(b.page, "Demo");
   await expect(b.page.locator("html")).toHaveAttribute("data-theme", "dark");
-  await expect(b.page.locator("body")).toHaveCSS("background-color", "rgb(17, 19, 24)");
+  await expect(b.page.locator("body")).toHaveCSS("background-color", "rgb(6, 13, 31)"); // dark --bg, #060d1f
   await expect(b.page.locator("#theme")).toHaveValue("dark");
 
   await b.page.locator("#logout").click();
