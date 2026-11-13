@@ -1,6 +1,14 @@
 package io.github.chicohaager.moviescast.ui
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -61,7 +69,7 @@ fun DetailScreen(
             val wide = maxWidth >= 600.dp
             if (wide) {
                 Row(Modifier.fillMaxSize().padding(horizontal = 24.dp), horizontalArrangement = Arrangement.spacedBy(24.dp)) {
-                    Poster(item, Modifier.width(260.dp).padding(top = 8.dp), widthPx = 600)
+                    GlowingPoster(item, Modifier.width(260.dp).padding(top = 8.dp))
                     Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(bottom = 24.dp)) {
                         Facts(state, item, onOpen, onPlay, onPlayed, onFavorite)
                     }
@@ -71,7 +79,7 @@ fun DetailScreen(
                     Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 16.dp).padding(bottom = 24.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
-                    Poster(item, Modifier.width(180.dp), widthPx = 600)
+                    GlowingPoster(item, Modifier.width(180.dp))
                     Facts(state, item, onOpen, onPlay, onPlayed, onFavorite)
                 }
             }
@@ -83,7 +91,7 @@ fun DetailScreen(
 @Composable
 private fun Facts(state: UiState, item: MediaItem, onOpen: (MediaItem) -> Unit, onPlay: (MediaItem, Long) -> Unit, onPlayed: (MediaItem, Boolean) -> Unit, onFavorite: (MediaItem, Boolean) -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
-        Text(item.name, style = MaterialTheme.typography.headlineSmall)
+        Text(item.name, style = MaterialTheme.typography.headlineMedium)
         val line = listOfNotNull(
             item.seriesName.takeIf { it.isNotEmpty() },
             item.year.takeIf { it > 0 }?.toString(),
@@ -100,14 +108,14 @@ private fun Facts(state: UiState, item: MediaItem, onOpen: (MediaItem) -> Unit, 
             LaunchedEffect(item.id) { runCatching { mainButton.requestFocus() } }
             FlowRow(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 if (item.resumable) {
-                    Button(onClick = { onPlay(item, item.resumeSeconds) }, modifier = Modifier.focusRequester(mainButton).testTag("resume")) {
+                    GlowButton(onClick = { onPlay(item, item.resumeSeconds) }, modifier = Modifier.focusRequester(mainButton).testTag("resume")) {
                         Text(stringResource(R.string.play_resume, clock(item.resumeSeconds)))
                     }
                     OutlinedButton(onClick = { onPlay(item, 0) }, modifier = Modifier.testTag("restart")) {
                         Text(stringResource(R.string.play_restart))
                     }
                 } else {
-                    Button(onClick = { onPlay(item, 0) }, modifier = Modifier.focusRequester(mainButton).testTag("play")) { Text("▶  " + stringResource(R.string.play)) }
+                    GlowButton(onClick = { onPlay(item, 0) }, modifier = Modifier.focusRequester(mainButton).testTag("play")) { Text("▶  " + stringResource(R.string.play), fontWeight = FontWeight.Bold) }
                 }
                 OutlinedButton(onClick = { onPlayed(item, !item.played) }, modifier = Modifier.testTag("played")) {
                     Text(if (item.played) "✓  " + stringResource(R.string.mark_unwatched) else stringResource(R.string.mark_watched))
@@ -134,7 +142,7 @@ private fun Facts(state: UiState, item: MediaItem, onOpen: (MediaItem) -> Unit, 
         }
 
         if (state.episodes.isNotEmpty()) {
-            Text(stringResource(R.string.episodes), style = MaterialTheme.typography.titleMedium)
+            Text(stringResource(R.string.episodes), style = MaterialTheme.typography.titleLarge)
             Column {
                 var season = -1
                 for (episode in state.episodes) {
@@ -170,6 +178,23 @@ private fun trackLine(track: Track): String {
         title.isEmpty() -> codec
         title.contains(codec, ignoreCase = true) -> title
         else -> "$title ($codec)"
+    }
+}
+
+/** The poster on the film's page, with a halo in the planet's colours behind it. */
+@Composable
+private fun GlowingPoster(item: MediaItem, modifier: Modifier) {
+    Box(modifier, contentAlignment = Alignment.Center) {
+        Box(
+            Modifier.matchParentSize().padding(4.dp)
+                .background(Brush.radialGradient(listOf(Brand.Rose.copy(alpha = 0.45f), Brand.Violet.copy(alpha = 0.18f), Color.Transparent)), RoundedCornerShape(24.dp)),
+        )
+        Poster(
+            item,
+            Modifier.fillMaxWidth().padding(10.dp)
+                .border(1.dp, Brush.linearGradient(listOf(Color.White.copy(alpha = 0.35f), Color.White.copy(alpha = 0.05f))), RoundedCornerShape(12.dp)),
+            widthPx = 600,
+        )
     }
 }
 

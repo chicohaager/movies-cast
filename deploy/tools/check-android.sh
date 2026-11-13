@@ -127,6 +127,18 @@ for abi in arm64-v8a armeabi-v7a x86 x86_64; do
     exit 1
   fi
 done
+# The launcher icon's vector layers are written from android/art/icon-*.svg by svg2vd.py; a hand edit of
+# one side only would let the app's icon and the logo of the other apps drift apart.
+art_tmp="$(mktemp -d)"
+for layer in background foreground monochrome; do
+  python3 "$repo/android/art/svg2vd.py" "$repo/android/art/icon-$layer.svg" "$art_tmp/$layer.xml" >/dev/null
+  if ! cmp -s "$art_tmp/$layer.xml" "$repo/android/app/src/main/res/drawable/ic_launcher_$layer.xml"; then
+    rm -rf "$art_tmp"
+    echo "res/drawable/ic_launcher_$layer.xml is not what android/art/svg2vd.py makes of icon-$layer.svg (run android/art/render.sh)" >&2
+    exit 1
+  fi
+done
+rm -rf "$art_tmp"
 # The licences page reads raw/aboutlibraries at run time. FFmpeg is no Gradle dependency, so only
 # android/config/libraries/ffmpeg.json puts it there (without that file this check fails; the LGPL's
 # text came from the plugin even without android/config/licenses, measured 2026-11-13).
@@ -138,7 +150,9 @@ if [[ -z "$licences" ]]; then
   exit 1
 fi
 licence_text="$(unzip -p "$apk" "$licences")"
-for want in '"uniqueId": *"org.ffmpeg:ffmpeg"' 'GNU LESSER GENERAL PUBLIC LICENSE' 'Apache License'; do
+# Space Grotesk (res/font, the display font) is no Gradle dependency either: android/config/libraries/space-grotesk.json.
+for want in '"uniqueId": *"org.ffmpeg:ffmpeg"' 'GNU LESSER GENERAL PUBLIC LICENSE' 'Apache License' \
+    '"uniqueId": *"com.github.floriankarsten:space-grotesk"' 'SIL OPEN FONT LICENSE'; do
   if ! grep -q -- "$want" <<<"$licence_text"; then
     echo "the licences file $licences in $apk lacks: $want" >&2
     exit 1
@@ -170,4 +184,4 @@ if [[ "$(basename "$apk")" == app-release.apk ]]; then
   fi
   signed=", signature valid"
 fi
-echo "android $(basename "$apk"): translations in the APK$signed, FFmpeg and the LGPL on the licences page, libffmpegJNI.so in 4 ABIs, 16 KB alignment in the APK and in the 64-bit libraries ok"
+echo "android $(basename "$apk"): translations in the APK$signed, FFmpeg and the LGPL, Space Grotesk and the OFL on the licences page, icon layers as drawn in android/art, libffmpegJNI.so in 4 ABIs, 16 KB alignment in the APK and in the 64-bit libraries ok"

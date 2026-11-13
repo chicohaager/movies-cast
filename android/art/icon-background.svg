@@ -1,0 +1,38 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 108 108" width="108" height="108">
+  <!-- Background layer of the adaptive icon: deep space with a nebula glow and stars.
+       Only what a VectorDrawable can draw (paths, radial gradients); mirrored in res/drawable/ic_launcher_background.xml. -->
+  <defs>
+    <radialGradient id="space" cx="54" cy="46" r="76" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#2B1C66"/>
+      <stop offset="0.45" stop-color="#130F36"/>
+      <stop offset="1" stop-color="#05050F"/>
+    </radialGradient>
+    <radialGradient id="nebula" cx="80" cy="84" r="46" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#C026D3" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#C026D3" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="nebula2" cx="22" cy="24" r="40" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#22D3EE" stop-opacity="0.30"/>
+      <stop offset="1" stop-color="#22D3EE" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <path d="M0,0h108v108h-108z" fill="url(#space)"/>
+  <path d="M0,0h108v108h-108z" fill="url(#nebula)"/>
+  <path d="M0,0h108v108h-108z" fill="url(#nebula2)"/>
+  <g fill="#FFFFFF">
+    <path d="M19,31m-0.8,0a0.8,0.8 0,1 0,1.6 0a0.8,0.8 0,1 0,-1.6 0" fill-opacity="0.9"/>
+    <path d="M29,20m-0.5,0a0.5,0.5 0,1 0,1 0a0.5,0.5 0,1 0,-1 0" fill-opacity="0.6"/>
+    <path d="M40,26m-0.4,0a0.4,0.4 0,1 0,0.8 0a0.4,0.4 0,1 0,-0.8 0" fill-opacity="0.5"/>
+    <path d="M66,22m-0.6,0a0.6,0.6 0,1 0,1.2 0a0.6,0.6 0,1 0,-1.2 0" fill-opacity="0.7"/>
+    <path d="M78,30m-0.9,0a0.9,0.9 0,1 0,1.8 0a0.9,0.9 0,1 0,-1.8 0" fill-opacity="0.95"/>
+    <path d="M88,24m-0.4,0a0.4,0.4 0,1 0,0.8 0a0.4,0.4 0,1 0,-0.8 0" fill-opacity="0.5"/>
+    <path d="M84,46m-0.5,0a0.5,0.5 0,1 0,1 0a0.5,0.5 0,1 0,-1 0" fill-opacity="0.55"/>
+    <path d="M24,50m-0.5,0a0.5,0.5 0,1 0,1 0a0.5,0.5 0,1 0,-1 0" fill-opacity="0.5"/>
+    <path d="M22,72m-0.7,0a0.7,0.7 0,1 0,1.4 0a0.7,0.7 0,1 0,-1.4 0" fill-opacity="0.75"/>
+    <path d="M33,84m-0.4,0a0.4,0.4 0,1 0,0.8 0a0.4,0.4 0,1 0,-0.8 0" fill-opacity="0.5"/>
+    <path d="M47,88m-0.5,0a0.5,0.5 0,1 0,1 0a0.5,0.5 0,1 0,-1 0" fill-opacity="0.6"/>
+    <path d="M73,86m-0.4,0a0.4,0.4 0,1 0,0.8 0a0.4,0.4 0,1 0,-0.8 0" fill-opacity="0.5"/>
+    <path d="M87,70m-0.7,0a0.7,0.7 0,1 0,1.4 0a0.7,0.7 0,1 0,-1.4 0" fill-opacity="0.8"/>
+    <path d="M56,18m-0.4,0a0.4,0.4 0,1 0,0.8 0a0.4,0.4 0,1 0,-0.8 0" fill-opacity="0.45"/>
+  </g>
+</svg>

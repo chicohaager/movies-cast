@@ -1,0 +1,19 @@
+{
+  "uniqueId": "com.github.floriankarsten:space-grotesk",
+  "name": "Space Grotesk",
+  "artifactVersion": "2.000",
+  "description": "The display font of headings and the logo (res/font/space_grotesk.ttf, the variable font from github.com/google/fonts, ofl/spacegrotesk). Copyright 2020 The Space Grotesk Project Authors.",
+  "website": "https://github.com/floriankarsten/space-grotesk",
+  "developers": [
+    {
+      "name": "The Space Grotesk Project Authors",
+      "organisationUrl": "https://github.com/floriankarsten/space-grotesk"
+    }
+  ],
+  "scm": {
+    "url": "https://github.com/floriankarsten/space-grotesk"
+  },
+  "licenses": [
+    "OFL-1.1"
+  ]
+}

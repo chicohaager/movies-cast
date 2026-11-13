@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 108 108" width="108" height="108">
+  <!-- Foreground layer of the adaptive icon (safe zone: the circle of 33 around the centre): a play sign as a
+       glowing planet, an orbit around it and a satellite on the orbit that sends (the cast).
+       Only what a VectorDrawable can draw; mirrored in res/drawable/ic_launcher_foreground.xml. -->
+  <defs>
+    <linearGradient id="planet" x1="44" y1="36" x2="70" y2="70" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFC56B"/>
+      <stop offset="0.5" stop-color="#FB6F92"/>
+      <stop offset="1" stop-color="#8B5CF6"/>
+    </linearGradient>
+    <radialGradient id="halo" cx="56" cy="54" r="26" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FB7185" stop-opacity="0.45"/>
+      <stop offset="1" stop-color="#FB7185" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="orbitBack" x1="24" y1="54" x2="84" y2="54" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#67E8F9" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#A78BFA" stop-opacity="0.35"/>
+    </linearGradient>
+    <linearGradient id="orbitFront" x1="84" y1="54" x2="24" y2="54" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#E0F2FE"/>
+      <stop offset="1" stop-color="#22D3EE"/>
+    </linearGradient>
+    <radialGradient id="spark" cx="77" cy="60.75" r="6" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#A5F3FC" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#22D3EE" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <path d="M54,54m-26,0a26,26 0,1 0,52 0a26,26 0,1 0,-52 0" fill="url(#halo)"/>
+  <g transform="rotate(-22 54 54)">
+    <path d="M24,54A30,10.5 0,0 1,84 54" fill="none" stroke="url(#orbitBack)" stroke-width="2.4" stroke-linecap="round"/>
+  </g>
+  <path d="M46,40L46,68L70,54Z" fill="url(#planet)" stroke="url(#planet)" stroke-width="6" stroke-linejoin="round"/>
+  <g transform="rotate(-22 54 54)">
+    <path d="M84,54A30,10.5 0,0 1,24 54" fill="none" stroke="#120F36" stroke-width="6" stroke-linecap="round" stroke-opacity="0.85"/>
+    <path d="M84,54A30,10.5 0,0 1,24 54" fill="none" stroke="url(#orbitFront)" stroke-width="2.4" stroke-linecap="round"/>
+    <path d="M77,60.75m-6,0a6,6 0,1 0,12 0a6,6 0,1 0,-12 0" fill="url(#spark)"/>
+    <path d="M77,60.75m-2.2,0a2.2,2.2 0,1 0,4.4 0a2.2,2.2 0,1 0,-4.4 0" fill="#FFFFFF"/>
+  </g>
+</svg>

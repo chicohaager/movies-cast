@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Written by android/art/svg2vd.py from android/art/icon-background.svg; change the master and run it again. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:pathData="M0,0h108v108h-108z">
+        <aapt:attr name="android:fillColor">
+            <gradient android:type="radial" android:centerX="54" android:centerY="46" android:gradientRadius="76">
+                <item android:offset="0" android:color="#FF2B1C66" />
+                <item android:offset="0.45" android:color="#FF130F36" />
+                <item android:offset="1" android:color="#FF05050F" />
+            </gradient>
+        </aapt:attr>
+    </path>
+    <path
+        android:pathData="M0,0h108v108h-108z">
+        <aapt:attr name="android:fillColor">
+            <gradient android:type="radial" android:centerX="80" android:centerY="84" android:gradientRadius="46">
+                <item android:offset="0" android:color="#8CC026D3" />
+                <item android:offset="1" android:color="#00C026D3" />
+            </gradient>
+        </aapt:attr>
+    </path>
+    <path
+        android:pathData="M0,0h108v108h-108z">
+        <aapt:attr name="android:fillColor">
+            <gradient android:type="radial" android:centerX="22" android:centerY="24" android:gradientRadius="40">
+                <item android:offset="0" android:color="#4C22D3EE" />
+                <item android:offset="1" android:color="#0022D3EE" />
+            </gradient>
+        </aapt:attr>
+    </path>
+    <path
+        android:pathData="M19,31m-0.8,0a0.8,0.8 0,1 0,1.6 0a0.8,0.8 0,1 0,-1.6 0"
+        android:fillColor="#E6FFFFFF" />
+    <path
+        android:pathData="M29,20m-0.5,0a0.5,0.5 0,1 0,1 0a0.5,0.5 0,1 0,-1 0"
+        android:fillColor="#99FFFFFF" />
+    <path
+        android:pathData="M40,26m-0.4,0a0.4,0.4 0,1 0,0.8 0a0.4,0.4 0,1 0,-0.8 0"
+        android:fillColor="#80FFFFFF" />
+    <path
+        android:pathData="M66,22m-0.6,0a0.6,0.6 0,1 0,1.2 0a0.6,0.6 0,1 0,-1.2 0"
+        android:fillColor="#B2FFFFFF" />
+    <path
+        android:pathData="M78,30m-0.9,0a0.9,0.9 0,1 0,1.8 0a0.9,0.9 0,1 0,-1.8 0"
+        android:fillColor="#F2FFFFFF" />
+    <path
+        android:pathData="M88,24m-0.4,0a0.4,0.4 0,1 0,0.8 0a0.4,0.4 0,1 0,-0.8 0"
+        android:fillColor="#80FFFFFF" />
+    <path
+        android:pathData="M84,46m-0.5,0a0.5,0.5 0,1 0,1 0a0.5,0.5 0,1 0,-1 0"
+        android:fillColor="#8CFFFFFF" />
+    <path
+        android:pathData="M24,50m-0.5,0a0.5,0.5 0,1 0,1 0a0.5,0.5 0,1 0,-1 0"
+        android:fillColor="#80FFFFFF" />
+    <path
+        android:pathData="M22,72m-0.7,0a0.7,0.7 0,1 0,1.4 0a0.7,0.7 0,1 0,-1.4 0"
+        android:fillColor="#BFFFFFFF" />
+    <path
+        android:pathData="M33,84m-0.4,0a0.4,0.4 0,1 0,0.8 0a0.4,0.4 0,1 0,-0.8 0"
+        android:fillColor="#80FFFFFF" />
+    <path
+        android:pathData="M47,88m-0.5,0a0.5,0.5 0,1 0,1 0a0.5,0.5 0,1 0,-1 0"
+        android:fillColor="#99FFFFFF" />
+    <path
+        android:pathData="M73,86m-0.4,0a0.4,0.4 0,1 0,0.8 0a0.4,0.4 0,1 0,-0.8 0"
+        android:fillColor="#80FFFFFF" />
+    <path
+        android:pathData="M87,70m-0.7,0a0.7,0.7 0,1 0,1.4 0a0.7,0.7 0,1 0,-1.4 0"
+        android:fillColor="#CCFFFFFF" />
+    <path
+        android:pathData="M56,18m-0.4,0a0.4,0.4 0,1 0,0.8 0a0.4,0.4 0,1 0,-0.8 0"
+        android:fillColor="#73FFFFFF" />
+</vector>

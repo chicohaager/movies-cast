@@ -1,5 +1,6 @@
 package io.github.chicohaager.moviescast.ui
 
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -10,6 +11,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
@@ -28,6 +30,7 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -42,6 +45,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
@@ -79,13 +85,18 @@ fun LibraryScreen(
         topBar = {
             TopAppBar(
                 title = {
-                    Column {
-                        Text(stringResource(R.string.app_name), maxLines = 1)
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+                        Wordmark(stringResource(R.string.app_name), markSize = 34.dp, textSize = 17)
                         if (state.userName.isNotEmpty()) {
                             Text(
                                 state.userName,
                                 style = MaterialTheme.typography.labelMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier
+                                    .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(50))
+                                    .padding(horizontal = 10.dp, vertical = 3.dp),
                             )
                         }
                     }
@@ -146,6 +157,13 @@ fun LibraryScreen(
                         onValueChange = onSearch,
                         label = { Text(stringResource(R.string.library_search)) },
                         singleLine = true,
+                        shape = RoundedCornerShape(50),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerLow.copy(alpha = 0.7f),
+                            focusedContainerColor = MaterialTheme.colorScheme.surfaceContainer.copy(alpha = 0.85f),
+                            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
+                            focusedBorderColor = MaterialTheme.colorScheme.secondary,
+                        ),
                         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                         readOnly = searchField.readOnly,
                         modifier = Modifier.fillMaxWidth().then(searchField.modifier).testTag("search"),
@@ -241,21 +259,27 @@ private fun Choice(tag: String, label: String, value: String, items: @Composable
     }
 }
 
+/** A section title with a short bar in the planet's colours before it. */
 @Composable
 private fun Heading(text: String) {
-    Text(text, style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(top = 4.dp))
+    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 12.dp)) {
+        Box(Modifier.width(4.dp).height(22.dp).background(Brand.Planet, RoundedCornerShape(50)))
+        Text(text, style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(start = 10.dp))
+    }
 }
 
 @Composable
 private fun Tile(item: MediaItem, modifier: Modifier, onOpen: (MediaItem) -> Unit, showProgress: Boolean) {
     var focused by remember { mutableStateOf(false) }
+    // A remote control has no pointer: the tile in focus grows a little and gets a glowing frame in the planet's colours.
+    val scale by animateFloatAsState(if (focused) 1.06f else 1f, label = "tile")
     Column(
         modifier
             .onFocusChanged { focused = it.isFocused }
-            // A remote control has no pointer: the tile in focus gets a frame.
-            .border(3.dp, if (focused) MaterialTheme.colorScheme.primary else Color.Transparent, RoundedCornerShape(12.dp))
+            .graphicsLayer { scaleX = scale; scaleY = scale }
+            .border(3.dp, if (focused) Brand.Planet else SolidColor(Color.Transparent), RoundedCornerShape(16.dp))
             .padding(3.dp)
-            .clip(RoundedCornerShape(10.dp))
+            .clip(RoundedCornerShape(13.dp))
             .clickable { onOpen(item) }
             .testTag("tile"),
         verticalArrangement = Arrangement.spacedBy(4.dp),
@@ -266,10 +290,10 @@ private fun Tile(item: MediaItem, modifier: Modifier, onOpen: (MediaItem) -> Uni
                 val watched = stringResource(R.string.watched)
                 Text(
                     "✓",
-                    color = MaterialTheme.colorScheme.onPrimary,
+                    color = Color.White,
                     style = MaterialTheme.typography.labelLarge,
                     modifier = Modifier.align(Alignment.TopEnd).padding(6.dp)
-                        .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(50))
+                        .background(Brand.Planet, RoundedCornerShape(50))
                         .padding(horizontal = 7.dp, vertical = 2.dp)
                         .semantics { contentDescription = watched }
                         .testTag("watched"),
@@ -278,11 +302,15 @@ private fun Tile(item: MediaItem, modifier: Modifier, onOpen: (MediaItem) -> Uni
             if (showProgress && item.runtimeSeconds > 0) {
                 LinearProgressIndicator(
                     progress = { (item.resumeSeconds.toFloat() / item.runtimeSeconds).coerceIn(0f, 1f) },
-                    modifier = Modifier.fillMaxWidth(),
+                    color = Brand.Cyan,
+                    trackColor = Color.White.copy(alpha = 0.18f),
+                    drawStopIndicator = {},
+                    gapSize = 0.dp,
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 8.dp).height(4.dp).clip(RoundedCornerShape(50)),
                 )
             }
         }
-        Text(item.name, style = MaterialTheme.typography.bodyMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
+        Text(item.name, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 4.dp))
         if (item.year > 0) {
             Text(item.year.toString(), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }

@@ -1,35 +1,82 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
-  <!-- movies-cast logo: a TV whose screen is a film frame. Colours from tv.css: background and accent. -->
+  <!-- movies-cast logo: a play sign as a planet with an orbit and a sending satellite, in deep space.
+       Written by android/art/make-logo.py from android/art/icon-background.svg and icon-foreground.svg. -->
+  <defs><clipPath id="corner"><rect width="512" height="512" rx="112"/></clipPath></defs>
+  <g clip-path="url(#corner)">
+    <g transform="scale(6.4) translate(-14 -14)">
+<!-- Background layer of the adaptive icon: deep space with a nebula glow and stars.
+       Only what a VectorDrawable can draw (paths, radial gradients); mirrored in res/drawable/ic_launcher_background.xml. -->
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#1d2232"/>
-      <stop offset="1" stop-color="#0b0d12"/>
-    </linearGradient>
-    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
-      <stop offset="0" stop-color="#fb923c" stop-opacity="0.35"/>
-      <stop offset="1" stop-color="#fb923c" stop-opacity="0"/>
+    <radialGradient id="space" cx="54" cy="46" r="76" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#2B1C66"/>
+      <stop offset="0.45" stop-color="#130F36"/>
+      <stop offset="1" stop-color="#05050F"/>
     </radialGradient>
-    <linearGradient id="warm" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#fdba74"/>
-      <stop offset="0.55" stop-color="#fb923c"/>
-      <stop offset="1" stop-color="#ea580c"/>
-    </linearGradient>
+    <radialGradient id="nebula" cx="80" cy="84" r="46" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#C026D3" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#C026D3" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="nebula2" cx="22" cy="24" r="40" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#22D3EE" stop-opacity="0.30"/>
+      <stop offset="1" stop-color="#22D3EE" stop-opacity="0"/>
+    </radialGradient>
   </defs>
-  <rect width="512" height="512" rx="112" fill="url(#bg)"/>
-  <ellipse cx="256" cy="262" rx="230" ry="190" fill="url(#glow)"/>
-  <!-- screen = film frame -->
-  <rect x="72" y="118" width="368" height="248" rx="38" fill="url(#warm)"/>
-  <g fill="#0f121a" fill-opacity="0.82">
-    <rect x="104" y="136" width="30" height="20" rx="6"/><rect x="156" y="136" width="30" height="20" rx="6"/>
-    <rect x="208" y="136" width="30" height="20" rx="6"/><rect x="260" y="136" width="30" height="20" rx="6"/>
-    <rect x="312" y="136" width="30" height="20" rx="6"/><rect x="364" y="136" width="30" height="20" rx="6"/>
-    <rect x="104" y="328" width="30" height="20" rx="6"/><rect x="156" y="328" width="30" height="20" rx="6"/>
-    <rect x="208" y="328" width="30" height="20" rx="6"/><rect x="260" y="328" width="30" height="20" rx="6"/>
-    <rect x="312" y="328" width="30" height="20" rx="6"/><rect x="364" y="328" width="30" height="20" rx="6"/>
+  <path d="M0,0h108v108h-108z" fill="url(#space)"/>
+  <path d="M0,0h108v108h-108z" fill="url(#nebula)"/>
+  <path d="M0,0h108v108h-108z" fill="url(#nebula2)"/>
+  <g fill="#FFFFFF">
+    <path d="M19,31m-0.8,0a0.8,0.8 0,1 0,1.6 0a0.8,0.8 0,1 0,-1.6 0" fill-opacity="0.9"/>
+    <path d="M29,20m-0.5,0a0.5,0.5 0,1 0,1 0a0.5,0.5 0,1 0,-1 0" fill-opacity="0.6"/>
+    <path d="M40,26m-0.4,0a0.4,0.4 0,1 0,0.8 0a0.4,0.4 0,1 0,-0.8 0" fill-opacity="0.5"/>
+    <path d="M66,22m-0.6,0a0.6,0.6 0,1 0,1.2 0a0.6,0.6 0,1 0,-1.2 0" fill-opacity="0.7"/>
+    <path d="M78,30m-0.9,0a0.9,0.9 0,1 0,1.8 0a0.9,0.9 0,1 0,-1.8 0" fill-opacity="0.95"/>
+    <path d="M88,24m-0.4,0a0.4,0.4 0,1 0,0.8 0a0.4,0.4 0,1 0,-0.8 0" fill-opacity="0.5"/>
+    <path d="M84,46m-0.5,0a0.5,0.5 0,1 0,1 0a0.5,0.5 0,1 0,-1 0" fill-opacity="0.55"/>
+    <path d="M24,50m-0.5,0a0.5,0.5 0,1 0,1 0a0.5,0.5 0,1 0,-1 0" fill-opacity="0.5"/>
+    <path d="M22,72m-0.7,0a0.7,0.7 0,1 0,1.4 0a0.7,0.7 0,1 0,-1.4 0" fill-opacity="0.75"/>
+    <path d="M33,84m-0.4,0a0.4,0.4 0,1 0,0.8 0a0.4,0.4 0,1 0,-0.8 0" fill-opacity="0.5"/>
+    <path d="M47,88m-0.5,0a0.5,0.5 0,1 0,1 0a0.5,0.5 0,1 0,-1 0" fill-opacity="0.6"/>
+    <path d="M73,86m-0.4,0a0.4,0.4 0,1 0,0.8 0a0.4,0.4 0,1 0,-0.8 0" fill-opacity="0.5"/>
+    <path d="M87,70m-0.7,0a0.7,0.7 0,1 0,1.4 0a0.7,0.7 0,1 0,-1.4 0" fill-opacity="0.8"/>
+    <path d="M56,18m-0.4,0a0.4,0.4 0,1 0,0.8 0a0.4,0.4 0,1 0,-0.8 0" fill-opacity="0.45"/>
   </g>
-  <!-- play -->
-  <path d="M228 200 L228 284 L302 242 Z" fill="#0f121a" stroke="#0f121a" stroke-width="20" stroke-linejoin="round"/>
-  <!-- stand -->
-  <rect x="240" y="366" width="32" height="30" fill="#c2410c"/>
-  <rect x="176" y="392" width="160" height="22" rx="11" fill="url(#warm)"/>
+<!-- Foreground layer of the adaptive icon (safe zone: the circle of 33 around the centre): a play sign as a
+       glowing planet, an orbit around it and a satellite on the orbit that sends (the cast).
+       Only what a VectorDrawable can draw; mirrored in res/drawable/ic_launcher_foreground.xml. -->
+  <defs>
+    <linearGradient id="planet" x1="44" y1="36" x2="70" y2="70" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FFC56B"/>
+      <stop offset="0.5" stop-color="#FB6F92"/>
+      <stop offset="1" stop-color="#8B5CF6"/>
+    </linearGradient>
+    <radialGradient id="halo" cx="56" cy="54" r="26" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#FB7185" stop-opacity="0.45"/>
+      <stop offset="1" stop-color="#FB7185" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="orbitBack" x1="24" y1="54" x2="84" y2="54" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#67E8F9" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#A78BFA" stop-opacity="0.35"/>
+    </linearGradient>
+    <linearGradient id="orbitFront" x1="84" y1="54" x2="24" y2="54" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#E0F2FE"/>
+      <stop offset="1" stop-color="#22D3EE"/>
+    </linearGradient>
+    <radialGradient id="spark" cx="77" cy="60.75" r="6" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#A5F3FC" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#22D3EE" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <path d="M54,54m-26,0a26,26 0,1 0,52 0a26,26 0,1 0,-52 0" fill="url(#halo)"/>
+  <g transform="rotate(-22 54 54)">
+    <path d="M24,54A30,10.5 0,0 1,84 54" fill="none" stroke="url(#orbitBack)" stroke-width="2.4" stroke-linecap="round"/>
+  </g>
+  <path d="M46,40L46,68L70,54Z" fill="url(#planet)" stroke="url(#planet)" stroke-width="6" stroke-linejoin="round"/>
+  <g transform="rotate(-22 54 54)">
+    <path d="M84,54A30,10.5 0,0 1,24 54" fill="none" stroke="#120F36" stroke-width="6" stroke-linecap="round" stroke-opacity="0.85"/>
+    <path d="M84,54A30,10.5 0,0 1,24 54" fill="none" stroke="url(#orbitFront)" stroke-width="2.4" stroke-linecap="round"/>
+    <path d="M77,60.75m-6,0a6,6 0,1 0,12 0a6,6 0,1 0,-12 0" fill="url(#spark)"/>
+    <path d="M77,60.75m-2.2,0a2.2,2.2 0,1 0,4.4 0a2.2,2.2 0,1 0,-4.4 0" fill="#FFFFFF"/>
+  </g>
+    </g>
+  </g>
 </svg>
