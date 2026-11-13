@@ -19,6 +19,7 @@ shows the version, the licences of every library, the privacy policy's address a
     ./gradlew :core:test :app:assembleDebug     # APK: app/build/outputs/apk/debug/app-debug.apk
     ../deploy/tools/check-android.sh            # what ../check.sh runs for the app
     ../deploy/tools/check-android.sh --device   # the screen tests on the device adb sees
+    ../deploy/tools/check-android.sh --device emulator-5554   # ... on this one, when several are connected
     ./gradlew :app:assembleRelease :app:bundleRelease   # app-release.apk and app-release.aab
 
 The release key is not in the repository. A properties file names it; the build takes the first of:
@@ -143,6 +144,17 @@ not trust the server's certificate …" (also when the certificate is made out f
 the address typed). Decision of the owner (2026-11-13): there is no button "accept the certificate
 anyway", and none is to be built.
 
+`deploy/tools/user-ca/measure-user-ca.sh [serial]` repeats that measurement without a hand on the
+device: it makes a certificate for the test, starts a fake HTTPS server on this machine
+(`fake-https.py`, reached from the device through `adb reverse`), and logs in from the app's login
+page three times — before the certificate is in Android's user store, after it was put there as the
+settings put it (`/data/misc/user/0/cacerts-added/<subject hash>.0`), after it was taken out again —
+and fails unless the app refuses, trusts, refuses. Putting a file into that store needs root, so it
+runs on an emulator with an image "Google APIs" (a "Google Play" image gives none); one such:
+
+    sdkmanager "system-images;android-36;google_apis;x86_64"
+    avdmanager create avd -n mc-api36-root -k "system-images;android-36;google_apis;x86_64" -d medium_phone
+
 ## Tests on a device
 
 `check-android.sh --device` installs the debug build and the test APK and runs `AppUiTest`: login,
@@ -154,7 +166,10 @@ device does not trust, the take-over of the login 0.1.0 kept, a refusal (401) th
 the change of login — against a
 fake server inside the test (MockWebServer on 127.0.0.1). The app runs as `TestApp` there, which
 keeps its login in a file of its own (`session-test`), so a real login on the device stays. The
-script installs with `adb install -r` and not with Gradle's `connectedDebugAndroidTest`. It stops
+script installs with `adb install -r` and not with Gradle's `connectedDebugAndroidTest`. With more
+than one device connected it stops before the build and names their serial numbers; `--device
+<serial>` or `ANDROID_SERIAL` names the one (`pick-device.sh`, 10 cases in `test-pick-device.sh`
+with a stand-in for adb, each red once). It stops
 with "the device is locked" when the lock screen stays: behind it no activity starts and every test
 fails with "No compose hierarchies found" (Pixel 7, 2026-11-13).
 Espresso is pinned to 3.7.0: the 3.5.0 that Compose's test library brings fails on Android 17
@@ -366,3 +381,17 @@ More than one login, HTTPS with a self-signed certificate (2026-11-13):
   film; the server saw `AuthenticateByName` and the two list requests. After removing the
   certificate again the app refused the server as before. Not played: the fake server has no film
   file. Not measured on a device other than this emulator.
+
+Tools (2026-11-13): `measure-user-ca.sh` on the emulator `mc-api36-root` (Android 16, image
+"Google APIs" revision 7): refused, trusted, refused. With the app built without the user
+certificates in `network_security_config.xml` it failed at the second case (`refused` where
+`trusted` was expected), as it has to. `check-android.sh --device` with the Pixel 7 and that
+emulator connected stops before the build and names both serials; `--device <serial>` then runs on
+the one named.
+- Pixel 7 (Android 17), the 17 screen tests: OK. The real login of the debug app there, written by
+  0.1.0 in four keys, was taken over into the list at the first start (the file then had `logins`
+  and none of the four keys). Then a second login from the app at a Jellyfin 10.11.0 with an
+  account made for the test (reached through `adb reverse`): its 6 test films. "Servers and
+  accounts" listed both; a tap changed to the Movies login and back, the films were each server's,
+  and Jellyfin's log had one password login only. "Remove" on the Jellyfin login: Jellyfin logged
+  its token out and dropped the device from its list; the Movies login stayed in use.

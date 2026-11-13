@@ -33,6 +33,7 @@ go vet ./...
 echo "== check 2/5: go test"
 go test -count=1 ./...
 deploy/zimaos/test-switch-image.sh
+deploy/tools/test-pick-device.sh
 
 echo "== check 3/5: browser tests"
 if [[ "$e2e" == 1 ]]; then

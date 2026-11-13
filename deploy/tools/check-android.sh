@@ -6,7 +6,8 @@
 # carries a valid signature.
 #
 #   deploy/tools/check-android.sh [apk]   with an APK: only the APK checks, no build
-#   deploy/tools/check-android.sh --device   the tests on the device adb sees (app/src/androidTest): login,
+#   deploy/tools/check-android.sh --device [serial]
+#                                           the tests on a device (app/src/androidTest): login,
 #                                           library, film page, licences and diagnostics against a fake
 #                                           server inside the test; a real login on the device is not touched
 set -euo pipefail
@@ -14,7 +15,13 @@ set -euo pipefail
 repo="$(cd "$(dirname "$0")/../.." && pwd)"
 apk="${1:-}"
 device=0
-if [[ "$apk" == "--device" ]]; then device=1; apk=""; fi
+if [[ "$apk" == "--device" ]]; then
+  device=1; apk=""
+  # Before anything is built: the one device adb has ready, or the one named (pick-device.sh says
+  # which there are when it is none or several). Every adb call below then goes to that device.
+  ANDROID_SERIAL="$("$repo/deploy/tools/pick-device.sh" ${2:+"$2"})"
+  export ANDROID_SERIAL
+fi
 [[ -n "$apk" ]] && apk="$(realpath "$apk")"
 cd "$repo/android"
 
@@ -63,7 +70,13 @@ if [[ -z "$apk" ]]; then
   # An APK of an earlier run with the other name would be checked in place of the new one.
   out=app/build/outputs/apk/release
   rm -f "$out/app-release.apk" "$out/app-release-unsigned.apk"
-  ./gradlew -q :core:test :app:testDebugUnitTest :app:assembleDebug :app:assembleRelease
+  # Results of an earlier run would be counted in with this one.
+  rm -rf core/build/test-results app/build/test-results
+  if ! ./gradlew -q :core:test :app:testDebugUnitTest :app:assembleDebug :app:assembleRelease; then
+    # -q leaves only "N tests completed, M failed"; name them (and say so when no test ran)
+    python3 tools/failed-tests.py core/build/test-results app/build/test-results >&2 || true
+    exit 1
+  fi
   release=""
   for f in "$out/app-release.apk" "$out/app-release-unsigned.apk"; do
     if [[ -f "$f" ]]; then release="$f"; fi
