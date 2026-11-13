@@ -19,5 +19,9 @@ for layer in background foreground monochrome; do
   python3 "$here/svg2vd.py" "$here/icon-$layer.svg" "$res/drawable/ic_launcher_$layer.xml"; done
 for d in "xhdpi 1" "xxhdpi 1.5" "xxxhdpi 2"; do set -- $d
   mkdir -p "$res/drawable-$1"; shot banner.html "$2" 320 180 "$res/drawable-$1/banner.png"; done
+# Fire TV (Fire OS 8.1.8.5, 2026-11-13): "Your apps and channels" draws a sideloaded app from its icon alone (the
+# launcher's APK calls loadIcon, never loadBanner) in a square in the middle of a grey 16:9 tile. A 16:9 icon for
+# "television" was cut to that square (mark and name cut off), so the TV keeps the square icon; full tiles come from
+# the Amazon Appstore's artwork. The launcher keeps a package's first icon until the app is uninstalled.
 for d in "mdpi 1" "hdpi 1.5" "xhdpi 2" "xxhdpi 3" "xxxhdpi 4"; do set -- $d
   shot icon-legacy.html "$2" 48 48 "$res/mipmap-$1/ic_launcher.png"; done

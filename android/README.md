@@ -473,6 +473,11 @@ SDK 30), 32-bit only (`armeabi-v7a`), reached by `adb connect` over the network.
     913 ms; TrueHD went out unchanged (`AUDIO_FORMAT_DOLBY_TRUEHD`).
   The stick's own audio decoders (`/vendor/etc/media_codecs*.xml`): AC3, E-AC3, E-AC3-JOC, AC4; none
   for DTS or TrueHD.
+- The tile in "Your apps and channels" (2026-11-13): the launcher draws a sideloaded app from its icon alone (its APK
+  calls `loadIcon`, never `loadBanner`; `android:banner` is used by Android TV's launchers) in a square in the
+  middle of a grey 16:9 tile. A 16:9 icon for `television` was cut to that square, so the square icon stays; full
+  tiles (ZDF, Netflix) come from the Amazon Appstore's artwork. The launcher keeps a package's first icon across
+  `adb install -r` and a reboot; after an uninstall and a new install the new icon showed.
 - Heard and seen at the TV by the owner, the same three films again: DTS-HD picture but no sound;
   Dolby Vision profile 7 sound but no picture (black); AV1 with AAC picture and sound. A Dolby Vision
   profile 8 film (through `DVHE`) had a picture. So the stick reports DTS-HD as playable unchanged
