@@ -52,7 +52,7 @@ State 2026-11-13: 0.2.0, the first build for testers (signed APK, [android/TESTE
 | A11 | player: chapters, skip intro, preview pictures while seeking | open | |
 | A12 | Google Cast from the app, downloads | open | |
 | A13 | icons in place of text signs (⋮ ‹ ▶), screen reader pass | open | 3 `contentDescription` in the screens |
-| A14 | a look of its own: logo, icon, banner, colours, font | done 2026-11-13 | graphite and gold ("eclipse", the owner's pick of three proposals), Space Grotesk, logo everywhere (app, TV starter, webOS, web icons, ZimaOS tile); Fire TV Stick 4K and Android 16 emulator: 19 screen tests OK each. The web pages keep their orange colours (tv.css) |
+| A14 | a look of its own: logo, icon, banner, colours, font | done 2026-11-13 | deep-sea blue and sun orange (proposal A of three, the owners' pick), Space Grotesk, logo everywhere (app, TV starter, webOS, web icons, ZimaOS tile); Fire TV Stick 4K and Android 16 emulator: 19 screen tests OK each. The web pages keep their orange colours (tv.css) |
 
 ## Next
 

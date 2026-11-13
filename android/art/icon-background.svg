@@ -3,17 +3,17 @@
        Only what a VectorDrawable can draw (paths, radial gradients); mirrored in res/drawable/ic_launcher_background.xml. -->
   <defs>
     <radialGradient id="space" cx="54" cy="46" r="76" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#26262E"/>
-      <stop offset="0.45" stop-color="#121216"/>
-      <stop offset="1" stop-color="#050507"/>
+      <stop offset="0" stop-color="#16305E"/>
+      <stop offset="0.45" stop-color="#0A1733"/>
+      <stop offset="1" stop-color="#03060F"/>
     </radialGradient>
     <radialGradient id="nebula" cx="80" cy="84" r="46" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#F59E0B" stop-opacity="0.55"/>
-      <stop offset="1" stop-color="#F59E0B" stop-opacity="0"/>
+      <stop offset="0" stop-color="#F97316" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#F97316" stop-opacity="0"/>
     </radialGradient>
     <radialGradient id="nebula2" cx="22" cy="24" r="40" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#E5E7EB" stop-opacity="0.30"/>
-      <stop offset="1" stop-color="#E5E7EB" stop-opacity="0"/>
+      <stop offset="0" stop-color="#38BDF8" stop-opacity="0.30"/>
+      <stop offset="1" stop-color="#38BDF8" stop-opacity="0"/>
     </radialGradient>
   </defs>
   <path d="M0,0h108v108h-108z" fill="url(#space)"/>

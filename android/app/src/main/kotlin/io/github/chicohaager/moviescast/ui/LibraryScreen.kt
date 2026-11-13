@@ -259,7 +259,7 @@ private fun Choice(tag: String, label: String, value: String, items: @Composable
     }
 }
 
-/** A section title with a short bar in the planet's gold before it. */
+/** A section title with a short bar in the planet's orange before it. */
 @Composable
 private fun Heading(text: String) {
     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 12.dp)) {
@@ -271,7 +271,7 @@ private fun Heading(text: String) {
 @Composable
 private fun Tile(item: MediaItem, modifier: Modifier, onOpen: (MediaItem) -> Unit, showProgress: Boolean) {
     var focused by remember { mutableStateOf(false) }
-    // A remote control has no pointer: the tile in focus grows a little and gets a glowing frame in the planet's gold.
+    // A remote control has no pointer: the tile in focus grows a little and gets a glowing frame in the planet's orange.
     val scale by animateFloatAsState(if (focused) 1.06f else 1f, label = "tile")
     Column(
         modifier
@@ -302,7 +302,7 @@ private fun Tile(item: MediaItem, modifier: Modifier, onOpen: (MediaItem) -> Uni
             if (showProgress && item.runtimeSeconds > 0) {
                 LinearProgressIndicator(
                     progress = { (item.resumeSeconds.toFloat() / item.runtimeSeconds).coerceIn(0f, 1f) },
-                    color = Brand.Silver,
+                    color = Brand.Sky,
                     trackColor = Color.White.copy(alpha = 0.18f),
                     drawStopIndicator = {},
                     gapSize = 0.dp,

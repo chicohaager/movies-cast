@@ -8,17 +8,17 @@
        Only what a VectorDrawable can draw (paths, radial gradients); mirrored in res/drawable/ic_launcher_background.xml. -->
   <defs>
     <radialGradient id="space" cx="54" cy="46" r="76" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#26262E"/>
-      <stop offset="0.45" stop-color="#121216"/>
-      <stop offset="1" stop-color="#050507"/>
+      <stop offset="0" stop-color="#16305E"/>
+      <stop offset="0.45" stop-color="#0A1733"/>
+      <stop offset="1" stop-color="#03060F"/>
     </radialGradient>
     <radialGradient id="nebula" cx="80" cy="84" r="46" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#F59E0B" stop-opacity="0.55"/>
-      <stop offset="1" stop-color="#F59E0B" stop-opacity="0"/>
+      <stop offset="0" stop-color="#F97316" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#F97316" stop-opacity="0"/>
     </radialGradient>
     <radialGradient id="nebula2" cx="22" cy="24" r="40" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#E5E7EB" stop-opacity="0.30"/>
-      <stop offset="1" stop-color="#E5E7EB" stop-opacity="0"/>
+      <stop offset="0" stop-color="#38BDF8" stop-opacity="0.30"/>
+      <stop offset="1" stop-color="#38BDF8" stop-opacity="0"/>
     </radialGradient>
   </defs>
   <path d="M0,0h108v108h-108z" fill="url(#space)"/>
@@ -45,25 +45,25 @@
        Only what a VectorDrawable can draw; mirrored in res/drawable/ic_launcher_foreground.xml. -->
   <defs>
     <linearGradient id="planet" x1="44" y1="36" x2="70" y2="70" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#FFF3C4"/>
-      <stop offset="0.5" stop-color="#F5C451"/>
-      <stop offset="1" stop-color="#D4912A"/>
+      <stop offset="0" stop-color="#FFD27A"/>
+      <stop offset="0.5" stop-color="#FB923C"/>
+      <stop offset="1" stop-color="#EA580C"/>
     </linearGradient>
     <radialGradient id="halo" cx="56" cy="54" r="26" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#F5C451" stop-opacity="0.45"/>
-      <stop offset="1" stop-color="#F5C451" stop-opacity="0"/>
+      <stop offset="0" stop-color="#FB923C" stop-opacity="0.45"/>
+      <stop offset="1" stop-color="#FB923C" stop-opacity="0"/>
     </radialGradient>
     <linearGradient id="orbitBack" x1="24" y1="54" x2="84" y2="54" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#E2E8F0" stop-opacity="0.35"/>
-      <stop offset="1" stop-color="#CBD5E1" stop-opacity="0.35"/>
+      <stop offset="0" stop-color="#7DD3FC" stop-opacity="0.35"/>
+      <stop offset="1" stop-color="#93C5FD" stop-opacity="0.35"/>
     </linearGradient>
     <linearGradient id="orbitFront" x1="84" y1="54" x2="24" y2="54" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#FFFFFF"/>
-      <stop offset="1" stop-color="#E5E7EB"/>
+      <stop offset="0" stop-color="#F0F9FF"/>
+      <stop offset="1" stop-color="#38BDF8"/>
     </linearGradient>
     <radialGradient id="spark" cx="77" cy="60.75" r="6" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#F1F5F9" stop-opacity="0.9"/>
-      <stop offset="1" stop-color="#E5E7EB" stop-opacity="0"/>
+      <stop offset="0" stop-color="#BAE6FD" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#38BDF8" stop-opacity="0"/>
     </radialGradient>
   </defs>
   <path d="M54,54m-26,0a26,26 0,1 0,52 0a26,26 0,1 0,-52 0" fill="url(#halo)"/>
@@ -72,7 +72,7 @@
   </g>
   <path d="M46,40L46,68L70,54Z" fill="url(#planet)" stroke="url(#planet)" stroke-width="6" stroke-linejoin="round"/>
   <g transform="rotate(-22 54 54)">
-    <path d="M84,54A30,10.5 0,0 1,24 54" fill="none" stroke="#121216" stroke-width="6" stroke-linecap="round" stroke-opacity="0.85"/>
+    <path d="M84,54A30,10.5 0,0 1,24 54" fill="none" stroke="#0A1733" stroke-width="6" stroke-linecap="round" stroke-opacity="0.85"/>
     <path d="M84,54A30,10.5 0,0 1,24 54" fill="none" stroke="url(#orbitFront)" stroke-width="2.4" stroke-linecap="round"/>
     <path d="M77,60.75m-6,0a6,6 0,1 0,12 0a6,6 0,1 0,-12 0" fill="url(#spark)"/>
     <path d="M77,60.75m-2.2,0a2.2,2.2 0,1 0,4.4 0a2.2,2.2 0,1 0,-4.4 0" fill="#FFFFFF"/>
