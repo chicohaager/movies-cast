@@ -51,4 +51,9 @@
     <string name="about_diagnostics">診断情報を共有</string>
     <string name="about_diagnostics_hint">アプリと Android のバージョン、端末のモデル、デコーダー、プレーヤーの最新のログ。アドレス、ユーザー名、パスワードは含まれません。</string>
     <string name="share">共有</string>
+    <string name="season_label">シーズン %1$d</string>
+    <string name="season_specials">スペシャル</string>
+    <string name="mark_watched">視聴済みにする</string>
+    <string name="mark_unwatched">未視聴にする</string>
+    <string name="watched">視聴済み</string>
 </resources>

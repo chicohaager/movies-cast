@@ -52,7 +52,12 @@ class AppUiTest {
     private fun json(code: Int, body: String) =
         MockResponse.Builder().code(code).addHeader("Content-Type", "application/json").body(body).build()
 
-    private val film = """{"Id":"f1","Name":"Invented Film","Type":"Movie","ProductionYear":2001,"RunTimeTicks":54000000000,"Overview":"A film that does not exist."}"""
+    @Volatile
+    private var filmPlayed = false
+    private val film get() = """{"Id":"f1","Name":"Invented Film","Type":"Movie","ProductionYear":2001,"RunTimeTicks":54000000000,"Overview":"A film that does not exist.","UserData":{"Played":$filmPlayed}}"""
+    private val series = """{"Id":"s1","Name":"Invented Show","Type":"Series","ProductionYear":2002}"""
+    private fun episode(id: String, name: String, season: Int, number: Int, played: Boolean) =
+        """{"Id":"$id","Name":"$name","Type":"Episode","SeriesId":"s1","SeriesName":"Invented Show","ParentIndexNumber":$season,"IndexNumber":$number,"UserData":{"Played":$played}}"""
 
     @Before
     fun start() {
@@ -74,8 +79,17 @@ class AppUiTest {
                         if (request.body!!.utf8().contains("\"Pw\":\"$password\"")) json(200, """{"AccessToken":"invented-token","User":{"Id":"u1","Name":"demo"}}""")
                         else json(401, "{}")
                     path == "/movies/Users/u1/Items/Resume" -> json(200, """{"Items":[],"TotalRecordCount":0}""")
-                    path == "/movies/Users/u1/Items" -> json(200, """{"Items":[$film],"TotalRecordCount":1}""")
+                    path == "/movies/Users/u1/Items" -> json(200, """{"Items":[$film,$series],"TotalRecordCount":2}""")
                     path == "/movies/Users/u1/Items/f1" -> json(200, film)
+                    path == "/movies/Users/u1/Items/s1" -> json(200, series)
+                    path == "/movies/Shows/s1/Episodes" -> json(
+                        200,
+                        """{"Items":[${episode("e1", "One", 1, 1, true)},${episode("e2", "Two", 1, 2, false)},${episode("e3", "Three", 2, 1, false)}],"TotalRecordCount":3}""",
+                    )
+                    path == "/movies/Users/u1/PlayedItems/f1" -> {
+                        filmPlayed = request.method == "POST"
+                        json(200, """{"Played":$filmPlayed}""")
+                    }
                     path == "/movies/Sessions/Logout" -> json(204, "")
                     else -> json(404, "{}")
                 }
@@ -146,5 +160,40 @@ class AppUiTest {
         assertFalse(text, text.contains("127.0.0.1"))
         assertFalse(text, text.contains("demo"))
         assertFalse(text, text.contains("invented-token"))
+    }
+
+    @Test
+    fun aSeriesShowsItsSeasonsAndWhichEpisodesWereWatched() {
+        login("right")
+        compose.waitUntilAtLeastOneExists(hasText("Invented Show"), 10_000)
+        compose.onNodeWithText("Invented Show").performClick()
+        compose.waitUntilAtLeastOneExists(hasTestTag("episode"), 10_000)
+        assertEquals(2, compose.onAllNodesWithTag("season").fetchSemanticsNodes().size)
+        compose.onNodeWithText(app.getString(R.string.season_label, 2)).assertExists()
+        compose.onNodeWithText("✓  " + app.getString(R.string.episode_label, 1, 1, "One")).assertExists()
+        compose.onNodeWithText(app.getString(R.string.episode_label, 1, 2, "Two")).assertExists()
+    }
+
+    @Test
+    fun markAsWatchedAsksTheServerAndTheButtonTurns() {
+        login("right")
+        compose.waitUntilAtLeastOneExists(hasTestTag("tile"), 10_000)
+        compose.onNodeWithText("Invented Film").performClick()
+        compose.waitUntilAtLeastOneExists(hasTestTag("played"), 10_000)
+        compose.onNodeWithTag("played").assertTextContains(app.getString(R.string.mark_watched)).performClick()
+        compose.waitUntilAtLeastOneExists(hasText(app.getString(R.string.mark_unwatched), substring = true), 10_000)
+        assertTrue(paths.toString(), synchronized(paths) { paths.contains("POST /movies/Users/u1/PlayedItems/f1") })
+        compose.onNodeWithTag("played").performClick()
+        compose.waitUntilAtLeastOneExists(hasText(app.getString(R.string.mark_watched)), 10_000)
+        assertTrue(paths.toString(), synchronized(paths) { paths.contains("DELETE /movies/Users/u1/PlayedItems/f1") })
+    }
+
+    @Test
+    fun thePrivacyPolicyIsAPageOfTheApp() {
+        compose.onNodeWithTag("about").performScrollTo().performClick()
+        compose.onNodeWithTag("privacy").performClick()
+        compose.waitUntilAtLeastOneExists(hasTestTag("privacy_text"), 10_000)
+        compose.onNodeWithText("no analytics", substring = true).assertExists()
+        compose.onNodeWithText("Movies-Cast for Android", substring = true).assertExists()
     }
 }

@@ -51,4 +51,9 @@
     <string name="about_diagnostics">Sdílet diagnostiku</string>
     <string name="about_diagnostics_hint">Verze aplikace a Androidu, model zařízení, dekodéry a poslední řádky protokolu přehrávače. Žádná adresa, žádné uživatelské jméno, žádné heslo.</string>
     <string name="share">Sdílet</string>
+    <string name="season_label">%1$d. řada</string>
+    <string name="season_specials">Speciály</string>
+    <string name="mark_watched">Označit jako zhlédnuté</string>
+    <string name="mark_unwatched">Označit jako nezhlédnuté</string>
+    <string name="watched">Zhlédnuto</string>
 </resources>

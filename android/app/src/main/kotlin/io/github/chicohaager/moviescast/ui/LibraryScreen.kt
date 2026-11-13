@@ -1,5 +1,6 @@
 package io.github.chicohaager.moviescast.ui
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -192,6 +193,19 @@ private fun Tile(item: MediaItem, modifier: Modifier, onOpen: (MediaItem) -> Uni
     ) {
         Box(contentAlignment = Alignment.BottomCenter) {
             Poster(item, Modifier.fillMaxWidth())
+            if (item.played) {
+                val watched = stringResource(R.string.watched)
+                Text(
+                    "✓",
+                    color = MaterialTheme.colorScheme.onPrimary,
+                    style = MaterialTheme.typography.labelLarge,
+                    modifier = Modifier.align(Alignment.TopEnd).padding(6.dp)
+                        .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(50))
+                        .padding(horizontal = 7.dp, vertical = 2.dp)
+                        .semantics { contentDescription = watched }
+                        .testTag("watched"),
+                )
+            }
             if (showProgress && item.runtimeSeconds > 0) {
                 LinearProgressIndicator(
                     progress = { (item.resumeSeconds.toFloat() / item.runtimeSeconds).coerceIn(0f, 1f) },

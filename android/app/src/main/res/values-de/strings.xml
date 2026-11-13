@@ -51,4 +51,9 @@
     <string name="about_diagnostics">Diagnose teilen</string>
     <string name="about_diagnostics_hint">App- und Android-Version, Gerätemodell, Dekoder und die letzten Protokollzeilen des Players. Keine Adresse, kein Benutzername, kein Passwort.</string>
     <string name="share">Teilen</string>
+    <string name="season_label">Staffel %1$d</string>
+    <string name="season_specials">Extras</string>
+    <string name="mark_watched">Als gesehen markieren</string>
+    <string name="mark_unwatched">Als ungesehen markieren</string>
+    <string name="watched">Gesehen</string>
 </resources>

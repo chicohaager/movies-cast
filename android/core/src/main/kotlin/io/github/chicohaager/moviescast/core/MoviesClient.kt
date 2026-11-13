@@ -126,6 +126,30 @@ class MoviesClient(http: OkHttpClient, private val device: Device) {
     fun streamUrl(s: Session, id: String): String =
         url(s.baseUrl, "/Videos/${seg(id)}/stream") { addQueryParameter("static", "true") }.toString()
 
+    /**
+     * The subtitle files lying next to the film that the player can read (SRT, WebVTT, ASS/SSA), with
+     * the address the server hands each out at. As Jellyfin's Android TV app builds it for external
+     * players: `DeliveryUrl` is empty without `PlaybackInfo`, so the format comes from the file's name.
+     * Measured against Jellyfin 10.11.0 (2026-11-13): `…/Subtitles/0/Stream.srt` answered the file.
+     */
+    fun subtitleFiles(s: Session, item: MediaItem): List<SubtitleFile> =
+        item.subtitles.filter { it.external }.mapNotNull { track ->
+            val format = when (track.format.ifEmpty { track.codec }.lowercase()) {
+                "srt", "subrip" -> "srt"
+                "vtt", "webvtt" -> "vtt"
+                "ass" -> "ass"
+                "ssa" -> "ssa"
+                else -> return@mapNotNull null
+            }
+            val address = url(s.baseUrl, "/Videos/${seg(item.id)}/${seg(item.sourceId.ifEmpty { item.id })}/Subtitles/${track.index}/Stream.$format") {}
+            SubtitleFile(address.toString(), format, track.language, track.title)
+        }
+
+    /** Marks an item as watched or as not watched; the server's "continue watching" forgets it either way. */
+    suspend fun setPlayed(s: Session, id: String, played: Boolean) {
+        call(s.baseUrl, s.token, if (played) "POST" else "DELETE", "/Users/${seg(s.userId)}/PlayedItems/${seg(id)}", if (played) "" else null)
+    }
+
     fun posterUrl(s: Session, id: String, maxWidth: Int): String =
         url(s.baseUrl, "/Items/${seg(id)}/Images/Primary") { addQueryParameter("maxWidth", maxWidth.toString()) }.toString()
 

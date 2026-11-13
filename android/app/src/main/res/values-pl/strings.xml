@@ -51,4 +51,9 @@
     <string name="about_diagnostics">Udostępnij diagnostykę</string>
     <string name="about_diagnostics_hint">Wersja aplikacji i Androida, model urządzenia, dekodery i ostatnie wiersze dziennika odtwarzacza. Bez adresu, nazwy użytkownika i hasła.</string>
     <string name="share">Udostępnij</string>
+    <string name="season_label">Sezon %1$d</string>
+    <string name="season_specials">Odcinki specjalne</string>
+    <string name="mark_watched">Oznacz jako obejrzane</string>
+    <string name="mark_unwatched">Oznacz jako nieobejrzane</string>
+    <string name="watched">Obejrzane</string>
 </resources>

@@ -51,4 +51,9 @@
     <string name="about_diagnostics">Dela diagnostik</string>
     <string name="about_diagnostics_hint">Appens och Androids version, enhetsmodell, avkodare och spelarens senaste loggrader. Ingen adress, inget användarnamn, inget lösenord.</string>
     <string name="share">Dela</string>
+    <string name="season_label">Säsong %1$d</string>
+    <string name="season_specials">Specialavsnitt</string>
+    <string name="mark_watched">Markera som sedd</string>
+    <string name="mark_unwatched">Markera som osedd</string>
+    <string name="watched">Sedd</string>
 </resources>

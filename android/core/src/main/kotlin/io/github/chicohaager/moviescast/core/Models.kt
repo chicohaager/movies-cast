@@ -16,8 +16,31 @@ data class Session(
     override fun toString(): String = "Session(baseUrl=$baseUrl, userId=$userId, userName=$userName)"
 }
 
-/** An audio or subtitle track of the file, as the server lists it. */
-data class Track(val index: Int, val codec: String, val language: String, val title: String, val channels: Int)
+/**
+ * An audio or subtitle track, as the server lists it. [external] is a subtitle file lying next to
+ * the film; [format] is then that file's extension (`srt`), which the server wants in the address.
+ */
+data class Track(
+    val index: Int,
+    val codec: String,
+    val language: String,
+    val title: String,
+    val channels: Int,
+    val external: Boolean = false,
+    val format: String = "",
+)
+
+/**
+ * A subtitle file the player loads next to the film. [format] is `srt`, `vtt`, `ass` or `ssa`.
+ * Serializable, because the player gets its queue through an intent.
+ */
+data class SubtitleFile(val url: String, val format: String, val language: String, val label: String) : java.io.Serializable
+
+/** The items of this list that follow the one with [id], in order: the episodes still to come. */
+fun List<MediaItem>.after(id: String): List<MediaItem> {
+    val at = indexOfFirst { it.id == id }
+    return if (at < 0) emptyList() else drop(at + 1)
+}
 
 /** A film, series or episode as the screens show it. */
 data class MediaItem(
@@ -45,6 +68,7 @@ data class MediaItem(
     val season: Int = 0,
     val episode: Int = 0,
     val childCount: Int = 0,
+    val sourceId: String = "",
 ) {
     /** A series is a folder of episodes; everything else is a file. */
     val playable: Boolean get() = type != "Series"
@@ -105,6 +129,8 @@ internal data class StreamDto(
     @SerialName("Width") val width: Int = 0,
     @SerialName("Height") val height: Int = 0,
     @SerialName("Channels") val channels: Int = 0,
+    @SerialName("IsExternal") val external: Boolean = false,
+    @SerialName("Path") val path: String = "",
 )
 
 @Serializable
@@ -119,6 +145,7 @@ internal data class TranscodeSourceDto(
 
 @Serializable
 internal data class SourceDto(
+    @SerialName("Id") val id: String = "",
     @SerialName("Container") val container: String = "",
     @SerialName("Size") val size: Long = 0,
     @SerialName("MediaStreams") val streams: List<StreamDto> = emptyList(),
@@ -154,7 +181,9 @@ internal data class ItemDto(
         val all = listOf(source?.streams.orEmpty(), streams).maxBy { it.size }
         val video = all.firstOrNull { it.type == "Video" }
         fun tracks(kind: String) = all.filter { it.type == kind }.map {
-            Track(it.index, it.codec, it.language, it.displayTitle.ifEmpty { it.language }, it.channels)
+            // Only the extension of the path is kept: where the file lies on the server is nobody's business here.
+            val format = if (it.external) it.path.substringAfterLast('.', it.codec).substringAfterLast('/').lowercase() else ""
+            Track(it.index, it.codec, it.language, it.displayTitle.ifEmpty { it.language }, it.channels, it.external, format)
         }
         return MediaItem(
             id = id,
@@ -181,6 +210,7 @@ internal data class ItemDto(
             season = if (type == "Episode") parentIndex else 0,
             episode = if (type == "Episode") index else 0,
             childCount = if (recursiveCount != 0) recursiveCount else childCount,
+            sourceId = source?.id?.ifEmpty { id } ?: id,
         )
     }
 }

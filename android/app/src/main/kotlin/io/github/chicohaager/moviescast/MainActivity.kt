@@ -26,6 +26,7 @@ import io.github.chicohaager.moviescast.ui.DetailScreen
 import io.github.chicohaager.moviescast.ui.Languages
 import io.github.chicohaager.moviescast.ui.LicenceScreen
 import io.github.chicohaager.moviescast.ui.LicencesScreen
+import io.github.chicohaager.moviescast.ui.PrivacyScreen
 import java.util.Locale
 import io.github.chicohaager.moviescast.ui.LibraryScreen
 import io.github.chicohaager.moviescast.ui.LoginScreen
@@ -56,10 +57,11 @@ class MainActivity : AppCompatActivity() {
                 when (val screen = state.screen) {
                     Screen.Login -> LoginScreen(state, model.lastServer, model.lastUser, ::login, ::openAppSettings) { model.show(Screen.About) }
                     Screen.Library -> LibraryScreen(state, model::search, model::open, ::refresh, model::logout, ::openAppSettings) { model.show(Screen.About) }
-                    is Screen.Detail -> DetailScreen(state, { model.back() }, model::open, ::play)
-                    Screen.About -> AboutScreen({ model.back() }, { model.show(Screen.Licences) }, ::openWeb, ::diagnostics, ::share)
+                    is Screen.Detail -> DetailScreen(state, { model.back() }, model::open, ::play, model::setPlayed)
+                    Screen.About -> AboutScreen({ model.back() }, { model.show(Screen.Licences) }, { model.show(Screen.Privacy) }, ::openWeb, ::diagnostics, ::share)
                     Screen.Licences -> LicencesScreen({ model.back() }) { model.show(Screen.Licence(it)) }
                     is Screen.Licence -> LicenceScreen(screen.id) { model.back() }
+                    Screen.Privacy -> PrivacyScreen { model.back() }
                 }
             }
         }
@@ -142,8 +144,17 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun play(item: MediaItem, fromSeconds: Long) {
+        val app = application as MoviesCastApp
+        val session = app.session ?: return
+        // An episode brings the ones after it, so the next starts by itself; each with its subtitle files.
+        val queue = queueFor(
+            item,
+            model.state.value.following,
+            { if (it.type == "Episode") getString(R.string.episode_label, it.season, it.episode, it.name) else it.name },
+            { app.client.subtitleFiles(session, it) },
+        )
         leftForPlayer = true
-        startActivity(PlayerActivity.intent(this, item, fromSeconds))
+        startActivity(PlayerActivity.intent(this, queue, fromSeconds))
     }
 
     private companion object {

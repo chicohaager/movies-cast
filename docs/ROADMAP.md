@@ -35,17 +35,17 @@ PLAYING. The two failures of 19:35 and 17:51 (no answer to Play within 6 s) were
 
 ## Android app (`android/`, native player)
 
-State 2026-11-13: 0.1.0, committed, not released. What is measured is in [android/README.md](../android/README.md).
+State 2026-11-13: 0.1.0, pushed, not released. What is measured is in [android/README.md](../android/README.md).
 
 | # | What | State | Note |
 |---|---|---|---|
 | A1 | licences in the app, privacy policy, diagnostics a tester can send | done 2026-11-13 | About page; PRIVACY.md; Pixel 7 (Android 17), debug and signed release |
-| A2 | tests of the screens on a device, a workflow on GitHub | done / written | 4 tests on the Pixel 7 (`check-android.sh --device`); the workflow has not run yet (nothing pushed) |
-| A3 | real devices besides the Pixel 7 | open | a tablet and a real Android TV box; so far emulators only |
+| A2 | tests of the screens on a device, a workflow on GitHub | done | 7 tests on the Pixel 7 and in the Android 16 emulator (`check-android.sh --device`); the workflow's first run (588a860) passed; its emulator job is new |
+| A3 | real devices besides the Pixel 7 | open | a tablet and a real Android TV box; so far emulators only. Signed release on the Pixel 7: login and a Dolby Vision profile 7 film with TrueHD 7.1 from Movies played (2026-11-13) |
 | A4 | open test, native speakers read the 16 translations, version number for it | open | owner's decision |
-| A5 | series: seasons, next episode by itself | open | episodes are one flat list; the player closes at the end |
-| A6 | subtitle files next to the film (the server's external streams) | open | only subtitles inside the file play |
-| A7 | mark as watched, favourites | open | |
+| A5 | series: seasons, next episode by itself | done 2026-11-13 | Jellyfin 10.11.0, Android 16 emulator: S1E2 → S1E3 → S2E1 by themselves, the server then lists them as watched. Movies on the test NAS has no series |
+| A6 | subtitle files next to the film (the server's external streams) | done 2026-11-13 | Jellyfin 10.11.0: an SRT next to the film shows after picking it with the subtitle button; none is picked by itself |
+| A7 | mark as watched, favourites | watched done 2026-11-13, favourites open | `POST`/`DELETE /Users/{id}/PlayedItems/{item}`, measured against Jellyfin 10.11.0 |
 | A8 | large libraries: sort, filter, genres, "recently added" | open | the whole library is read into memory, one grid |
 | A9 | servers: search in the network, more than one server or account, self-signed HTTPS | open | the address is typed |
 | A10 | TV: "continue watching" on the home screen, refresh rate to the film's (24p) | open | the TV uses the phone's screens with a focus frame |

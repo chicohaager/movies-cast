@@ -51,4 +51,9 @@
     <string name="about_diagnostics">Tanılama bilgisini paylaş</string>
     <string name="about_diagnostics_hint">Uygulama ve Android sürümü, cihaz modeli, kod çözücüler ve oynatıcının son günlük satırları. Adres, kullanıcı adı ve parola içermez.</string>
     <string name="share">Paylaş</string>
+    <string name="season_label">%1$d. Sezon</string>
+    <string name="season_specials">Özel bölümler</string>
+    <string name="mark_watched">İzlendi olarak işaretle</string>
+    <string name="mark_unwatched">İzlenmedi olarak işaretle</string>
+    <string name="watched">İzlendi</string>
 </resources>

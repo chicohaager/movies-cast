@@ -47,7 +47,6 @@ import io.github.chicohaager.moviescast.BuildConfig
 import io.github.chicohaager.moviescast.R
 
 const val SOURCE_URL = "https://github.com/chicohaager/movies-cast"
-const val PRIVACY_URL = "https://github.com/chicohaager/movies-cast/blob/master/PRIVACY.md"
 
 /** FFmpeg is the one library under a copyleft licence; it heads the list so nobody has to look for it. */
 private const val FFMPEG = "org.ffmpeg:ffmpeg"
@@ -104,12 +103,14 @@ fun MenuRow(title: String, caption: String, modifier: Modifier = Modifier, onCli
  *
  * [diagnostics] builds the text; it is shown before it is shared, so the person sees what leaves
  * the device. [onOpen] opens a web address and answers false where no app can (a TV without a
- * browser); the address stays readable on the row either way.
+ * browser); the address stays readable on the row either way. The privacy policy is a page of the
+ * app for that reason: the build copies PRIVACY.md of the repository into the APK.
  */
 @Composable
 fun AboutScreen(
     onBack: () -> Unit,
     onLicences: () -> Unit,
+    onPrivacy: () -> Unit,
     onOpen: (String) -> Boolean,
     diagnostics: () -> String,
     onShare: (String) -> Unit,
@@ -133,7 +134,7 @@ fun AboutScreen(
                 report = diagnostics()
             }
             MenuRow(stringResource(R.string.about_licences), "", Modifier.testTag("licences"), onLicences)
-            MenuRow(stringResource(R.string.about_privacy), PRIVACY_URL, Modifier.testTag("privacy")) { onOpen(PRIVACY_URL) }
+            MenuRow(stringResource(R.string.about_privacy), "", Modifier.testTag("privacy"), onPrivacy)
             MenuRow(stringResource(R.string.about_source), SOURCE_URL, Modifier.testTag("source")) { onOpen(SOURCE_URL) }
         }
     }
@@ -209,3 +210,35 @@ fun LicenceScreen(id: String, onBack: () -> Unit) {
         }
     }
 }
+
+/**
+ * The repository's PRIVACY.md, which the build puts into the APK (`assets/PRIVACY.md`), so it can
+ * be read on a TV without a browser and without a network. Shown as plain text: headings larger,
+ * the marks of Markdown taken out.
+ */
+@Composable
+fun PrivacyScreen(onBack: () -> Unit) {
+    val context = LocalContext.current
+    val paragraphs = remember(context) { privacyParagraphs(context.assets.open("PRIVACY.md").bufferedReader().use { it.readText() }) }
+    Page(stringResource(R.string.about_privacy), onBack) { padding ->
+        Column(
+            Modifier.padding(padding).fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 24.dp).padding(bottom = 24.dp).testTag("privacy_text"),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            for ((heading, text) in paragraphs) {
+                Text(text, style = if (heading) MaterialTheme.typography.titleMedium else MaterialTheme.typography.bodyMedium)
+            }
+        }
+    }
+}
+
+/** Markdown as paragraphs of plain text; the Boolean says "this one is a heading". */
+internal fun privacyParagraphs(markdown: String): List<Pair<Boolean, String>> =
+    markdown.split(Regex("\\n\\s*\\n")).map { it.trim() }.filter { it.isNotEmpty() }.map { block ->
+        val heading = block.startsWith("#")
+        val text = block.trimStart('#', ' ')
+            .replace(Regex("\\[([^\\]]+)]\\([^)]+\\)"), "$1")
+            .replace("**", "").replace("`", "").replace("<", "").replace(">", "")
+            .replace(Regex("\\s*\\n\\s*"), " ")
+        heading to text
+    }

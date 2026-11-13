@@ -53,4 +53,9 @@
     <string name="about_diagnostics">Share diagnostics</string>
     <string name="about_diagnostics_hint">App and Android version, device model, decoders and the player\'s last log lines. No address, no user name, no password.</string>
     <string name="share">Share</string>
+    <string name="season_label">Season %1$d</string>
+    <string name="season_specials">Specials</string>
+    <string name="mark_watched">Mark as watched</string>
+    <string name="mark_unwatched">Mark as unwatched</string>
+    <string name="watched">Watched</string>
 </resources>

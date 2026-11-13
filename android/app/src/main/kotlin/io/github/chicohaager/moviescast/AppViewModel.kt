@@ -12,6 +12,7 @@ import io.github.chicohaager.moviescast.core.ServerInfo
 import io.github.chicohaager.moviescast.core.Session
 import io.github.chicohaager.moviescast.core.UnauthorizedException
 import io.github.chicohaager.moviescast.core.UnexpectedAnswerException
+import io.github.chicohaager.moviescast.core.after
 import java.io.IOException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
@@ -41,6 +42,7 @@ sealed interface Screen {
     data object About : Screen
     data object Licences : Screen
     data class Licence(val id: String) : Screen
+    data object Privacy : Screen
 }
 
 data class UiState(
@@ -55,6 +57,8 @@ data class UiState(
     val query: String = "",
     val detail: MediaItem? = null,
     val episodes: List<MediaItem> = emptyList(),
+    /** For an episode: the episodes of its series that come after it; they play one after the other. */
+    val following: List<MediaItem> = emptyList(),
 ) {
     val screen: Screen get() = stack.last()
 
@@ -133,7 +137,7 @@ class AppViewModel(private val app: MoviesCastApp) : ViewModel() {
 
     fun open(item: MediaItem) {
         val session = app.session ?: return
-        _state.update { it.copy(stack = it.stack + Screen.Detail(item.id), detail = item, episodes = emptyList(), error = null) }
+        _state.update { it.copy(stack = it.stack + Screen.Detail(item.id), detail = item, episodes = emptyList(), following = emptyList(), error = null) }
         viewModelScope.launch {
             try {
                 loadDetail(session, item.id)
@@ -146,11 +150,25 @@ class AppViewModel(private val app: MoviesCastApp) : ViewModel() {
     private suspend fun loadDetail(session: Session, id: String) {
         val full = client.item(session, id)
         val episodes = if (full.type == "Series") client.episodes(session, id) else emptyList()
-        _state.update { if ((it.screen as? Screen.Detail)?.id == id) it.copy(detail = full, episodes = episodes) else it }
+        val following = if (full.type == "Episode" && full.seriesId.isNotEmpty()) client.episodes(session, full.seriesId).after(id) else emptyList()
+        _state.update { if ((it.screen as? Screen.Detail)?.id == id) it.copy(detail = full, episodes = episodes, following = following) else it }
     }
 
     /** Opens a page on top of the current one: About, the licences, one licence. */
     fun show(screen: Screen) = _state.update { it.copy(stack = it.stack + screen, error = null) }
+
+    /** Marks the item as watched or not; the library and the page are read again, so every mark on the screen is the server's. */
+    fun setPlayed(item: MediaItem, played: Boolean) {
+        val session = app.session ?: return
+        viewModelScope.launch {
+            try {
+                client.setPlayed(session, item.id, played)
+                refresh()
+            } catch (e: IOException) {
+                fail(e)
+            }
+        }
+    }
 
     /** Returns false when there is nothing to go back to (the activity then closes). */
     fun back(): Boolean {

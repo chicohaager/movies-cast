@@ -51,4 +51,9 @@
     <string name="about_diagnostics">Поделиться диагностикой</string>
     <string name="about_diagnostics_hint">Версия приложения и Android, модель устройства, декодеры и последние строки журнала плеера. Без адреса, имени пользователя и пароля.</string>
     <string name="share">Поделиться</string>
+    <string name="season_label">Сезон %1$d</string>
+    <string name="season_specials">Спецвыпуски</string>
+    <string name="mark_watched">Отметить как просмотренное</string>
+    <string name="mark_unwatched">Отметить как непросмотренное</string>
+    <string name="watched">Просмотрено</string>
 </resources>

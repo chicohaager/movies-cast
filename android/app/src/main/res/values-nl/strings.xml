@@ -51,4 +51,9 @@
     <string name="about_diagnostics">Diagnose delen</string>
     <string name="about_diagnostics_hint">App- en Android-versie, apparaatmodel, decoders en de laatste logregels van de speler. Geen adres, geen gebruikersnaam, geen wachtwoord.</string>
     <string name="share">Delen</string>
+    <string name="season_label">Seizoen %1$d</string>
+    <string name="season_specials">Specials</string>
+    <string name="mark_watched">Markeren als bekeken</string>
+    <string name="mark_unwatched">Markeren als niet bekeken</string>
+    <string name="watched">Bekeken</string>
 </resources>

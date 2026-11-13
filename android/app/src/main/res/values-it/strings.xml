@@ -51,4 +51,9 @@
     <string name="about_diagnostics">Condividi diagnostica</string>
     <string name="about_diagnostics_hint">Versione dell’app e di Android, modello del dispositivo, decoder e ultime righe del registro del lettore. Nessun indirizzo, nessun nome utente, nessuna password.</string>
     <string name="share">Condividi</string>
+    <string name="season_label">Stagione %1$d</string>
+    <string name="season_specials">Speciali</string>
+    <string name="mark_watched">Segna come visto</string>
+    <string name="mark_unwatched">Segna come non visto</string>
+    <string name="watched">Visto</string>
 </resources>

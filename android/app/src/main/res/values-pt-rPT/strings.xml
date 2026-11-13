@@ -51,4 +51,9 @@
     <string name="about_diagnostics">Partilhar diagnóstico</string>
     <string name="about_diagnostics_hint">Versão da aplicação e do Android, modelo do dispositivo, descodificadores e as últimas linhas do registo do leitor. Sem endereço, sem nome de utilizador, sem palavra-passe.</string>
     <string name="share">Partilhar</string>
+    <string name="season_label">Temporada %1$d</string>
+    <string name="season_specials">Especiais</string>
+    <string name="mark_watched">Marcar como visto</string>
+    <string name="mark_unwatched">Marcar como não visto</string>
+    <string name="watched">Visto</string>
 </resources>

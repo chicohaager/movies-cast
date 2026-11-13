@@ -9,6 +9,7 @@ import android.util.Rational
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
+import android.net.Uri
 import android.os.Bundle
 import android.os.SystemClock
 import android.view.Gravity
@@ -43,7 +44,6 @@ import androidx.media3.exoplayer.analytics.AnalyticsListener
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.session.MediaSession
 import androidx.media3.ui.PlayerView
-import io.github.chicohaager.moviescast.core.MediaItem
 import io.github.chicohaager.moviescast.core.PlayState
 import io.github.chicohaager.moviescast.core.Session
 import java.io.IOException
@@ -62,11 +62,12 @@ class PlayerActivity : AppCompatActivity() {
     private lateinit var app: MoviesCastApp
     private lateinit var session: Session
     private lateinit var itemId: String
+    private var startMs = 0L
     private var player: ExoPlayer? = null
     private var mediaSession: MediaSession? = null
     private lateinit var message: TextView
     private lateinit var playerView: PlayerView
-    private val playSessionId = UUID.randomUUID().toString()
+    private var playSessionId = UUID.randomUUID().toString()
     private var reported = false
     private var converting = false
     private val openedAt = SystemClock.elapsedRealtime()
@@ -75,19 +76,20 @@ class PlayerActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         app = application as MoviesCastApp
         val current = app.session
-        val id = intent.getStringExtra(EXTRA_ID)
-        if (current == null || id == null) {
+        @Suppress("DEPRECATION") // the typed variant exists from Android 13 only
+        val queue = (intent.getSerializableExtra(EXTRA_QUEUE) as? ArrayList<*>)?.filterIsInstance<QueueEntry>().orEmpty()
+        if (current == null || queue.isEmpty()) {
             finish()
             return
         }
         session = current
-        itemId = id
 
         val view = PlayerView(this).also { playerView = it }.apply {
             keepScreenOn = true
             setShowSubtitleButton(true)
-            setShowNextButton(false)
-            setShowPreviousButton(false)
+            // An episode brings the ones after it; the buttons then step through them.
+            setShowNextButton(queue.size > 1)
+            setShowPreviousButton(queue.size > 1)
             controllerShowTimeoutMs = 3500
         }
         message = TextView(this).apply {
@@ -130,13 +132,28 @@ class PlayerActivity : AppCompatActivity() {
             .build()
         exo.addListener(Events())
         exo.addAnalyticsListener(Diagnostics())
-        val media = ExoMediaItem.Builder()
-            .setUri(app.client.streamUrl(session, itemId))
-            .setMediaId(itemId)
-            .setMediaMetadata(MediaMetadata.Builder().setTitle(intent.getStringExtra(EXTRA_TITLE)).build())
-            .build()
-        val startMs = savedInstanceState?.getLong(STATE_POSITION) ?: (intent.getLongExtra(EXTRA_START, 0) * 1000)
-        exo.setMediaItem(media, startMs)
+        val media = queue.map { entry ->
+            ExoMediaItem.Builder()
+                .setUri(app.client.streamUrl(session, entry.id))
+                .setMediaId(entry.id)
+                .setMediaMetadata(MediaMetadata.Builder().setTitle(entry.title).build())
+                // Subtitle files lying next to the film; they come from the same server with the same login header.
+                .setSubtitleConfigurations(
+                    entry.subtitles.map {
+                        ExoMediaItem.SubtitleConfiguration.Builder(Uri.parse(it.url))
+                            .setMimeType(subtitleMime(it.format))
+                            .setLanguage(it.language)
+                            .setLabel(it.label)
+                            .build()
+                    },
+                )
+                .build()
+        }
+        val index = (savedInstanceState?.getInt(STATE_INDEX) ?: 0).coerceIn(0, queue.size - 1)
+        startMs = savedInstanceState?.getLong(STATE_POSITION) ?: (intent.getLongExtra(EXTRA_START, 0) * 1000)
+        itemId = queue[index].id
+        AppLog.i("queue of ${queue.size}, subtitle files ${queue[index].subtitles.size}")
+        exo.setMediaItems(media, index, startMs)
         exo.playWhenReady = true
         exo.prepare()
         view.player = exo
@@ -153,7 +170,10 @@ class PlayerActivity : AppCompatActivity() {
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
-        player?.let { outState.putLong(STATE_POSITION, it.currentPosition) }
+        player?.let {
+            outState.putLong(STATE_POSITION, it.currentPosition)
+            outState.putInt(STATE_INDEX, it.currentMediaItemIndex)
+        }
     }
 
     /** Home or the task switcher during playback: keep the film in a small window (Android 8 to 11; 12 and later enter by themselves). */
@@ -209,8 +229,10 @@ class PlayerActivity : AppCompatActivity() {
         return PlayState(itemId, playSessionId, exo.currentPosition.coerceAtLeast(0) / 1000, !exo.isPlaying)
     }
 
-    private fun report(send: suspend (Session, PlayState) -> Unit) {
-        val state = state() ?: return
+    private fun report(send: suspend (Session, PlayState) -> Unit) = report(state(), send)
+
+    private fun report(state: PlayState?, send: suspend (Session, PlayState) -> Unit) {
+        if (state == null) return
         app.appScope.launch {
             try {
                 send(session, state)
@@ -229,7 +251,8 @@ class PlayerActivity : AppCompatActivity() {
         if (converting) return false
         converting = true
         val exo = player ?: return false
-        val position = exo.currentPosition.coerceAtLeast(intent.getLongExtra(EXTRA_START, 0) * 1000)
+        // The film was opened to continue at a place it may not have reached before the decoder gave up.
+        val position = exo.currentPosition.coerceAtLeast(if (exo.currentMediaItemIndex == 0) startMs else 0)
         show(getString(R.string.player_converting))
         lifecycleScope.launch {
             val url = try {
@@ -245,7 +268,10 @@ class PlayerActivity : AppCompatActivity() {
                 return@launch
             }
             AppLog.i("playing the server's converted stream")
-            exo.setMediaItem(ExoMediaItem.Builder().setUri(url).setMimeType(MimeTypes.APPLICATION_M3U8).setMediaId(itemId).build(), position)
+            // Only this item is replaced; the episodes after it stay in the queue.
+            val at = exo.currentMediaItemIndex
+            exo.replaceMediaItem(at, ExoMediaItem.Builder().setUri(url).setMimeType(MimeTypes.APPLICATION_M3U8).setMediaId(itemId).build())
+            exo.seekTo(at, position)
             exo.prepare()
             exo.playWhenReady = true
         }
@@ -287,6 +313,26 @@ class PlayerActivity : AppCompatActivity() {
 
         override fun onVideoSizeChanged(videoSize: VideoSize) = updatePictureInPicture()
 
+        /**
+         * The next item of the queue began (by itself at the end of an episode, or with the
+         * next/previous button): the server hears where the old one stopped, at its end when it ran
+         * out, which marks it as watched, and the new one gets a play session of its own.
+         */
+        override fun onPositionDiscontinuity(oldPosition: Player.PositionInfo, newPosition: Player.PositionInfo, reason: Int) {
+            if (oldPosition.mediaItemIndex == newPosition.mediaItemIndex) return
+            val exo = player ?: return
+            if (reported) {
+                report(PlayState(itemId, playSessionId, oldPosition.positionMs.coerceAtLeast(0) / 1000, false)) { s, p -> app.client.reportStopped(s, p) }
+            }
+            itemId = exo.currentMediaItem?.mediaId ?: return
+            playSessionId = UUID.randomUUID().toString()
+            converting = false
+            message.visibility = View.GONE
+            AppLog.i("next item of the queue (${newPosition.mediaItemIndex + 1} of ${exo.mediaItemCount})")
+            reported = exo.isPlaying
+            if (reported) report { s, p -> app.client.reportStart(s, p) }
+        }
+
         override fun onPlaybackStateChanged(playbackState: Int) {
             if (playbackState == Player.STATE_ENDED) finish()
         }
@@ -317,6 +363,8 @@ class PlayerActivity : AppCompatActivity() {
                 }
             }
             if (!converting) message.visibility = View.GONE
+            val text = tracks.groups.filter { it.type == C.TRACK_TYPE_TEXT }
+            if (text.isNotEmpty()) AppLog.i("subtitle tracks ${text.size}: " + text.joinToString { it.getTrackFormat(0).language ?: "?" })
         }
     }
 
@@ -340,8 +388,8 @@ class PlayerActivity : AppCompatActivity() {
     }
 
     companion object {
-        private const val EXTRA_ID = "id"
-        private const val EXTRA_TITLE = "title"
+        private const val EXTRA_QUEUE = "queue"
+        private const val STATE_INDEX = "index"
         private const val EXTRA_START = "start"
         private const val STATE_POSITION = "position"
         private const val PROGRESS_EVERY_MS = 10_000L
@@ -363,10 +411,17 @@ class PlayerActivity : AppCompatActivity() {
             else -> width to height
         }
 
-        fun intent(context: Context, item: MediaItem, fromSeconds: Long): Intent =
+        /** The MIME type Media3 reads a subtitle file of this format with. */
+        internal fun subtitleMime(format: String): String = when (format) {
+            "vtt" -> MimeTypes.TEXT_VTT
+            "ass", "ssa" -> MimeTypes.TEXT_SSA
+            else -> MimeTypes.APPLICATION_SUBRIP
+        }
+
+        /** Plays the first entry of [queue] from [fromSeconds] and the others after it. */
+        fun intent(context: Context, queue: List<QueueEntry>, fromSeconds: Long): Intent =
             Intent(context, PlayerActivity::class.java)
-                .putExtra(EXTRA_ID, item.id)
-                .putExtra(EXTRA_TITLE, item.name)
+                .putExtra(EXTRA_QUEUE, ArrayList(queue))
                 .putExtra(EXTRA_START, fromSeconds)
     }
 }

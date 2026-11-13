@@ -83,6 +83,25 @@ aboutLibraries {
     collect { configPath = file("../config") }
 }
 
+// The privacy policy is a page of the app (a TV has no browser): the repository's PRIVACY.md goes
+// into the APK as assets/PRIVACY.md, so the app and the repository cannot say different things.
+abstract class PrivacyAsset : DefaultTask() {
+    @get:InputFile
+    abstract val source: RegularFileProperty
+
+    @get:OutputDirectory
+    abstract val outputDir: DirectoryProperty
+
+    @TaskAction
+    fun copy() {
+        source.get().asFile.copyTo(outputDir.get().asFile.resolve("PRIVACY.md"), overwrite = true)
+    }
+}
+val privacyAsset = tasks.register<PrivacyAsset>("privacyAsset") { source.set(rootProject.file("../PRIVACY.md")) }
+androidComponents {
+    onVariants { variant -> variant.sources.assets?.addGeneratedSourceDirectory(privacyAsset, PrivacyAsset::outputDir) }
+}
+
 dependencies {
     implementation(project(":core"))
     implementation(project(":ffmpeg"))

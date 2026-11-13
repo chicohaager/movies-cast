@@ -14,7 +14,8 @@ of dependencies that Google Play can read out of an app is switched off (`depend
 **Sends to that server:** user name and password once at the login; afterwards the token the
 server answered with, a random installation id made on the first start, the device's model name and
 the app's version (the `X-Emby-Authorization` header, as every Jellyfin client sends it); while a
-film plays, the film's id and the position, so that "continue watching" is right on other devices.
+film plays, the film's id and the position, so that "continue watching" is right on other devices;
+"Mark as watched" and its opposite, when you press them.
 
 **Stores on the device:** the address as typed, the user name, the installation id and the login
 token. The token is encrypted with a key of the Android keystore that does not leave the device;

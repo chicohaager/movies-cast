@@ -51,4 +51,9 @@
     <string name="about_diagnostics">진단 정보 공유</string>
     <string name="about_diagnostics_hint">앱 및 Android 버전, 기기 모델, 디코더, 플레이어의 최근 로그입니다. 주소, 사용자 이름, 비밀번호는 포함되지 않습니다.</string>
     <string name="share">공유</string>
+    <string name="season_label">시즌 %1$d</string>
+    <string name="season_specials">스페셜</string>
+    <string name="mark_watched">시청함으로 표시</string>
+    <string name="mark_unwatched">시청 안 함으로 표시</string>
+    <string name="watched">시청함</string>
 </resources>

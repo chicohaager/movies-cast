@@ -8,6 +8,10 @@ What changed in each version; the "why" with its measurements is in
 - Android app 0.1.0 (`android/`, not released): a native player for phones, tablets and Android TV that plays the original file straight from Movies or Jellyfin — login, library with search and "continue watching", film page, picture-in-picture, 18 languages; FFmpeg (LGPL build) for sound the device cannot decode; Dolby Vision profile 7 as HEVC; one server conversion when the picture cannot be decoded.
 - Android app: "About" (menu and login page) with the version, the open-source licences (every library of the build, FFmpeg with the LGPL's text first), links to the privacy policy and the source, and "Share diagnostics" — versions, device, decoders and the player's last log lines, shown before sharing, without addresses.
 - Android app: the question for "Local network access" (Android 17) comes with "Log in", no longer at the first start.
+- Android app: an episode brings the episodes after it; the next one starts by itself and the player's next/previous buttons step through them; each episode that ran to its end is reported to the server at its end.
+- Android app: a series page lists its episodes by season, with a mark on those watched; "Mark as watched" / "Mark as unwatched" on every film, series and episode; a mark on watched posters.
+- Android app: subtitle files lying next to the film (SRT, WebVTT, ASS/SSA) are offered by the player's subtitle button.
+- Android app: the privacy policy is a page of the app (the build copies PRIVACY.md into the APK), readable on a TV without a browser.
 - PRIVACY.md: what the Android app, the server and the TV apps store and talk to.
 - `./check.sh` has a step for the Android app; `deploy/tools/check-android.sh --device` runs four tests on a connected device; a GitHub workflow runs the step on pushes that touch the app.
 

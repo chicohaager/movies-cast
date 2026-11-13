@@ -43,8 +43,8 @@ and plays with the device's own decoders only.
 
 | Module | What |
 |---|---|
-| `core` | plain Kotlin: the client for the Jellyfin-compatible API (`MoviesClient`), 20 tests against a local fake server |
-| `app` | the Android app: login, library with search and "continue watching", film page, player, About; 14 tests (Dolby Vision base layer, shape of the small window, language list, the diagnostics text) and 4 on a device (`src/androidTest`) |
+| `core` | plain Kotlin: the client for the Jellyfin-compatible API (`MoviesClient`), 23 tests against a local fake server |
+| `app` | the Android app: login, library with search and "continue watching", film page with seasons and "mark as watched", player with a queue, About; 18 tests (Dolby Vision base layer, shape of the small window, language list, the diagnostics text, the queue, the privacy text) and 7 on a device (`src/androidTest`) |
 | `config` | what the licences page needs besides the Gradle dependencies: FFmpeg and the copied Media3 module as libraries, the LGPL's text as FFmpeg ships it |
 | `ffmpeg` | Media3's FFmpeg audio decoder (`androidx/media` 1.11.1, `libraries/decoder_ffmpeg`, Apache 2.0), copied because Google publishes it only as source; `build-ffmpeg.sh` builds FFmpeg for it |
 
@@ -68,10 +68,29 @@ version, device model, the server's product and version, the player's last 200 l
 memory only, `AppLog`), the device's decoders. No address, user name, token or film title is put
 in; `LogBook.scrub` replaces URLs and IPv4 addresses in every line all the same.
 
+## Series, the queue, subtitle files, "watched"
+
+A series page lists the episodes by season. "Play" on an episode hands the player that episode and
+the ones after it (at most 100) as one Media3 playlist: the next starts by itself, the player's
+next/previous buttons step through them. At each change the server gets "stopped" for the old
+episode at the place it had reached (its end when it ran out) and a new play session for the next.
+
+Subtitle files lying next to the film (`IsExternal` in the server's stream list; SRT, WebVTT,
+ASS/SSA) go to the player as `SubtitleConfiguration`s, from `/Videos/{id}/{source}/Subtitles/{index}/Stream.{format}`,
+the address Jellyfin's Android TV app builds for external players. The subtitle button offers them;
+none is switched on by itself.
+
+"Mark as watched" / "Mark as unwatched" (`POST` / `DELETE /Users/{user}/PlayedItems/{item}`) on the
+page of a film, series or episode; watched posters and episodes carry a ✓.
+
+The privacy policy is a page of the app: the build copies the repository's `PRIVACY.md` into the
+APK (`assets/PRIVACY.md`, task `privacyAsset`).
+
 ## Tests on a device
 
 `check-android.sh --device` installs the debug build and the test APK and runs `AppUiTest`: login,
-library and film page, a wrong password, About with the licences, the diagnostics text — against a
+library and film page, a wrong password, About with the licences, the diagnostics text, a series
+with its seasons, "mark as watched", the privacy page — against a
 fake server inside the test (MockWebServer on 127.0.0.1). The app runs as `TestApp` there, which
 keeps its login in a file of its own (`session-test`), so a real login on the device stays. The
 script installs with `adb install -r` and not with Gradle's `connectedDebugAndroidTest`.
@@ -202,7 +221,20 @@ report with `scrub` switched off), and the real login of the debug app was still
 
 Signed release build on the same Pixel 7: starts, About, licences with the LGPL's text, the
 diagnostics text says `release`. With the permission taken away (`pm revoke`) a fresh start shows
-the login page and no permission dialog. A login and playback with the release build: not done.
+the login page and no permission dialog. After a login by the owner a Dolby Vision profile 7 film
+from Movies played: `dolby vision dvhe.07.06: no decoder, playing the HEVC base layer`,
+`c2.exynos.hevc.decoder` 3840x2160, `ffmpegLavc60.3.100-truehd` 8 channels, first picture 1.7 s.
 
 A release APK built without `res/raw/keep.xml` still carried the licences file (the code names
 `R.raw.aboutlibraries`), so no keep file is in the tree.
+
+Android 16 emulator against Jellyfin 10.11.0 (a test series of three 15 s and one 20 s episode):
+"Play" on S1E2 logged `queue of 3`; S1E3 and S2E1 followed by themselves (`next item of the queue
+(2 of 3)`, `(3 of 3)`), and the server then listed all three as watched. A film with a `.de.srt`
+next to it: `queue of 1, subtitle files 1`, `subtitle tracks 1: de`; the subtitle button offered
+"Deutsch" and the file's second line showed at 0:11. `check-android.sh --device` there and on the
+Pixel 7: OK (7 tests); the three new ones and the four new unit tests were red once with the app
+broken on purpose. Movies on the test NAS has 8 films and no series (asked 2026-11-13); subtitle
+files and "watched" are not measured against Movies.
+
+The workflow's first run on GitHub (commit 588a860) passed: FFmpeg built, `check-android.sh` green.

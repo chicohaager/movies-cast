@@ -51,4 +51,9 @@
     <string name="about_diagnostics">Diagnosztika megosztása</string>
     <string name="about_diagnostics_hint">Az alkalmazás és az Android verziója, az eszköz típusa, a dekóderek és a lejátszó naplójának utolsó sorai. Nincs benne cím, felhasználónév vagy jelszó.</string>
     <string name="share">Megosztás</string>
+    <string name="season_label">%1$d. évad</string>
+    <string name="season_specials">Különkiadások</string>
+    <string name="mark_watched">Megjelölés megnézettként</string>
+    <string name="mark_unwatched">Megjelölés nem megnézettként</string>
+    <string name="watched">Megnézve</string>
 </resources>

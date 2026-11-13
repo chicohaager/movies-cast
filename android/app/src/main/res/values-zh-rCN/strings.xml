@@ -51,4 +51,9 @@
     <string name="about_diagnostics">分享诊断信息</string>
     <string name="about_diagnostics_hint">应用和 Android 版本、设备型号、解码器以及播放器最近的日志。不含地址、用户名和密码。</string>
     <string name="share">分享</string>
+    <string name="season_label">第 %1$d 季</string>
+    <string name="season_specials">特别篇</string>
+    <string name="mark_watched">标记为已观看</string>
+    <string name="mark_unwatched">标记为未观看</string>
+    <string name="watched">已观看</string>
 </resources>

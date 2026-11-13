@@ -319,4 +319,47 @@ class MoviesClientTest {
         assertFalse(film.copy(resumeSeconds = 5990).resumable)
         assertFalse(MediaItem("s", "n", "Series").playable)
     }
+
+    @Test
+    fun subtitleFilesAreTheExternalOnesThePlayerReads() = runBlocking {
+        routes = {
+            json(
+                200,
+                """{"Id":"f1","Name":"Film","Type":"Movie","MediaSources":[{"Id":"src-9","Container":"mkv","MediaStreams":[
+                {"Type":"Video","Codec":"h264","Index":1},
+                {"Type":"Subtitle","Codec":"subrip","Language":"deu","DisplayTitle":"German - External","Index":0,"IsExternal":true,"Path":"/media/invented/Film.de.srt"},
+                {"Type":"Subtitle","Codec":"ass","Language":"eng","DisplayTitle":"English","Index":3,"IsExternal":true,"Path":""},
+                {"Type":"Subtitle","Codec":"pgssub","Language":"fra","DisplayTitle":"French","Index":4,"IsExternal":true,"Path":"/media/invented/Film.fr.sup"},
+                {"Type":"Subtitle","Codec":"subrip","Language":"spa","DisplayTitle":"Spanish","Index":2,"IsExternal":false}]}]}""",
+            )
+        }
+        val item = client.item(session, "f1")
+        assertEquals("src-9", item.sourceId)
+        assertEquals(
+            listOf(
+                SubtitleFile("$base/Videos/f1/src-9/Subtitles/0/Stream.srt", "srt", "deu", "German - External"),
+                SubtitleFile("$base/Videos/f1/src-9/Subtitles/3/Stream.ass", "ass", "eng", "English"),
+            ),
+            client.subtitleFiles(session, item),
+        )
+        // The place of the file on the server stays there.
+        assertFalse(item.toString(), item.toString().contains("invented"))
+    }
+
+    @Test
+    fun setPlayedPostsAndUnsetDeletes() = runBlocking {
+        routes = { json(200, """{"Played":true}""") }
+        client.setPlayed(session, "f1", true)
+        client.setPlayed(session, "f1", false)
+        assertEquals(listOf("POST /movies/Users/user-1/PlayedItems/f1", "DELETE /movies/Users/user-1/PlayedItems/f1"), seen.map { "${it.method} ${it.url.encodedPath}" })
+        assertTrue(seen.all { it.headers["X-Emby-Authorization"]!!.contains("Token=\"tok-secret-123\"") })
+    }
+
+    @Test
+    fun afterAnswersTheEpisodesStillToCome() {
+        val episodes = listOf("e1", "e2", "e3").map { MediaItem(id = it, name = it, type = "Episode") }
+        assertEquals(listOf("e2", "e3"), episodes.after("e1").map { it.id })
+        assertEquals(emptyList<String>(), episodes.after("e3").map { it.id })
+        assertEquals(emptyList<String>(), episodes.after("unknown").map { it.id })
+    }
 }

@@ -39,7 +39,13 @@ import io.github.chicohaager.moviescast.core.Track
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DetailScreen(state: UiState, onBack: () -> Unit, onOpen: (MediaItem) -> Unit, onPlay: (MediaItem, Long) -> Unit) {
+fun DetailScreen(
+    state: UiState,
+    onBack: () -> Unit,
+    onOpen: (MediaItem) -> Unit,
+    onPlay: (MediaItem, Long) -> Unit,
+    onPlayed: (MediaItem, Boolean) -> Unit,
+) {
     val item = state.detail ?: return
     Scaffold(
         topBar = {
@@ -55,7 +61,7 @@ fun DetailScreen(state: UiState, onBack: () -> Unit, onOpen: (MediaItem) -> Unit
                 Row(Modifier.fillMaxSize().padding(horizontal = 24.dp), horizontalArrangement = Arrangement.spacedBy(24.dp)) {
                     Poster(item, Modifier.width(260.dp).padding(top = 8.dp), widthPx = 600)
                     Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(bottom = 24.dp)) {
-                        Facts(state, item, onOpen, onPlay)
+                        Facts(state, item, onOpen, onPlay, onPlayed)
                     }
                 }
             } else {
@@ -64,7 +70,7 @@ fun DetailScreen(state: UiState, onBack: () -> Unit, onOpen: (MediaItem) -> Unit
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
                     Poster(item, Modifier.width(180.dp), widthPx = 600)
-                    Facts(state, item, onOpen, onPlay)
+                    Facts(state, item, onOpen, onPlay, onPlayed)
                 }
             }
         }
@@ -73,7 +79,7 @@ fun DetailScreen(state: UiState, onBack: () -> Unit, onOpen: (MediaItem) -> Unit
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun Facts(state: UiState, item: MediaItem, onOpen: (MediaItem) -> Unit, onPlay: (MediaItem, Long) -> Unit) {
+private fun Facts(state: UiState, item: MediaItem, onOpen: (MediaItem) -> Unit, onPlay: (MediaItem, Long) -> Unit, onPlayed: (MediaItem, Boolean) -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
         Text(item.name, style = MaterialTheme.typography.headlineSmall)
         val line = listOfNotNull(
@@ -101,6 +107,9 @@ private fun Facts(state: UiState, item: MediaItem, onOpen: (MediaItem) -> Unit, 
                 } else {
                     Button(onClick = { onPlay(item, 0) }, modifier = Modifier.focusRequester(mainButton).testTag("play")) { Text("▶  " + stringResource(R.string.play)) }
                 }
+                OutlinedButton(onClick = { onPlayed(item, !item.played) }, modifier = Modifier.testTag("played")) {
+                    Text(if (item.played) "✓  " + stringResource(R.string.mark_unwatched) else stringResource(R.string.mark_watched))
+                }
             }
         }
 
@@ -121,10 +130,20 @@ private fun Facts(state: UiState, item: MediaItem, onOpen: (MediaItem) -> Unit, 
         if (state.episodes.isNotEmpty()) {
             Text(stringResource(R.string.episodes), style = MaterialTheme.typography.titleMedium)
             Column {
+                var season = -1
                 for (episode in state.episodes) {
+                    if (episode.season != season) {
+                        season = episode.season
+                        Text(
+                            if (season == 0) stringResource(R.string.season_specials) else stringResource(R.string.season_label, season),
+                            style = MaterialTheme.typography.titleSmall,
+                            color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.padding(top = 18.dp, bottom = 6.dp).testTag("season"),
+                        )
+                    }
                     HorizontalDivider()
                     Text(
-                        stringResource(R.string.episode_label, episode.season, episode.episode, episode.name),
+                        (if (episode.played) "✓  " else "") + stringResource(R.string.episode_label, episode.season, episode.episode, episode.name),
                         modifier = Modifier.fillMaxWidth().clickable { onOpen(episode) }.padding(vertical = 14.dp).testTag("episode"),
                     )
                 }
