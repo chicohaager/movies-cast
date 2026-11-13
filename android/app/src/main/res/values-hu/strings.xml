@@ -43,4 +43,12 @@
     <string name="language">Nyelv</string>
     <string name="language_system">Rendszer alapértelmezése</string>
     <string name="menu">Menü</string>
+    <string name="about">Névjegy</string>
+    <string name="about_version">Verzió: %1$s</string>
+    <string name="about_source">Forráskód</string>
+    <string name="about_privacy">Adatvédelmi irányelvek</string>
+    <string name="about_licences">Nyílt forráskódú licencek</string>
+    <string name="about_diagnostics">Diagnosztika megosztása</string>
+    <string name="about_diagnostics_hint">Az alkalmazás és az Android verziója, az eszköz típusa, a dekóderek és a lejátszó naplójának utolsó sorai. Nincs benne cím, felhasználónév vagy jelszó.</string>
+    <string name="share">Megosztás</string>
 </resources>

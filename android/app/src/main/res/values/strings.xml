@@ -45,4 +45,12 @@
     <string name="language">Language</string>
     <string name="language_system">System default</string>
     <string name="menu">Menu</string>
+    <string name="about">About</string>
+    <string name="about_version">Version %1$s</string>
+    <string name="about_source">Source code</string>
+    <string name="about_privacy">Privacy policy</string>
+    <string name="about_licences">Open-source licences</string>
+    <string name="about_diagnostics">Share diagnostics</string>
+    <string name="about_diagnostics_hint">App and Android version, device model, decoders and the player\'s last log lines. No address, no user name, no password.</string>
+    <string name="share">Share</string>
 </resources>

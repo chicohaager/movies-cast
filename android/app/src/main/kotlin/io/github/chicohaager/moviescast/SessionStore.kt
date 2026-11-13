@@ -18,8 +18,8 @@ import javax.crypto.spec.GCMParameterSpec
  * the Android keystore and never leaves the device; address and user name are stored in the clear
  * so the login screen can offer them again.
  */
-class SessionStore(context: Context) {
-    private val prefs = context.getSharedPreferences("session", Context.MODE_PRIVATE)
+class SessionStore(context: Context, name: String = "session") {
+    private val prefs = context.getSharedPreferences(name, Context.MODE_PRIVATE)
 
     /** Identifies this installation to the server (its device list), made once. */
     val deviceId: String

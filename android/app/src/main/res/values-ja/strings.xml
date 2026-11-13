@@ -43,4 +43,12 @@
     <string name="language">言語</string>
     <string name="language_system">システムのデフォルト</string>
     <string name="menu">メニュー</string>
+    <string name="about">このアプリについて</string>
+    <string name="about_version">バージョン %1$s</string>
+    <string name="about_source">ソースコード</string>
+    <string name="about_privacy">プライバシーポリシー</string>
+    <string name="about_licences">オープンソースライセンス</string>
+    <string name="about_diagnostics">診断情報を共有</string>
+    <string name="about_diagnostics_hint">アプリと Android のバージョン、端末のモデル、デコーダー、プレーヤーの最新のログ。アドレス、ユーザー名、パスワードは含まれません。</string>
+    <string name="share">共有</string>
 </resources>

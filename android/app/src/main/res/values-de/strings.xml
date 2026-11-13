@@ -43,4 +43,12 @@
     <string name="language">Sprache</string>
     <string name="language_system">Wie das Gerät</string>
     <string name="menu">Menü</string>
+    <string name="about">Über</string>
+    <string name="about_version">Version %1$s</string>
+    <string name="about_source">Quellcode</string>
+    <string name="about_privacy">Datenschutzerklärung</string>
+    <string name="about_licences">Open-Source-Lizenzen</string>
+    <string name="about_diagnostics">Diagnose teilen</string>
+    <string name="about_diagnostics_hint">App- und Android-Version, Gerätemodell, Dekoder und die letzten Protokollzeilen des Players. Keine Adresse, kein Benutzername, kein Passwort.</string>
+    <string name="share">Teilen</string>
 </resources>

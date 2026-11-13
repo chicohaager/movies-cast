@@ -43,4 +43,12 @@
     <string name="language">语言</string>
     <string name="language_system">跟随系统</string>
     <string name="menu">菜单</string>
+    <string name="about">关于</string>
+    <string name="about_version">版本 %1$s</string>
+    <string name="about_source">源代码</string>
+    <string name="about_privacy">隐私政策</string>
+    <string name="about_licences">开源许可</string>
+    <string name="about_diagnostics">分享诊断信息</string>
+    <string name="about_diagnostics_hint">应用和 Android 版本、设备型号、解码器以及播放器最近的日志。不含地址、用户名和密码。</string>
+    <string name="share">分享</string>
 </resources>

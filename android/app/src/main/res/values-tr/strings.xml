@@ -43,4 +43,12 @@
     <string name="language">Dil</string>
     <string name="language_system">Sistem varsayılanı</string>
     <string name="menu">Menü</string>
+    <string name="about">Hakkında</string>
+    <string name="about_version">Sürüm %1$s</string>
+    <string name="about_source">Kaynak kodu</string>
+    <string name="about_privacy">Gizlilik politikası</string>
+    <string name="about_licences">Açık kaynak lisansları</string>
+    <string name="about_diagnostics">Tanılama bilgisini paylaş</string>
+    <string name="about_diagnostics_hint">Uygulama ve Android sürümü, cihaz modeli, kod çözücüler ve oynatıcının son günlük satırları. Adres, kullanıcı adı ve parola içermez.</string>
+    <string name="share">Paylaş</string>
 </resources>

@@ -43,4 +43,12 @@
     <string name="language">Jazyk</string>
     <string name="language_system">Podle systému</string>
     <string name="menu">Nabídka</string>
+    <string name="about">O aplikaci</string>
+    <string name="about_version">Verze %1$s</string>
+    <string name="about_source">Zdrojový kód</string>
+    <string name="about_privacy">Zásady ochrany soukromí</string>
+    <string name="about_licences">Licence open source</string>
+    <string name="about_diagnostics">Sdílet diagnostiku</string>
+    <string name="about_diagnostics_hint">Verze aplikace a Androidu, model zařízení, dekodéry a poslední řádky protokolu přehrávače. Žádná adresa, žádné uživatelské jméno, žádné heslo.</string>
+    <string name="share">Sdílet</string>
 </resources>

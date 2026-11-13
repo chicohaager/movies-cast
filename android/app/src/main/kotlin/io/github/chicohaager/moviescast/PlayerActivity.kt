@@ -11,7 +11,6 @@ import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
 import android.os.SystemClock
-import android.util.Log
 import android.view.Gravity
 import android.view.View
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
@@ -115,7 +114,7 @@ class PlayerActivity : AppCompatActivity() {
         val renderers = MoviesCastRenderersFactory(this)
             .setEnableDecoderFallback(true)
             .setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_ON)
-        Log.i(TAG, "ffmpeg ${if (FfmpegLibrary.isAvailable()) "available ${FfmpegLibrary.getVersion()}" else "not available"}")
+        AppLog.i("ffmpeg ${if (FfmpegLibrary.isAvailable()) "available ${FfmpegLibrary.getVersion()}" else "not available"}")
         val exo = ExoPlayer.Builder(this, renderers)
             .setMediaSourceFactory(DefaultMediaSourceFactory(OkHttpDataSource.Factory(app.mediaHttp)))
             .setAudioAttributes(
@@ -216,7 +215,7 @@ class PlayerActivity : AppCompatActivity() {
             try {
                 send(session, state)
             } catch (e: IOException) {
-                Log.w(TAG, "report failed: ${e.javaClass.simpleName}")
+                AppLog.w("report failed: ${e.javaClass.simpleName}")
             }
         }
     }
@@ -235,17 +234,17 @@ class PlayerActivity : AppCompatActivity() {
         lifecycleScope.launch {
             val url = try {
                 val (width, height) = largestH264Picture()
-                Log.i(TAG, "asking for h264 up to ${width}x$height")
+                AppLog.i("asking for h264 up to ${width}x$height")
                 app.client.transcodeUrl(session, itemId, width, height)
             } catch (e: IOException) {
-                Log.w(TAG, "converted stream: ${e.javaClass.simpleName}")
+                AppLog.w("converted stream: ${e.javaClass.simpleName}")
                 null
             }
             if (url == null) {
                 show(getString(R.string.player_cannot_convert))
                 return@launch
             }
-            Log.i(TAG, "playing the server's converted stream")
+            AppLog.i("playing the server's converted stream")
             exo.setMediaItem(ExoMediaItem.Builder().setUri(url).setMimeType(MimeTypes.APPLICATION_M3U8).setMediaId(itemId).build(), position)
             exo.prepare()
             exo.playWhenReady = true
@@ -294,11 +293,11 @@ class PlayerActivity : AppCompatActivity() {
 
         override fun onRenderedFirstFrame() {
             if (converting) message.visibility = View.GONE
-            Log.i(TAG, "first frame ${SystemClock.elapsedRealtime() - openedAt} ms after opening")
+            AppLog.i("first frame ${SystemClock.elapsedRealtime() - openedAt} ms after opening")
         }
 
         override fun onPlayerError(error: PlaybackException) {
-            Log.e(TAG, "playback error ${error.errorCodeName}")
+            AppLog.e("playback error ${error.errorCodeName}")
             if (error.errorCode in DECODER_ERRORS && askServerToConvert()) return
             show(getString(R.string.player_error, error.errorCodeName))
         }
@@ -310,7 +309,7 @@ class PlayerActivity : AppCompatActivity() {
                 val groups = tracks.groups.filter { it.type == type }
                 if (groups.isNotEmpty() && groups.none { it.isSupported }) {
                     val format = groups.first().getTrackFormat(0)
-                    Log.w(TAG, "no decoder for ${format.sampleMimeType} ${format.codecs.orEmpty()}")
+                    AppLog.w("no decoder for ${format.sampleMimeType} ${format.codecs.orEmpty()}")
                     // No picture is no film: let the server convert. Missing sound only gets the message.
                     if (type == C.TRACK_TYPE_VIDEO && askServerToConvert()) return
                     show(getString(text, format.sampleMimeType?.substringAfter('/')?.uppercase() ?: "?"))
@@ -324,24 +323,23 @@ class PlayerActivity : AppCompatActivity() {
     /** One log line per decoder and format, so a tester's `adb logcat -s MoviesCast` says what the device did. */
     private inner class Diagnostics : AnalyticsListener {
         override fun onAudioDecoderInitialized(eventTime: AnalyticsListener.EventTime, decoderName: String, initializedTimestampMs: Long, initializationDurationMs: Long) {
-            Log.i(TAG, "audio decoder $decoderName")
+            AppLog.i("audio decoder $decoderName")
         }
 
         override fun onVideoDecoderInitialized(eventTime: AnalyticsListener.EventTime, decoderName: String, initializedTimestampMs: Long, initializationDurationMs: Long) {
-            Log.i(TAG, "video decoder $decoderName")
+            AppLog.i("video decoder $decoderName")
         }
 
         override fun onAudioInputFormatChanged(eventTime: AnalyticsListener.EventTime, format: Format, decoderReuseEvaluation: androidx.media3.exoplayer.DecoderReuseEvaluation?) {
-            Log.i(TAG, "audio format ${format.sampleMimeType} channels=${format.channelCount} lang=${format.language}")
+            AppLog.i("audio format ${format.sampleMimeType} channels=${format.channelCount} lang=${format.language}")
         }
 
         override fun onVideoInputFormatChanged(eventTime: AnalyticsListener.EventTime, format: Format, decoderReuseEvaluation: androidx.media3.exoplayer.DecoderReuseEvaluation?) {
-            Log.i(TAG, "video format ${format.sampleMimeType} ${format.width}x${format.height}")
+            AppLog.i("video format ${format.sampleMimeType} ${format.width}x${format.height}")
         }
     }
 
     companion object {
-        private const val TAG = "MoviesCast"
         private const val EXTRA_ID = "id"
         private const val EXTRA_TITLE = "title"
         private const val EXTRA_START = "start"

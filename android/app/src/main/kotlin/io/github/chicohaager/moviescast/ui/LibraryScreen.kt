@@ -63,6 +63,7 @@ fun LibraryScreen(
     onRefresh: () -> Unit,
     onLogout: () -> Unit,
     onOpenSettings: () -> Unit,
+    onAbout: () -> Unit,
 ) {
     val searchField = rememberRemoteField()
     Scaffold(
@@ -95,6 +96,11 @@ fun LibraryScreen(
                             text = { Text(stringResource(R.string.language)) },
                             onClick = { menu = false; languages = true },
                             modifier = Modifier.testTag("language"),
+                        )
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.about)) },
+                            onClick = { menu = false; onAbout() },
+                            modifier = Modifier.testTag("about"),
                         )
                         DropdownMenuItem(
                             text = { Text(stringResource(R.string.logout)) },

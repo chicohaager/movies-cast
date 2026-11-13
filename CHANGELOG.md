@@ -3,6 +3,14 @@
 What changed in each version; the "why" with its measurements is in
 [docs/ROADMAP.md](docs/ROADMAP.md) and [docs/TECHNICAL.md](docs/TECHNICAL.md).
 
+## Unreleased
+
+- Android app 0.1.0 (`android/`, not released): a native player for phones, tablets and Android TV that plays the original file straight from Movies or Jellyfin — login, library with search and "continue watching", film page, picture-in-picture, 18 languages; FFmpeg (LGPL build) for sound the device cannot decode; Dolby Vision profile 7 as HEVC; one server conversion when the picture cannot be decoded.
+- Android app: "About" (menu and login page) with the version, the open-source licences (every library of the build, FFmpeg with the LGPL's text first), links to the privacy policy and the source, and "Share diagnostics" — versions, device, decoders and the player's last log lines, shown before sharing, without addresses.
+- Android app: the question for "Local network access" (Android 17) comes with "Log in", no longer at the first start.
+- PRIVACY.md: what the Android app, the server and the TV apps store and talk to.
+- `./check.sh` has a step for the Android app; `deploy/tools/check-android.sh --device` runs four tests on a connected device; a GitHub workflow runs the step on pushes that touch the app.
+
 ## 0.27.0 (2026-10-31)
 
 - Series and episodes, music albums and photos (with Jellyfin or Emby; Movies 0.3.0 has films only); tabs show only what the server has.

@@ -1,0 +1,18 @@
+{
+  "uniqueId": "androidx.media3:media3-decoder-ffmpeg",
+  "name": "Media3 FFmpeg decoder module",
+  "artifactVersion": "1.11.1",
+  "description": "libraries/decoder_ffmpeg of androidx/media, built from source in android/ffmpeg.",
+  "website": "https://github.com/androidx/media",
+  "developers": [
+    {
+      "name": "The Android Open Source Project"
+    }
+  ],
+  "scm": {
+    "url": "https://github.com/androidx/media"
+  },
+  "licenses": [
+    "Apache-2.0"
+  ]
+}

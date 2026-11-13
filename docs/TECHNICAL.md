@@ -90,7 +90,9 @@ the TV's description answers. Whether a TV wakes this way depends on the TV (LG:
 
 `./check.sh` runs everything that must pass: gofmt + vet, the Go tests, the browser tests (`e2e/`), the Android
 app (`deploy/tools/check-android.sh`: its tests, a debug and a release build, every translation and the FFmpeg
-decoder for all four ABIs in both APKs, 16 KB alignment, the signature where the release key is) and the public-data scan; `--no-android` leaves the app out. `build-on-host.sh` and the testers'
+decoder for all four ABIs in both APKs, FFmpeg with the LGPL's text on the licences page, 16 KB alignment, the
+signature where the release key is; `--device` runs the screen tests on a connected device and is not part of
+`check.sh`; `.github/workflows/android.yml` runs the step on GitHub) and the public-data scan; `--no-android` leaves the app out. `build-on-host.sh` and the testers'
 package run it first with `--no-android`, because they ship the server only (`CHECK_ARGS=--no-e2e` without Node).
 
 ### Package for testers

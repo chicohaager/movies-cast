@@ -43,4 +43,12 @@
     <string name="language">語言</string>
     <string name="language_system">系統預設</string>
     <string name="menu">選單</string>
+    <string name="about">關於</string>
+    <string name="about_version">版本 %1$s</string>
+    <string name="about_source">原始碼</string>
+    <string name="about_privacy">隱私權政策</string>
+    <string name="about_licences">開放原始碼授權</string>
+    <string name="about_diagnostics">分享診斷資訊</string>
+    <string name="about_diagnostics_hint">應用程式與 Android 版本、裝置型號、解碼器，以及播放器最近的記錄。不含位址、使用者名稱與密碼。</string>
+    <string name="share">分享</string>
 </resources>

@@ -38,6 +38,9 @@ sealed interface Screen {
     data object Login : Screen
     data object Library : Screen
     data class Detail(val id: String) : Screen
+    data object About : Screen
+    data object Licences : Screen
+    data class Licence(val id: String) : Screen
 }
 
 data class UiState(
@@ -145,6 +148,9 @@ class AppViewModel(private val app: MoviesCastApp) : ViewModel() {
         val episodes = if (full.type == "Series") client.episodes(session, id) else emptyList()
         _state.update { if ((it.screen as? Screen.Detail)?.id == id) it.copy(detail = full, episodes = episodes) else it }
     }
+
+    /** Opens a page on top of the current one: About, the licences, one licence. */
+    fun show(screen: Screen) = _state.update { it.copy(stack = it.stack + screen, error = null) }
 
     /** Returns false when there is nothing to go back to (the activity then closes). */
     fun back(): Boolean {

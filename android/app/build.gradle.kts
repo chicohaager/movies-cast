@@ -3,6 +3,7 @@ import java.util.Properties
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.aboutlibraries)
 }
 
 java { toolchain { languageVersion = JavaLanguageVersion.of(17) } }
@@ -32,6 +33,8 @@ android {
         targetSdk = 37
         versionCode = 100
         versionName = "0.1.0"
+        // The tests on a device (src/androidTest) run the app with a store of its own, see TestRunner.
+        testInstrumentationRunner = "io.github.chicohaager.moviescast.TestRunner"
         buildConfigField("String[]", "LANGUAGES", languages.joinToString(prefix = "{", postfix = "}") { "\"$it\"" })
     }
 
@@ -72,6 +75,14 @@ android {
     }
 }
 
+// The licences page of the app: every library of the build, read by the plugin into
+// res/raw/aboutlibraries.json (as Jellyfin's Android TV app does). FFmpeg and the copied Media3
+// decoder are no Gradle dependencies; ../config names them and carries the LGPL's text as FFmpeg
+// ships it (COPYING.LGPLv2.1), so the page does not depend on what the plugin can fetch.
+aboutLibraries {
+    collect { configPath = file("../config") }
+}
+
 dependencies {
     implementation(project(":core"))
     implementation(project(":ffmpeg"))
@@ -97,6 +108,17 @@ dependencies {
     implementation(libs.coil.compose)
     implementation(libs.coil.network.okhttp)
     implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.aboutlibraries.core)
 
     testImplementation(libs.junit)
+
+    androidTestImplementation(libs.junit)
+    androidTestImplementation(libs.androidx.test.runner)
+    androidTestImplementation(libs.androidx.test.ext.junit)
+    androidTestImplementation(libs.androidx.compose.ui.test.junit4)
+    // Compose's test library brings Espresso 3.5.0, which fails on Android 17 with
+    // "NoSuchMethodException: InputManager.getInstance" (Pixel 7, measured 2026-11-13).
+    androidTestImplementation(libs.androidx.test.espresso.core)
+    androidTestImplementation(libs.okhttp.mockwebserver)
+    debugImplementation(libs.androidx.compose.ui.test.manifest)
 }

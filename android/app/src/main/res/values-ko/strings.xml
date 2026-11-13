@@ -43,4 +43,12 @@
     <string name="language">언어</string>
     <string name="language_system">시스템 기본값</string>
     <string name="menu">메뉴</string>
+    <string name="about">정보</string>
+    <string name="about_version">버전 %1$s</string>
+    <string name="about_source">소스 코드</string>
+    <string name="about_privacy">개인정보처리방침</string>
+    <string name="about_licences">오픈소스 라이선스</string>
+    <string name="about_diagnostics">진단 정보 공유</string>
+    <string name="about_diagnostics_hint">앱 및 Android 버전, 기기 모델, 디코더, 플레이어의 최근 로그입니다. 주소, 사용자 이름, 비밀번호는 포함되지 않습니다.</string>
+    <string name="share">공유</string>
 </resources>

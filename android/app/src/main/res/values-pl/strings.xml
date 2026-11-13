@@ -43,4 +43,12 @@
     <string name="language">Język</string>
     <string name="language_system">Domyślny systemu</string>
     <string name="menu">Menu</string>
+    <string name="about">O aplikacji</string>
+    <string name="about_version">Wersja %1$s</string>
+    <string name="about_source">Kod źródłowy</string>
+    <string name="about_privacy">Polityka prywatności</string>
+    <string name="about_licences">Licencje open source</string>
+    <string name="about_diagnostics">Udostępnij diagnostykę</string>
+    <string name="about_diagnostics_hint">Wersja aplikacji i Androida, model urządzenia, dekodery i ostatnie wiersze dziennika odtwarzacza. Bez adresu, nazwy użytkownika i hasła.</string>
+    <string name="share">Udostępnij</string>
 </resources>

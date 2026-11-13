@@ -33,6 +33,26 @@ H.264, AC3, E-AC3, TrueHD, three audio tracks — all PLAYING, Play answered in 
 Avatar (37 GiB, HEVC 4K, 3× E-AC3) through movies-cast 0.18.0: Play answered after 2.26 s, 40 s
 PLAYING. The two failures of 19:35 and 17:51 (no answer to Play within 6 s) were not reproduced.
 
+## Android app (`android/`, native player)
+
+State 2026-11-13: 0.1.0, committed, not released. What is measured is in [android/README.md](../android/README.md).
+
+| # | What | State | Note |
+|---|---|---|---|
+| A1 | licences in the app, privacy policy, diagnostics a tester can send | done 2026-11-13 | About page; PRIVACY.md; Pixel 7 (Android 17), debug and signed release |
+| A2 | tests of the screens on a device, a workflow on GitHub | done / written | 4 tests on the Pixel 7 (`check-android.sh --device`); the workflow has not run yet (nothing pushed) |
+| A3 | real devices besides the Pixel 7 | open | a tablet and a real Android TV box; so far emulators only |
+| A4 | open test, native speakers read the 16 translations, version number for it | open | owner's decision |
+| A5 | series: seasons, next episode by itself | open | episodes are one flat list; the player closes at the end |
+| A6 | subtitle files next to the film (the server's external streams) | open | only subtitles inside the file play |
+| A7 | mark as watched, favourites | open | |
+| A8 | large libraries: sort, filter, genres, "recently added" | open | the whole library is read into memory, one grid |
+| A9 | servers: search in the network, more than one server or account, self-signed HTTPS | open | the address is typed |
+| A10 | TV: "continue watching" on the home screen, refresh rate to the film's (24p) | open | the TV uses the phone's screens with a focus frame |
+| A11 | player: chapters, skip intro, preview pictures while seeking | open | |
+| A12 | Google Cast from the app, downloads | open | |
+| A13 | icons in place of text signs (⋮ ‹ ▶), screen reader pass | open | 3 `contentDescription` in the screens |
+
 ## Next
 
 | # | What | Effort | Note |

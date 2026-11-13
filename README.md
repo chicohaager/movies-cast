@@ -27,6 +27,10 @@ phone ──HTTP(S)──> Movies-Cast :8097 ──Jellyfin API──> Movies / 
 - Wake-on-LAN for TVs in standby, 18 languages, light/dark, HTTPS with a `__Host-` cookie, accessibility
   checked with axe (WCAG 2.1 AA).
 
+**Android app (first build 0.1.0, not released yet):** [android/](android/README.md) is a player of its
+own for phones, tablets and Android TV. It plays the original file straight from Movies or Jellyfin on the
+device, without the Movies-Cast container, with FFmpeg for the sound formats the device lacks (DTS, TrueHD).
+
 ## Requirements
 
 - **A media server:** IceWhale Movies on ZimaOS (`zimaos-movies` 0.3.0 or later; a beta, not in the ZimaOS
@@ -153,6 +157,8 @@ MC_DEV_LIBRARY=../../docs/screenshots/demo MC_DEV_SERVER=127.0.0.1:18097 go test
 - [docs/ROADMAP.md](docs/ROADMAP.md): what is done and what is next · [CHANGELOG.md](CHANGELOG.md)
 - [docs/TRANSLATIONS.md](docs/TRANSLATIONS.md): the 18 languages and how to correct one
 - [CONTRIBUTING.md](CONTRIBUTING.md): reporting a TV, a bug or a translation
+- [android/README.md](android/README.md): the Android app — build, tests on a device, what was measured
+- [PRIVACY.md](PRIVACY.md): what each part stores and which machines it talks to
 - [docs/WEBOS-STORE.md](docs/WEBOS-STORE.md): the webOS app for the LG Content Store — what is ready, what LG asks for
 
 ## License

@@ -43,4 +43,12 @@
     <string name="language">Язык</string>
     <string name="language_system">Как в системе</string>
     <string name="menu">Меню</string>
+    <string name="about">О приложении</string>
+    <string name="about_version">Версия %1$s</string>
+    <string name="about_source">Исходный код</string>
+    <string name="about_privacy">Политика конфиденциальности</string>
+    <string name="about_licences">Лицензии открытого ПО</string>
+    <string name="about_diagnostics">Поделиться диагностикой</string>
+    <string name="about_diagnostics_hint">Версия приложения и Android, модель устройства, декодеры и последние строки журнала плеера. Без адреса, имени пользователя и пароля.</string>
+    <string name="share">Поделиться</string>
 </resources>

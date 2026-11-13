@@ -1,0 +1,19 @@
+{
+  "uniqueId": "org.ffmpeg:ffmpeg",
+  "name": "FFmpeg",
+  "artifactVersion": "n6.0.1",
+  "description": "Sound decoders (flac, alac, mp3, aac, ac3, eac3, dca, mlp, truehd), linked statically into libffmpegJNI.so. Configured without --enable-gpl and --enable-nonfree. The app's source and android/ffmpeg/build-ffmpeg.sh rebuild the library against another FFmpeg.",
+  "website": "https://ffmpeg.org",
+  "developers": [
+    {
+      "name": "The FFmpeg developers",
+      "organisationUrl": "https://ffmpeg.org"
+    }
+  ],
+  "scm": {
+    "url": "https://git.ffmpeg.org/ffmpeg.git"
+  },
+  "licenses": [
+    "LGPL-2.1-or-later"
+  ]
+}

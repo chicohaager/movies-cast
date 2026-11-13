@@ -19,7 +19,10 @@ import okhttp3.OkHttpClient
 import okhttp3.Response
 
 /** The few objects every screen shares; built once, by hand. */
-class MoviesCastApp : Application(), SingletonImageLoader.Factory {
+open class MoviesCastApp : Application(), SingletonImageLoader.Factory {
+
+    /** The preferences file of the login; the tests on a device use one of their own, so they never touch a real login. */
+    protected open val storeName: String get() = "session"
 
     lateinit var store: SessionStore
         private set
@@ -40,7 +43,7 @@ class MoviesCastApp : Application(), SingletonImageLoader.Factory {
 
     override fun onCreate() {
         super.onCreate()
-        store = SessionStore(this)
+        store = SessionStore(this, storeName)
         val http = OkHttpClient.Builder()
             .connectTimeout(8, TimeUnit.SECONDS)
             .readTimeout(20, TimeUnit.SECONDS)

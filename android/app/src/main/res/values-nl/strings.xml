@@ -43,4 +43,12 @@
     <string name="language">Taal</string>
     <string name="language_system">Systeemstandaard</string>
     <string name="menu">Menu</string>
+    <string name="about">Over</string>
+    <string name="about_version">Versie %1$s</string>
+    <string name="about_source">Broncode</string>
+    <string name="about_privacy">Privacybeleid</string>
+    <string name="about_licences">Opensourcelicenties</string>
+    <string name="about_diagnostics">Diagnose delen</string>
+    <string name="about_diagnostics_hint">App- en Android-versie, apparaatmodel, decoders en de laatste logregels van de speler. Geen adres, geen gebruikersnaam, geen wachtwoord.</string>
+    <string name="share">Delen</string>
 </resources>

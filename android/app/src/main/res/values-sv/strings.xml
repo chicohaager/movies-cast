@@ -43,4 +43,12 @@
     <string name="language">Språk</string>
     <string name="language_system">Systemets standard</string>
     <string name="menu">Meny</string>
+    <string name="about">Om</string>
+    <string name="about_version">Version %1$s</string>
+    <string name="about_source">Källkod</string>
+    <string name="about_privacy">Integritetspolicy</string>
+    <string name="about_licences">Licenser för öppen källkod</string>
+    <string name="about_diagnostics">Dela diagnostik</string>
+    <string name="about_diagnostics_hint">Appens och Androids version, enhetsmodell, avkodare och spelarens senaste loggrader. Ingen adress, inget användarnamn, inget lösenord.</string>
+    <string name="share">Dela</string>
 </resources>

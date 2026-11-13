@@ -1,16 +1,39 @@
 #!/usr/bin/env bash
 # The Android app's part of ./check.sh: complete translations, unit tests, debug and release build, and
-# properties of the APKs that no test sees: every translation is inside, the FFmpeg sound decoder is
-# inside for every ABI, every native library is laid out for 16 KB pages (Android warns on such
-# devices otherwise), and a release APK built with a key carries a valid signature.
+# properties of the APKs that no test sees: every translation is inside, the licences page names FFmpeg
+# with the LGPL's text, the FFmpeg sound decoder is inside for every ABI, every native library is laid
+# out for 16 KB pages (Android warns on such devices otherwise), and a release APK built with a key
+# carries a valid signature.
 #
 #   deploy/tools/check-android.sh [apk]   with an APK: only the APK checks, no build
+#   deploy/tools/check-android.sh --device   the tests on the device adb sees (app/src/androidTest): login,
+#                                           library, film page, licences and diagnostics against a fake
+#                                           server inside the test; a real login on the device is not touched
 set -euo pipefail
 
 repo="$(cd "$(dirname "$0")/../.." && pwd)"
 apk="${1:-}"
+device=0
+if [[ "$apk" == "--device" ]]; then device=1; apk=""; fi
 [[ -n "$apk" ]] && apk="$(realpath "$apk")"
 cd "$repo/android"
+
+if [[ "$device" == 1 ]]; then
+  # Installed by hand and not with Gradle's connectedDebugAndroidTest, so the app and its data stay on the device.
+  ./gradlew -q :app:assembleDebug :app:assembleDebugAndroidTest
+  adb install -r app/build/outputs/apk/debug/app-debug.apk >/dev/null
+  adb install -r app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk >/dev/null
+  adb shell input keyevent KEYCODE_WAKEUP
+  # "am instrument" ends with 0 also when tests fail; its last lines say what happened.
+  out="$(adb shell am instrument -w io.github.chicohaager.moviescast.debug.test/io.github.chicohaager.moviescast.TestRunner)"
+  if ! grep -qE '^OK \([0-9]+ tests?\)' <<<"$out"; then
+    echo "$out" >&2
+    echo "the tests on the device failed" >&2
+    exit 1
+  fi
+  echo "android on $(adb shell getprop ro.product.model | tr -d '\r') (Android $(adb shell getprop ro.build.version.release | tr -d '\r')): $(grep -E '^OK \(' <<<"$out")"
+  exit 0
+fi
 
 sdk="${ANDROID_HOME:-}"
 if [[ -z "$sdk" && -f local.properties ]]; then
@@ -64,6 +87,23 @@ for abi in arm64-v8a armeabi-v7a x86 x86_64; do
     exit 1
   fi
 done
+# The licences page reads raw/aboutlibraries at run time. FFmpeg is no Gradle dependency, so only
+# android/config/libraries/ffmpeg.json puts it there (without that file this check fails; the LGPL's
+# text came from the plugin even without android/config/licenses, measured 2026-11-13).
+# (Read into a variable first: a reader that stops early would end aapt2 with SIGPIPE under pipefail.)
+resources="$("$aapt2" dump resources "$apk")"
+licences="$(awk '/resource 0x[0-9a-f]+ raw\/aboutlibraries$/ { getline; print $NF; exit }' <<<"$resources")"
+if [[ -z "$licences" ]]; then
+  echo "raw/aboutlibraries (the licences page) is not in $apk" >&2
+  exit 1
+fi
+licence_text="$(unzip -p "$apk" "$licences")"
+for want in '"uniqueId": *"org.ffmpeg:ffmpeg"' 'GNU LESSER GENERAL PUBLIC LICENSE' 'Apache License'; do
+  if ! grep -q -- "$want" <<<"$licence_text"; then
+    echo "the licences file $licences in $apk lacks: $want" >&2
+    exit 1
+  fi
+done
 if ! "$zipalign" -c -P 16 4 "$apk" >/dev/null; then
   echo "$apk is not aligned for 16 KB pages (zipalign -c -P 16 4)" >&2
   exit 1
@@ -90,4 +130,4 @@ if [[ "$(basename "$apk")" == app-release.apk ]]; then
   fi
   signed=", signature valid"
 fi
-echo "android $(basename "$apk"): translations in the APK$signed, libffmpegJNI.so in 4 ABIs, 16 KB alignment in the APK and in the 64-bit libraries ok"
+echo "android $(basename "$apk"): translations in the APK$signed, FFmpeg and the LGPL on the licences page, libffmpegJNI.so in 4 ABIs, 16 KB alignment in the APK and in the 64-bit libraries ok"

@@ -3,6 +3,7 @@ package io.github.chicohaager.moviescast.ui
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -22,6 +23,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -47,6 +49,7 @@ fun LoginScreen(
     lastUser: String,
     onLogin: (String, String, String) -> Unit,
     onOpenSettings: () -> Unit,
+    onAbout: () -> Unit,
 ) {
     var server by rememberSaveable { mutableStateOf(lastServer) }
     var user by rememberSaveable { mutableStateOf(lastUser) }
@@ -125,7 +128,11 @@ fun LoginScreen(
                         Text(stringResource(R.string.login_button))
                     }
                 }
-                LanguageButton(Modifier.align(Alignment.CenterHorizontally))
+                // Who cannot log in needs "Share diagnostics" most, so About is reachable from here too.
+                Row(Modifier.align(Alignment.CenterHorizontally), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    LanguageButton()
+                    TextButton(onClick = onAbout, modifier = Modifier.testTag("about")) { Text(stringResource(R.string.about)) }
+                }
             }
         }
     }
