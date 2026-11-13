@@ -241,8 +241,12 @@ Against Movies 0.4.5 on the test NAS (2026-11-13, one library of the kind "movie
 - "Mark as watched" and its opposite work: pressed in the app on the Pixel 7, Movies then answered
   `Played=True, PlayCount=1` and afterwards `Played=False, PlayCount=0` for the film.
 - Series: two episode files in `Test series/Season 01/` inside that library were not taken in
-  (`[scan] library 1: 3 new … 2 skipped`, `3 movies + 0 shows`); the film next to them was. Whether
-  Movies has a library kind for series was not tried: it would be a new library on the owner's box.
+  (`[scan] library 1: 3 new … 2 skipped`, `3 movies + 0 shows`); the film next to them was. In a
+  library of the kind "TV shows" (added in Movies' settings, `CollectionType=tvshows`) the same two
+  files came as `Series`, `Season` and two `Episode` items with `SeriesId`, `ParentIndexNumber` and
+  `IndexNumber`. The app on the Pixel 7 showed "Season 1" with both episodes, "Play" on the first
+  logged `queue of 2`, the second followed by itself (`next item of the queue (2 of 2)`), and Movies
+  then listed both as `Played=True`. Both test episodes carried the series' name as their own.
 - Subtitle files: Movies does not name a `.de.srt` next to the film in the item
   (`/Users/{user}/Items/{id}?Fields=MediaStreams,MediaSources` lists video and sound only), so the app
   offers none. `GET /Items/{id}/PlaybackInfo` names it (`IsExternal`, index 2, `DeliveryUrl`), and
