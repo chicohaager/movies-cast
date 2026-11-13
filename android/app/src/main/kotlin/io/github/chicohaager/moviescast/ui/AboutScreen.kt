@@ -184,8 +184,9 @@ fun LicenceScreen(id: String, onBack: () -> Unit) {
     val library = rememberLibraries().firstOrNull { it.uniqueId == id }
     Page(library?.name ?: id, onBack) { padding ->
         if (library == null) return@Page
+        val scroll = rememberScrollState()
         Column(
-            Modifier.padding(padding).fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 24.dp).padding(bottom = 24.dp),
+            Modifier.padding(padding).fillMaxSize().then(rememberRemoteScroll(scroll)).verticalScroll(scroll).padding(horizontal = 24.dp).padding(bottom = 24.dp).testTag("licence_page"),
         ) {
             val facts = listOfNotNull(
                 library.artifactVersion,
@@ -221,8 +222,9 @@ fun PrivacyScreen(onBack: () -> Unit) {
     val context = LocalContext.current
     val paragraphs = remember(context) { privacyParagraphs(context.assets.open("PRIVACY.md").bufferedReader().use { it.readText() }) }
     Page(stringResource(R.string.about_privacy), onBack) { padding ->
+        val scroll = rememberScrollState()
         Column(
-            Modifier.padding(padding).fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 24.dp).padding(bottom = 24.dp).testTag("privacy_text"),
+            Modifier.padding(padding).fillMaxSize().then(rememberRemoteScroll(scroll)).verticalScroll(scroll).padding(horizontal = 24.dp).padding(bottom = 24.dp).testTag("privacy_text"),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             for ((heading, text) in paragraphs) {

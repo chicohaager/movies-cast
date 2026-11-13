@@ -29,7 +29,7 @@ android {
 
     defaultConfig {
         applicationId = "io.github.chicohaager.moviescast"
-        minSdk = 23
+        minSdk = 24
         targetSdk = 37
         versionCode = 200
         versionName = "0.2.0"

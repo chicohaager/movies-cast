@@ -5,8 +5,9 @@ the original file, straight from the server, no conversion on the box and no mov
 in between. Kotlin, Jetpack Compose, AndroidX Media3 (ExoPlayer).
 
 State 2026-11-13: 0.2.0, the first build for testers ([TESTERS.md](TESTERS.md)), in git, application id
-`io.github.chicohaager.moviescast` (debug builds: `.debug` appended). Runs from Android 6
-(`minSdk` 23) on phones, tablets and Android TV (remote control only, own launcher entry and
+`io.github.chicohaager.moviescast` (debug builds: `.debug` appended). Runs from Android 7
+(`minSdk` 24; the trust manager `ScopedTrust` needs Android 7's `X509ExtendedTrustManager`, and on Android 6
+0.2.0 died at its start, emulator API 23, 2026-11-13) on phones, tablets and Android TV (remote control only, own launcher entry and
 banner). Texts in the 18 languages of movies-cast, with a language list in the app. Picture-in-picture
 from Android 8: Home during playback keeps the film in a small window. The release build (shrunk,
 APK and bundle) is built, signed and checked; it is in no store. "About" (menu and login page)
@@ -234,7 +235,7 @@ listed in `localeFilters` in `app/build.gradle.kts`.
 
 The app's menu (and the login page) has a language list: "System default" and the 18 languages
 under their own names. It is AppCompat's per-app language (`AppCompatDelegate.setApplicationLocales`,
-kept by `AppLocalesMetadataHolderService` on Android 6 to 12, by the system from Android 13, where
+kept by `AppLocalesMetadataHolderService` on Android 7 to 12, by the system from Android 13, where
 the system's own setting for the app shows the same choice). The list comes from `languages` in
 `app/build.gradle.kts`, the same list the build keeps translations by.
 
@@ -280,7 +281,7 @@ started, but the clip stopped because the emulator cannot decode its 10-bit HEVC
 Real films from Movies 0.4.5 on the Pixel 7: DTS-HD by `ffmpegLavc60.3.100-dca`, TrueHD 7.1 by
 `ffmpegLavc60.3.100-truehd`, a Dolby Vision profile 7 film as HEVC by `c2.exynos.hevc.decoder`.
 
-Emulators: Android 6 (API 23, x86_64) start, login and playback with FFmpeg's AC3; Android TV 11
+Emulators (the Android 6 lines below are from builds before the trust manager; the app now needs Android 7): Android 6 (API 23, x86_64) start, login and playback with FFmpeg's AC3; Android TV 11
 (x86) login, library and playback with the remote's keys only; tablet size 1600x2560 (Android 16).
 
 Server conversion, Android 6 emulator (no AV1 decoder): an AV1 film from Movies 0.4.5 came as H.264

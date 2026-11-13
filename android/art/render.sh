@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Renders the app's pictures from the masters in this folder with headless Chrome (gradients, the font):
 #   banner.html      -> res/drawable-{xhdpi,xxhdpi,xxxhdpi}/banner.png   (Android TV launcher, 320×180 dp)
-#   icon-legacy.html -> res/mipmap-{m,h,xh,xxh,xxxh}dpi/ic_launcher.png  (Android 6–7; 8+ uses the vector layers)
+#   icon-legacy.html -> res/mipmap-{m,h,xh,xxh,xxxh}dpi/ic_launcher.png  (Android 7; 8+ uses the vector layers)
 #   icon-*.svg       -> res/drawable/ic_launcher_{background,foreground,monochrome}.xml (svg2vd.py)
 set -euo pipefail
 here="$(cd "$(dirname "$0")" && pwd)"

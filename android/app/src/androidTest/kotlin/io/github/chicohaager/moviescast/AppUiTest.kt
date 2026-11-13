@@ -310,6 +310,37 @@ class AppUiTest {
         compose.onNodeWithText("Movies-Cast for Android", substring = true).assertExists()
     }
 
+    /** How far down a scrolling page is (its semantics' vertical scroll range), in pixels. */
+    private fun scrolled(tag: String): Float =
+        compose.onNodeWithTag(tag).fetchSemanticsNode().config[SemanticsProperties.VerticalScrollAxisRange].value()
+
+    /** The remote's ↓ as the system sends it (a key event to the window, not to a node the test picks). */
+    private fun remoteDown(times: Int) {
+        val instrumentation = InstrumentationRegistry.getInstrumentation()
+        repeat(times) { instrumentation.sendKeyDownUpSync(android.view.KeyEvent.KEYCODE_DPAD_DOWN) }
+        compose.waitForIdle()
+    }
+
+    /** A page of text only has nothing to focus: with a remote (Fire TV, 2026-11-13) ↓ did not move it. */
+    @Test
+    fun thePrivacyPolicyAndALicenceScrollWithTheRemote() {
+        compose.onNodeWithTag("about").performScrollTo().performClick()
+        compose.onNodeWithTag("privacy").performClick()
+        compose.waitUntilAtLeastOneExists(hasTestTag("privacy_text"), 10_000)
+        assertEquals(0f, scrolled("privacy_text"))
+        remoteDown(4)
+        assertTrue("privacy page after 4 × ↓: ${scrolled("privacy_text")} px", scrolled("privacy_text") > 0f)
+
+        compose.onNodeWithTag("back").performClick()
+        compose.onNodeWithTag("licences").performScrollTo().performClick()
+        compose.waitUntilAtLeastOneExists(hasTestTag("licence_row"), 10_000)
+        compose.onAllNodesWithTag("licence_row").onFirst().assertTextContains("FFmpeg", substring = true).performClick()
+        compose.waitUntilAtLeastOneExists(hasTestTag("licence_page"), 10_000)
+        assertEquals(0f, scrolled("licence_page"))
+        remoteDown(4)
+        assertTrue("licence page after 4 × ↓: ${scrolled("licence_page")} px", scrolled("licence_page") > 0f)
+    }
+
     @Test
     fun sortAndFilterChangeWhatTheLibraryShows() {
         login("right")

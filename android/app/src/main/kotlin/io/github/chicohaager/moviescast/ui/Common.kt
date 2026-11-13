@@ -1,6 +1,15 @@
 package io.github.chicohaager.moviescast.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.ScrollState
+import androidx.compose.foundation.focusable
+import androidx.compose.foundation.gestures.animateScrollBy
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalDensity
+import kotlinx.coroutines.launch
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
@@ -136,4 +145,25 @@ fun rememberRemoteField(): RemoteField {
             }
         }
     return RemoteField(readOnly = tv && !editing, modifier = modifier)
+}
+
+/**
+ * A page of text scrolled with a remote: it takes the focus when it opens, ↓ and ↑ move it by a step. ↑ at its top
+ * is left to the focus search (to the back button), ↓ at its end too. Without this a page with nothing to focus did
+ * not move at all (Fire TV Stick 4K, privacy policy, 2026-11-13). Phones scroll it by touch as before.
+ */
+@Composable
+fun rememberRemoteScroll(state: ScrollState): Modifier {
+    val scope = rememberCoroutineScope()
+    val focus = remember { FocusRequester() }
+    val step = with(LocalDensity.current) { 160.dp.toPx() }
+    LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
+    return Modifier.focusRequester(focus).focusable().onPreviewKeyEvent { event ->
+        if (event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
+        when (event.key) {
+            Key.DirectionDown -> (state.value < state.maxValue).also { if (it) scope.launch { state.animateScrollBy(step) } }
+            Key.DirectionUp -> (state.value > 0).also { if (it) scope.launch { state.animateScrollBy(-step) } }
+            else -> false
+        }
+    }
 }

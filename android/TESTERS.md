@@ -8,7 +8,7 @@ or a Jellyfin server on the device itself, in the original file, without a conve
 
 ## Install
 
-1. You need Android 6 or newer, and a ZimaOS box with Movies or a Jellyfin server in your network.
+1. You need Android 7 or newer, and a ZimaOS box with Movies or a Jellyfin server in your network.
 2. Copy `movies-cast-android-0.2.0.apk` to the device and open it. Android asks once whether the app
    that opens it (Files, the browser) may install apps; allow it.
 3. Later versions install over this one, and the logins are kept.
@@ -52,7 +52,7 @@ auf der Box. 0.2.0 ist die erste Version für Tester. Sie steht in keinem Store.
 
 ## Installieren
 
-1. Du brauchst Android 6 oder neuer und eine ZimaOS-Box mit Movies oder einen Jellyfin-Server im
+1. Du brauchst Android 7 oder neuer und eine ZimaOS-Box mit Movies oder einen Jellyfin-Server im
    Netz.
 2. Kopiere `movies-cast-android-0.2.0.apk` aufs Gerät und öffne die Datei. Android fragt einmal, ob
    die öffnende App (Dateien, Browser) Apps installieren darf. Erlaube es.

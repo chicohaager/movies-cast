@@ -139,6 +139,17 @@ for layer in background foreground monochrome; do
   fi
 done
 rm -rf "$art_tmp"
+# core's ScopedTrust extends X509ExtendedTrustManager, which Android has from 7 (API 24) on; with minSdk 23 the
+# app died at its start on Android 6 (NoClassDefFoundError, emulator API 23, 2026-11-13). core is plain Kotlin, so
+# lint does not see it; the APK's minimum is checked here.
+# (aapt2 dump badging ends with 1 after a full answer here, so its exit is not the check.)
+badging="$("$aapt2" dump badging "$apk" 2>&1 || true)"
+min_sdk=""
+[[ "$badging" =~ minSdkVersion:\'([0-9]+)\' ]] && min_sdk="${BASH_REMATCH[1]}"
+if [[ -z "$min_sdk" || "$min_sdk" -lt 24 ]]; then
+  echo "$apk allows Android below 7 (minSdk '${min_sdk}'), where X509ExtendedTrustManager (ScopedTrust) does not exist" >&2
+  exit 1
+fi
 # The licences page reads raw/aboutlibraries at run time. FFmpeg is no Gradle dependency, so only
 # android/config/libraries/ffmpeg.json puts it there (without that file this check fails; the LGPL's
 # text came from the plugin even without android/config/licenses, measured 2026-11-13).
@@ -184,4 +195,4 @@ if [[ "$(basename "$apk")" == app-release.apk ]]; then
   fi
   signed=", signature valid"
 fi
-echo "android $(basename "$apk"): translations in the APK$signed, FFmpeg and the LGPL, Space Grotesk and the OFL on the licences page, icon layers as drawn in android/art, libffmpegJNI.so in 4 ABIs, 16 KB alignment in the APK and in the 64-bit libraries ok"
+echo "android $(basename "$apk"): translations in the APK$signed, FFmpeg and the LGPL, Space Grotesk and the OFL on the licences page, icon layers as drawn in android/art, minSdk ${min_sdk}, libffmpegJNI.so in 4 ABIs, 16 KB alignment in the APK and in the 64-bit libraries ok"

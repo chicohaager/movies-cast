@@ -15,7 +15,7 @@ android {
     ndkVersion = "26.1.10909125"
 
     defaultConfig {
-        minSdk = 23
+        minSdk = 24
         consumerProguardFiles("proguard-rules.txt")
     }
 

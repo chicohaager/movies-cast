@@ -5,6 +5,8 @@ What changed in each version; the "why" with its measurements is in
 
 ## Unreleased
 
+- Android app: needs Android 7 or newer (minSdk 24). On Android 6 0.2.0 died at its start, as the trust manager of the login (ScopedTrust) uses a class Android has from 7 on; `check-android.sh` now fails on an APK that allows less.
+- Android app: the privacy policy and a licence's text scroll with a remote's ↑/↓ (on a TV they did not move, as they hold nothing to focus).
 - New logo for every part of movies-cast: a play sign as an orange sun-planet with a sky-blue orbit and a sending satellite, on a deep-sea blue night (Android app icon with themed-icon layer, Android TV banner, the TV starter app, the webOS icons, the phone page's icons, the ZimaOS tile). Masters and render scripts in `android/art/`.
 - Android app: a new look: a deep-sea blue starry sky with an orange glow behind every page (a TV always gets it, as Android TV's guidelines ask for a dark interface; a phone in light mode gets a pale morning sky), headings in Space Grotesk (SIL OFL 1.1, on the licences page), the logo in the title bar and on a frosted login panel, play and log-in buttons in the planet's orange with a white ring in focus, poster tiles that grow a little and get a glowing frame in focus.
 - Android app 0.2.0, the first build for testers ([android/TESTERS.md](android/TESTERS.md)): everything below, signed with the release key; it installs over 0.1.0 and keeps its login.
