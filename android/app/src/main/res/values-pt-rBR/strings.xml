@@ -16,6 +16,8 @@
     <string name="error_answer">Não foi possível ler a resposta do servidor.</string>
     <string name="error_local_network">O Movies-Cast não pode acessar os dispositivos da sua rede doméstica. Permita “Acesso à rede local” nas configurações do app.</string>
     <string name="open_settings">Abrir as configurações do app</string>
+    <string name="find_servers">Procurar servidores na rede</string>
+    <string name="find_none">Nenhum servidor encontrado. Digite o endereço acima.</string>
     <string name="retry">Tentar novamente</string>
     <string name="library_search">Pesquisar</string>
     <string name="library_continue">Continuar assistindo</string>

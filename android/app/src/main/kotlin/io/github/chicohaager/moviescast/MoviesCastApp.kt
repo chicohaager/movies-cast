@@ -8,11 +8,14 @@ import coil3.SingletonImageLoader
 import coil3.network.okhttp.OkHttpNetworkFetcherFactory
 import io.github.chicohaager.moviescast.core.Device
 import io.github.chicohaager.moviescast.core.MoviesClient
+import io.github.chicohaager.moviescast.core.ServerSearch
 import io.github.chicohaager.moviescast.core.Session
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
@@ -57,6 +60,19 @@ open class MoviesCastApp : Application(), SingletonImageLoader.Factory {
         session = store.load()
     }
 
+    /**
+     * What announces itself in the home network: one list of base URLs per server, to be asked
+     * with [MoviesClient.confirm]. Jellyfin servers by their search call, ZimaOS boxes by mDNS;
+     * both run at the same time. The tests on a device put their fake server here.
+     */
+    open suspend fun announced(): List<List<String>> = coroutineScope {
+        val jellyfin = async { ServerSearch.askJellyfin(ServerSearch.broadcastTargets(), SEARCH_MS) }
+        val zima = async { ZimaSearch(this@MoviesCastApp).boxes(SEARCH_MS).map { listOf(ServerSearch.zimaCandidate(it.first, it.second)) } }
+        val out = jellyfin.await() + zima.await()
+        AppLog.i("search: ${jellyfin.await().size} answer(s) to Jellyfin's call, ${zima.await().size} ZimaOS box(es)")
+        out
+    }
+
     fun setSession(value: Session?) {
         session = value
         if (value == null) store.clear() else store.save(value)
@@ -66,6 +82,10 @@ open class MoviesCastApp : Application(), SingletonImageLoader.Factory {
         ImageLoader.Builder(context)
             .components { add(OkHttpNetworkFetcherFactory(callFactory = { mediaHttp })) }
             .build()
+
+    private companion object {
+        const val SEARCH_MS = 4000L
+    }
 
     private inner class AuthInterceptor : Interceptor {
         override fun intercept(chain: Interceptor.Chain): Response {

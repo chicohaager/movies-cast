@@ -1,7 +1,11 @@
 package io.github.chicohaager.moviescast.core
 
 import java.io.IOException
+import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
@@ -74,6 +78,31 @@ class MoviesClient(http: OkHttpClient, private val device: Device) {
             }
         }
         throw last
+    }
+
+    /**
+     * Of what a search of the home network brought ([ServerSearch]), the servers that answer:
+     * [announced] holds one list of base URLs per server, the first that answers within
+     * [timeoutMs] counts. All are asked at the same time.
+     */
+    suspend fun confirm(announced: List<List<String>>, timeoutMs: Long = 3000): List<FoundServer> = coroutineScope {
+        val quick = http.newBuilder().callTimeout(timeoutMs, TimeUnit.MILLISECONDS).build()
+        announced.map { candidates ->
+            async {
+                candidates.map { candidate ->
+                    async {
+                        try {
+                            val dto = decode<PublicInfoDto>(call(url(candidate, "/System/Info/Public") {}, null, "GET", null, quick))
+                            if (dto.version.isEmpty()) null else FoundServer(candidate, dto.serverName, dto.productName, dto.version)
+                        } catch (_: IOException) {
+                            null
+                        } catch (_: IllegalArgumentException) {
+                            null
+                        }
+                    }
+                }.awaitAll().firstOrNull { it != null }
+            }
+        }.awaitAll().filterNotNull().distinctBy { it.address }
     }
 
     suspend fun login(baseUrl: String, user: String, password: String): Session {
@@ -265,7 +294,7 @@ class MoviesClient(http: OkHttpClient, private val device: Device) {
     private suspend fun call(baseUrl: String, token: String?, method: String, path: String, body: String?): String =
         call(url(baseUrl, path) {}, token, method, body)
 
-    private suspend fun call(url: HttpUrl, token: String?, method: String, body: String?): String =
+    private suspend fun call(url: HttpUrl, token: String?, method: String, body: String?, http: OkHttpClient = this.http): String =
         withContext(Dispatchers.IO) {
             val request = Request.Builder().url(url)
                 .header("X-Emby-Authorization", authHeader(token))

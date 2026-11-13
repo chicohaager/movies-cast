@@ -16,6 +16,8 @@
     <string name="error_answer">Sunucunun yanıtı okunamadı.</string>
     <string name="error_local_network">Movies-Cast ev ağınızdaki cihazlara erişemiyor. Uygulama ayarlarında “Yerel ağ erişimi”ne izin verin.</string>
     <string name="open_settings">Uygulama ayarlarını aç</string>
+    <string name="find_servers">Ağda sunucu ara</string>
+    <string name="find_none">Sunucu bulunamadı. Adresi yukarıya yazın.</string>
     <string name="retry">Yeniden dene</string>
     <string name="library_search">Ara</string>
     <string name="library_continue">İzlemeye devam et</string>

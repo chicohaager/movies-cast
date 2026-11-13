@@ -16,6 +16,8 @@
     <string name="error_answer">A kiszolgáló válaszát nem sikerült beolvasni.</string>
     <string name="error_local_network">A Movies-Cast nem érheti el az otthoni hálózat eszközeit. Engedélyezze az alkalmazás beállításaiban a „Helyi hálózati hozzáférés” lehetőséget.</string>
     <string name="open_settings">Alkalmazásbeállítások megnyitása</string>
+    <string name="find_servers">Szerverek keresése a hálózaton</string>
+    <string name="find_none">Nem található szerver. Írd be a címet fent.</string>
     <string name="retry">Újra</string>
     <string name="library_search">Keresés</string>
     <string name="library_continue">Megtekintés folytatása</string>

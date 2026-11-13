@@ -16,6 +16,8 @@
     <string name="error_answer">无法读取服务器的应答。</string>
     <string name="error_local_network">Movies-Cast 无权访问家庭网络中的设备。请在应用设置中允许“本地网络访问”。</string>
     <string name="open_settings">打开应用设置</string>
+    <string name="find_servers">在网络中搜索服务器</string>
+    <string name="find_none">未找到服务器。请在上方输入地址。</string>
     <string name="retry">重试</string>
     <string name="library_search">搜索</string>
     <string name="library_continue">继续观看</string>

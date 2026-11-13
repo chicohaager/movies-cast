@@ -16,6 +16,8 @@
     <string name="error_answer">Nie udało się odczytać odpowiedzi serwera.</string>
     <string name="error_local_network">Movies-Cast nie może łączyć się z urządzeniami w sieci domowej. Zezwól na „Dostęp do sieci lokalnej” w ustawieniach aplikacji.</string>
     <string name="open_settings">Otwórz ustawienia aplikacji</string>
+    <string name="find_servers">Szukaj serwerów w sieci</string>
+    <string name="find_none">Nie znaleziono serwera. Wpisz adres powyżej.</string>
     <string name="retry">Spróbuj ponownie</string>
     <string name="library_search">Szukaj</string>
     <string name="library_continue">Oglądaj dalej</string>

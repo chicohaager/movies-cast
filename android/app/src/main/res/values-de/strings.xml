@@ -16,6 +16,8 @@
     <string name="error_answer">Die Antwort des Servers war nicht lesbar.</string>
     <string name="error_local_network">Movies-Cast darf keine Geräte in deinem Heimnetz erreichen. Erlaube „Zugriff auf lokales Netzwerk“ in den App-Einstellungen.</string>
     <string name="open_settings">App-Einstellungen öffnen</string>
+    <string name="find_servers">Server im Netz suchen</string>
+    <string name="find_none">Kein Server gefunden. Tippe die Adresse oben ein.</string>
     <string name="retry">Erneut versuchen</string>
     <string name="library_search">Suchen</string>
     <string name="library_continue">Weiterschauen</string>

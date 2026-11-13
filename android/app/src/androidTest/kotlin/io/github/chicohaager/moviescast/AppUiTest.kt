@@ -74,6 +74,7 @@ class AppUiTest {
         instrumentation.runOnMainSync {
             app.setSession(null)
             app.store.sort = ""
+            (app as TestApp).announcedByTest = emptyList()
         }
         server.dispatcher = object : Dispatcher() {
             override fun dispatch(request: RecordedRequest): MockResponse {
@@ -142,6 +143,32 @@ class AppUiTest {
         compose.waitUntilAtLeastOneExists(hasText(app.getString(R.string.error_login)), 10_000)
         compose.onNodeWithTag("login").assertExists()
         assertEquals(0, compose.onAllNodesWithTag("tile").fetchSemanticsNodes().size)
+    }
+
+    @Test
+    fun theSearchListsWhatAnswersAndATapFillsInTheAddress() {
+        val movies = "http://127.0.0.1:${server.port}/movies"
+        // announced: the fake server, and a box on which nothing answers as a server (404)
+        (app as TestApp).announcedByTest = listOf(listOf(movies), listOf("http://127.0.0.1:${server.port}/other"))
+        compose.onNodeWithTag("find").performScrollTo().performClick()
+        compose.waitUntilAtLeastOneExists(hasTestTag("found"), 10_000)
+        assertEquals(1, compose.onAllNodesWithTag("found").fetchSemanticsNodes().size)
+        compose.onNodeWithText("fake · Fake Movies 10.11.0").assertExists()
+        compose.onNodeWithTag("found").performScrollTo().performClick()
+        compose.onNodeWithTag("server").assertTextContains(movies)
+        compose.onNodeWithTag("user").performTextReplacement("demo")
+        compose.onNodeWithTag("password").performTextInput("right")
+        compose.onNodeWithTag("login").performScrollTo().performClick()
+        compose.waitUntilAtLeastOneExists(hasTestTag("tile"), 10_000)
+    }
+
+    @Test
+    fun aSearchThatFindsNothingSaysSo() {
+        (app as TestApp).announcedByTest = listOf(listOf("http://127.0.0.1:${server.port}/other"))
+        compose.onNodeWithTag("find").performScrollTo().performClick()
+        compose.waitUntilAtLeastOneExists(hasTestTag("find_none"), 10_000)
+        compose.onNodeWithText(app.getString(R.string.find_none)).assertExists()
+        assertEquals(0, compose.onAllNodesWithTag("found").fetchSemanticsNodes().size)
     }
 
     @Test

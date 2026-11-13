@@ -16,6 +16,8 @@
     <string name="error_answer">Odpověď serveru se nepodařilo přečíst.</string>
     <string name="error_local_network">Movies-Cast nesmí přistupovat k zařízením ve vaší domácí síti. Povolte v nastavení aplikace „Přístup k místní síti“.</string>
     <string name="open_settings">Otevřít nastavení aplikace</string>
+    <string name="find_servers">Hledat servery v síti</string>
+    <string name="find_none">Nenalezen žádný server. Zadejte adresu výše.</string>
     <string name="retry">Zkusit znovu</string>
     <string name="library_search">Hledat</string>
     <string name="library_continue">Pokračovat ve sledování</string>

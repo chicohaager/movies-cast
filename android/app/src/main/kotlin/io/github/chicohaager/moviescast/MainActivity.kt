@@ -56,7 +56,7 @@ class MainActivity : AppCompatActivity() {
                 val state by model.state.collectAsStateWithLifecycle()
                 BackHandler(enabled = state.stack.size > 1) { model.back() }
                 when (val screen = state.screen) {
-                    Screen.Login -> LoginScreen(state, model.lastServer, model.lastUser, ::login, ::openAppSettings) { model.show(Screen.About) }
+                    Screen.Login -> LoginScreen(state, model.lastServer, model.lastUser, ::login, ::findServers, ::openAppSettings) { model.show(Screen.About) }
                     Screen.Library -> LibraryScreen(state, model::search, model::sort, model::filter, model::open, ::refresh, model::logout, ::openAppSettings) { model.show(Screen.About) }
                     is Screen.Detail -> DetailScreen(state, { model.back() }, model::open, ::play, model::setPlayed, model::setFavorite)
                     Screen.About -> AboutScreen({ model.back() }, { model.show(Screen.Licences) }, { model.show(Screen.Privacy) }, ::openWeb, ::diagnostics, ::share)
@@ -85,6 +85,9 @@ class MainActivity : AppCompatActivity() {
     private fun login(server: String, user: String, password: String) = withLocalNetwork { model.login(server, user, password) }
 
     private fun refresh() = withLocalNetwork { model.refresh() }
+
+    /** The search talks to the home network, so on Android 17 the question comes first, as with "Log in". */
+    private fun findServers() = withLocalNetwork { model.findServers() }
 
     /**
      * Android 17 (API 37) asks the person before an app may reach addresses in the home network

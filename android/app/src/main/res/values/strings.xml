@@ -18,6 +18,8 @@
     <string name="error_answer">The server\'s answer could not be read.</string>
     <string name="error_local_network">Movies-Cast may not reach devices in your home network. Allow “Local network access” in the app settings.</string>
     <string name="open_settings">Open app settings</string>
+    <string name="find_servers">Search the network for servers</string>
+    <string name="find_none">No server found. Type the address above.</string>
     <string name="retry">Try again</string>
     <string name="library_search">Search</string>
     <string name="library_continue">Continue watching</string>

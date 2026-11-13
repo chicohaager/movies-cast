@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -41,6 +42,7 @@ import androidx.compose.ui.unit.dp
 import io.github.chicohaager.moviescast.R
 import io.github.chicohaager.moviescast.UiError
 import io.github.chicohaager.moviescast.UiState
+import io.github.chicohaager.moviescast.core.FoundServer
 
 @Composable
 fun LoginScreen(
@@ -48,6 +50,7 @@ fun LoginScreen(
     lastServer: String,
     lastUser: String,
     onLogin: (String, String, String) -> Unit,
+    onFind: () -> Unit,
     onOpenSettings: () -> Unit,
     onAbout: () -> Unit,
 ) {
@@ -89,6 +92,41 @@ fun LoginScreen(
                     readOnly = serverField.readOnly,
                     modifier = Modifier.fillMaxWidth().then(serverField.modifier).testTag("server"),
                 )
+                OutlinedButton(
+                    onClick = onFind,
+                    enabled = !state.searching && !state.busy,
+                    modifier = Modifier.fillMaxWidth().testTag("find"),
+                ) {
+                    if (state.searching) {
+                        CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
+                    } else {
+                        Text(stringResource(R.string.find_servers))
+                    }
+                }
+                state.found?.let { found ->
+                    if (found.isEmpty()) {
+                        Text(
+                            stringResource(R.string.find_none),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.testTag("find_none"),
+                        )
+                    }
+                    // A tap puts the address into the field above; account and password stay to be typed.
+                    found.forEach { it ->
+                        OutlinedButton(
+                            onClick = { server = it.address },
+                            // two lines, the first may wrap: the round ends of a button would cut into them
+                            shape = RoundedCornerShape(12.dp),
+                            modifier = Modifier.fillMaxWidth().testTag("found"),
+                        ) {
+                            Column(Modifier.fillMaxWidth()) {
+                                Text(foundTitle(it), style = MaterialTheme.typography.bodyLarge)
+                                Text(it.address, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                        }
+                    }
+                }
                 OutlinedTextField(
                     value = user,
                     onValueChange = { user = it },
@@ -136,4 +174,10 @@ fun LoginScreen(
             }
         }
     }
+}
+
+/** "name · product version"; a server whose name is its product (or empty) is named once. */
+internal fun foundTitle(server: FoundServer): String {
+    val product = listOf(server.product, server.version).filter { it.isNotBlank() }.joinToString(" ")
+    return if (server.name.isBlank() || server.name == server.product) product else "${server.name} · $product"
 }

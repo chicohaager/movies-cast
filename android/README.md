@@ -43,7 +43,7 @@ and plays with the device's own decoders only.
 
 | Module | What |
 |---|---|
-| `core` | plain Kotlin: the client for the Jellyfin-compatible API (`MoviesClient`, 24 tests against a local fake server) and what the library screen shows (`LibraryView.kt`, 8 tests) |
+| `core` | plain Kotlin: the client for the Jellyfin-compatible API (`MoviesClient`, 24 tests against a local fake server) and what the library screen shows (`LibraryView.kt`, 8 tests), the search for servers (`ServerSearch.kt`, 8 tests) |
 | `app` | the Android app: login, library with search and "continue watching", film page with seasons and "mark as watched", player with a queue, About; 18 tests (Dolby Vision base layer, shape of the small window, language list, the diagnostics text, the queue, the privacy text) and 9 on a device (`src/androidTest`) |
 | `config` | what the licences page needs besides the Gradle dependencies: FFmpeg and the copied Media3 module as libraries, the LGPL's text as FFmpeg ships it |
 | `ffmpeg` | Media3's FFmpeg audio decoder (`androidx/media` 1.11.1, `libraries/decoder_ffmpeg`, Apache 2.0), copied because Google publishes it only as source; `build-ffmpeg.sh` builds FFmpeg for it |
@@ -100,11 +100,31 @@ again. "Recently added" goes by the moment, not by the text: Movies writes
 (`POST` / `DELETE /Users/{user}/FavoriteItems/{item}`). An episode that carries its series' name as
 its own is listed as "S1 E2" without the name.
 
+## Finding the server in the home network
+
+"Search the network for servers" on the login page asks two ways at the same time for 4 seconds and
+lists what then answers `System/Info/Public` (name, product, version, address); a tap puts the
+address into the field. On Android 17 the question for "Local network access" comes first.
+
+- **Jellyfin**: the text `who is JellyfinServer?` to UDP port 7359 of every broadcast address of the
+  device, as Jellyfin's own apps do. The answer names the server's address. A Jellyfin in a
+  container without host networking names the address inside the container's network, which a phone
+  does not reach; so the sender's own address with the same port is tried second.
+- **IceWhale Movies** does not answer that call. A ZimaOS box announces itself by mDNS as
+  `_zimaos._tcp` (port 80), found with Android's service search (`NsdManager`); Movies is behind
+  its gateway at `/movies` if it is installed. Android at times names only an IPv6 link-local
+  address for a box at first; the app asks again (up to 6 times, 250 ms apart) until the IPv4
+  address comes.
+
+`ServerSearch.kt` in `core` holds the call, the choice of addresses and the check (8 tests, the call
+against a fake on the loopback); `ZimaSearch.kt` in `app` is the mDNS part.
+
 ## Tests on a device
 
 `check-android.sh --device` installs the debug build and the test APK and runs `AppUiTest`: login,
 library and film page, a wrong password, About with the licences, the diagnostics text, a series
-with its seasons, "mark as watched", the privacy page, order and filter, a favourite — against a
+with its seasons, "mark as watched", the privacy page, order and filter, a favourite, the search for
+servers (what it brings is set by the test, the network of the device is not asked) — against a
 fake server inside the test (MockWebServer on 127.0.0.1). The app runs as `TestApp` there, which
 keeps its login in a file of its own (`session-test`), so a real login on the device stays. The
 script installs with `adb install -r` and not with Gradle's `connectedDebugAndroidTest`. It stops
@@ -282,5 +302,21 @@ Order, filter and favourites (2026-11-13): Movies 0.4.5 on the test NAS answers 
 favourite, set in Movies' own page; two films have no rating, one no year). `check-android.sh
 --device` in the Android 16 emulator: OK (9 tests), the two new ones red once with the app broken on
 purpose; the 9 new unit tests in `core` likewise. A favourite set and taken back from the app in the
-emulator: Jellyfin 10.11.0 answered `IsFavorite=True`, then `False`. Against Movies the same press
-is not measured yet (the route `/Users/:userId/FavoriteItems/:itemId` is in Movies' program).
+emulator: Jellyfin 10.11.0 answered `IsFavorite=True`, then `False`. The same from the app on the
+Pixel 7 against Movies 0.4.5: `UserData.IsFavorite` of the film `True` after the press, `False` after
+the second, and the list of all 8 films as before.
+
+Search for servers (2026-11-13, home network with two ZimaOS boxes, Movies on one of them, and a
+Jellyfin 10.11.0 on a third machine):
+- UDP 7359 from a computer: 0 answers from the boxes; Jellyfin answered, also to the broadcast once
+  it ran with host networking. Published as `-p 7359:7359/udp` from a bridge network it answered
+  only a packet sent straight to its host, and named its address inside the bridge network.
+- mDNS: both boxes answered `_zimaos._tcp.local` (SRV port 80, TXT `os=ZimaOS`);
+  `/movies/System/Info/Public` answered 200 on one and 404 on the other.
+- The app on the Pixel 7 (Android 17): before the app asked a box again for its address, 5 of 8
+  searches lost one box ("1 address, none of them IPv4" in the log); with it 10 of 10 searches found
+  both boxes and listed the two servers (Movies, Jellyfin), 5 of them after asking 3 times. A tap on
+  the Movies entry and the account: logged in.
+- `check-android.sh --device` on the Pixel 7: OK (11 tests); the two new ones red once with the app
+  broken on purpose (the tap does nothing, no "nothing found" text, no list), the 8 new tests in
+  `core` likewise.

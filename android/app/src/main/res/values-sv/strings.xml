@@ -16,6 +16,8 @@
     <string name="error_answer">Serverns svar kunde inte läsas.</string>
     <string name="error_local_network">Movies-Cast får inte nå enheter i ditt hemnätverk. Tillåt ”Åtkomst till lokalt nätverk” i appens inställningar.</string>
     <string name="open_settings">Öppna appens inställningar</string>
+    <string name="find_servers">Sök efter servrar i nätverket</string>
+    <string name="find_none">Ingen server hittades. Skriv adressen ovan.</string>
     <string name="retry">Försök igen</string>
     <string name="library_search">Sök</string>
     <string name="library_continue">Fortsätt titta</string>

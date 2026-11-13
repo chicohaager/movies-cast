@@ -16,6 +16,8 @@
     <string name="error_answer">サーバーの応答を読み取れませんでした。</string>
     <string name="error_local_network">Movies-Cast はホームネットワーク内の機器にアクセスできません。アプリの設定で「ローカル ネットワークへのアクセス」を許可してください。</string>
     <string name="open_settings">アプリの設定を開く</string>
+    <string name="find_servers">ネットワーク内のサーバーを検索</string>
+    <string name="find_none">サーバーが見つかりません。上にアドレスを入力してください。</string>
     <string name="retry">再試行</string>
     <string name="library_search">検索</string>
     <string name="library_continue">視聴を続ける</string>

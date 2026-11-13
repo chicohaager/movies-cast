@@ -16,6 +16,8 @@
     <string name="error_answer">Impossibile leggere la risposta del server.</string>
     <string name="error_local_network">Movies-Cast non può raggiungere i dispositivi della tua rete domestica. Consenti «Accesso alla rete locale» nelle impostazioni dell’app.</string>
     <string name="open_settings">Apri le impostazioni dell’app</string>
+    <string name="find_servers">Cerca server nella rete</string>
+    <string name="find_none">Nessun server trovato. Digita l\'indirizzo qui sopra.</string>
     <string name="retry">Riprova</string>
     <string name="library_search">Cerca</string>
     <string name="library_continue">Continua a guardare</string>

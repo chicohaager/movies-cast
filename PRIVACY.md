@@ -7,9 +7,15 @@ stores and which machines it talks to, so that the statement can be checked agai
 ## Movies-Cast for Android (`android/`, application id `io.github.chicohaager.moviescast`)
 
 **Talks to:** the one server whose address is typed on the login page (IceWhale Movies on a ZimaOS
-box, or a Jellyfin server) and to nothing else. The app carries no library for analytics,
+box, or a Jellyfin server); only when you press "Search the network for servers", also to what
+answers that search in the home network (below). To nothing else. The app carries no library for analytics,
 advertising or crash reports (`android/app/build.gradle.kts` lists every dependency), and the list
 of dependencies that Google Play can read out of an app is switched off (`dependenciesInfo`).
+
+**"Search the network for servers"** (login page, only when you press it): sends the question
+`who is JellyfinServer?` to the broadcast addresses of the networks the device is in and asks by
+mDNS for ZimaOS boxes, then reads the public info page (product, name, version) of what answered.
+Nothing of it leaves the home network, and no account data is part of it.
 
 **Sends to that server:** user name and password once at the login; afterwards the token the
 server answered with, a random installation id made on the first start, the device's model name and

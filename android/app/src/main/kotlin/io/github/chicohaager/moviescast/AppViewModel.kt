@@ -7,6 +7,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import io.github.chicohaager.moviescast.core.LibraryFilter
 import io.github.chicohaager.moviescast.core.LibrarySort
+import io.github.chicohaager.moviescast.core.FoundServer
 import io.github.chicohaager.moviescast.core.MediaItem
 import io.github.chicohaager.moviescast.core.MoviesClient
 import io.github.chicohaager.moviescast.core.ServerException
@@ -54,6 +55,10 @@ data class UiState(
     val server: ServerInfo? = null,
     val busy: Boolean = false,
     val error: UiError? = null,
+    /** The home network is being searched for servers. */
+    val searching: Boolean = false,
+    /** What the last search found; null before the first search. */
+    val found: List<FoundServer>? = null,
     val library: List<MediaItem> = emptyList(),
     val resume: List<MediaItem> = emptyList(),
     val loaded: Boolean = false,
@@ -120,6 +125,22 @@ class AppViewModel(private val app: MoviesCastApp) : ViewModel() {
         }
     }
 
+    /** Searches the home network for servers; the login page lists what answered. */
+    fun findServers() {
+        if (_state.value.searching || _state.value.busy) return
+        _state.update { it.copy(searching = true, found = null, error = null) }
+        viewModelScope.launch {
+            val found = try {
+                client.confirm(app.announced())
+            } catch (e: IOException) {
+                AppLog.w("search: failed (${e.javaClass.simpleName})")
+                emptyList()
+            }
+            AppLog.i("search: ${found.size} server(s) answered")
+            _state.update { it.copy(searching = false, found = found) }
+        }
+    }
+
     /** Reads the library and the resume row again; also called when the player closes. */
     fun refresh() {
         val session = app.session ?: return
@@ -141,7 +162,7 @@ class AppViewModel(private val app: MoviesCastApp) : ViewModel() {
     }
 
     /** The person refused access to the home network; nothing on the LAN can be reached. */
-    fun localNetworkDenied() = _state.update { it.copy(busy = false, error = UiError.LocalNetwork) }
+    fun localNetworkDenied() = _state.update { it.copy(busy = false, searching = false, error = UiError.LocalNetwork) }
 
     fun search(query: String) = _state.update { it.copy(query = query) }
 

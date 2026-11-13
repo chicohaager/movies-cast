@@ -16,6 +16,8 @@
     <string name="error_answer">Het antwoord van de server kon niet worden gelezen.</string>
     <string name="error_local_network">Movies-Cast mag geen apparaten in je thuisnetwerk bereiken. Sta ‘Toegang tot lokaal netwerk’ toe in de app-instellingen.</string>
     <string name="open_settings">App-instellingen openen</string>
+    <string name="find_servers">Servers in het netwerk zoeken</string>
+    <string name="find_none">Geen server gevonden. Typ het adres hierboven.</string>
     <string name="retry">Opnieuw proberen</string>
     <string name="library_search">Zoeken</string>
     <string name="library_continue">Verder kijken</string>

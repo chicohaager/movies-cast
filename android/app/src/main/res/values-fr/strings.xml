@@ -16,6 +16,8 @@
     <string name="error_answer">La réponse du serveur n’a pas pu être lue.</string>
     <string name="error_local_network">Movies-Cast n’a pas le droit d’accéder aux appareils de votre réseau domestique. Autorisez « Accès au réseau local » dans les paramètres de l’application.</string>
     <string name="open_settings">Ouvrir les paramètres de l’application</string>
+    <string name="find_servers">Rechercher des serveurs sur le réseau</string>
+    <string name="find_none">Aucun serveur trouvé. Saisissez l\'adresse ci-dessus.</string>
     <string name="retry">Réessayer</string>
     <string name="library_search">Rechercher</string>
     <string name="library_continue">Reprendre la lecture</string>

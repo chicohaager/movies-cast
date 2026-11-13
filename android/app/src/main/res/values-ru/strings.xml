@@ -16,6 +16,8 @@
     <string name="error_answer">Не удалось прочитать ответ сервера.</string>
     <string name="error_local_network">Movies-Cast не может обращаться к устройствам в домашней сети. Разрешите «Доступ к локальной сети» в настройках приложения.</string>
     <string name="open_settings">Открыть настройки приложения</string>
+    <string name="find_servers">Искать серверы в сети</string>
+    <string name="find_none">Сервер не найден. Введите адрес выше.</string>
     <string name="retry">Повторить</string>
     <string name="library_search">Поиск</string>
     <string name="library_continue">Продолжить просмотр</string>
