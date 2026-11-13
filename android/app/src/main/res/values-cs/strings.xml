@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="login_title">Připojte se ke svým filmům</string>
+    <string name="login_hint">Adresa vašeho zařízení se ZimaOS nebo serveru Jellyfin a váš účet na něm.</string>
+    <string name="login_server">Adresa serveru</string>
+    <string name="login_server_example">např. 192.168.x.x nebo nas.local</string>
+    <string name="login_user">Uživatelské jméno</string>
+    <string name="login_password">Heslo</string>
+    <string name="login_button">Přihlásit se</string>
+    <string name="error_address">Tuto adresu nelze otevřít.</string>
+    <string name="error_no_server">Na této adrese neodpověděl žádný server Movies ani Jellyfin.</string>
+    <string name="error_login">Uživatelské jméno nebo heslo není správné.</string>
+    <string name="error_session">Přihlášení vypršelo. Přihlaste se prosím znovu.</string>
+    <string name="error_network">Server neodpověděl. Jste ve stejné síti?</string>
+    <string name="error_server">Server odpověděl chybou (HTTP %1$d).</string>
+    <string name="error_answer">Odpověď serveru se nepodařilo přečíst.</string>
+    <string name="error_local_network">Movies-Cast nesmí přistupovat k zařízením ve vaší domácí síti. Povolte v nastavení aplikace „Přístup k místní síti“.</string>
+    <string name="open_settings">Otevřít nastavení aplikace</string>
+    <string name="retry">Zkusit znovu</string>
+    <string name="library_search">Hledat</string>
+    <string name="library_continue">Pokračovat ve sledování</string>
+    <string name="library_all">Všechny filmy</string>
+    <string name="library_empty">Tato knihovna je prázdná.</string>
+    <string name="library_no_match">Výrazu „%1$s“ nic neodpovídá.</string>
+    <string name="library_refresh">Načíst znovu</string>
+    <string name="logout">Odhlásit se</string>
+    <string name="back">Zpět</string>
+    <string name="play">Přehrát</string>
+    <string name="play_resume">Pokračovat od %1$s</string>
+    <string name="play_restart">Od začátku</string>
+    <string name="episodes">Epizody</string>
+    <string name="episode_label">S%1$d E%2$d · %3$s</string>
+    <string name="detail_minutes">%1$d min</string>
+    <string name="detail_audio">Zvuk</string>
+    <string name="detail_subtitles">Titulky</string>
+    <string name="detail_file">Soubor</string>
+    <string name="player_error">Přehrávání se nezdařilo: %1$s</string>
+    <string name="player_no_audio_decoder">Toto zařízení neumí dekódovat zvukový formát %1$s.</string>
+    <string name="player_no_video_decoder">Toto zařízení neumí dekódovat obrazový formát %1$s.</string>
+    <string name="player_converting">Server tento film převádí pro vaše zařízení …</string>
+    <string name="player_cannot_convert">Ani server tento film převést nedokáže.</string>
+    <string name="player_close">Zavřít</string>
+    <string name="language">Jazyk</string>
+    <string name="language_system">Podle systému</string>
+    <string name="menu">Nabídka</string>
+</resources>

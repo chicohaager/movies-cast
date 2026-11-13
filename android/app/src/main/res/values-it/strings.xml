@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="login_title">Collegati ai tuoi film</string>
+    <string name="login_hint">L’indirizzo del tuo dispositivo ZimaOS o server Jellyfin e il tuo account su di esso.</string>
+    <string name="login_server">Indirizzo del server</string>
+    <string name="login_server_example">ad es. 192.168.x.x o nas.local</string>
+    <string name="login_user">Nome utente</string>
+    <string name="login_password">Password</string>
+    <string name="login_button">Accedi</string>
+    <string name="error_address">Non riesco ad aprire questo indirizzo.</string>
+    <string name="error_no_server">Nessun server Movies o Jellyfin ha risposto a questo indirizzo.</string>
+    <string name="error_login">Nome utente o password errati.</string>
+    <string name="error_session">La sessione è scaduta. Accedi di nuovo.</string>
+    <string name="error_network">Il server non ha risposto. Sei nella stessa rete?</string>
+    <string name="error_server">Il server ha risposto con un errore (HTTP %1$d).</string>
+    <string name="error_answer">Impossibile leggere la risposta del server.</string>
+    <string name="error_local_network">Movies-Cast non può raggiungere i dispositivi della tua rete domestica. Consenti «Accesso alla rete locale» nelle impostazioni dell’app.</string>
+    <string name="open_settings">Apri le impostazioni dell’app</string>
+    <string name="retry">Riprova</string>
+    <string name="library_search">Cerca</string>
+    <string name="library_continue">Continua a guardare</string>
+    <string name="library_all">Tutti i film</string>
+    <string name="library_empty">Questa libreria è vuota.</string>
+    <string name="library_no_match">Nessun risultato per «%1$s».</string>
+    <string name="library_refresh">Ricarica</string>
+    <string name="logout">Esci</string>
+    <string name="back">Indietro</string>
+    <string name="play">Riproduci</string>
+    <string name="play_resume">Riprendi da %1$s</string>
+    <string name="play_restart">Dall’inizio</string>
+    <string name="episodes">Episodi</string>
+    <string name="episode_label">S%1$d E%2$d · %3$s</string>
+    <string name="detail_minutes">%1$d min</string>
+    <string name="detail_audio">Audio</string>
+    <string name="detail_subtitles">Sottotitoli</string>
+    <string name="detail_file">File</string>
+    <string name="player_error">Riproduzione non riuscita: %1$s</string>
+    <string name="player_no_audio_decoder">Questo dispositivo non può decodificare il formato audio %1$s.</string>
+    <string name="player_no_video_decoder">Questo dispositivo non può decodificare il formato video %1$s.</string>
+    <string name="player_converting">Il server sta convertendo questo film per il tuo dispositivo …</string>
+    <string name="player_cannot_convert">Nemmeno il server può convertire questo film.</string>
+    <string name="player_close">Chiudi</string>
+    <string name="language">Lingua</string>
+    <string name="language_system">Predefinita di sistema</string>
+    <string name="menu">Menu</string>
+</resources>

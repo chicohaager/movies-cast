@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="login_title">Filmlerinize bağlanın</string>
+    <string name="login_hint">ZimaOS cihazınızın veya Jellyfin sunucunuzun adresi ve oradaki hesabınız.</string>
+    <string name="login_server">Sunucu adresi</string>
+    <string name="login_server_example">örn. 192.168.x.x veya nas.local</string>
+    <string name="login_user">Kullanıcı adı</string>
+    <string name="login_password">Parola</string>
+    <string name="login_button">Oturum aç</string>
+    <string name="error_address">Bu adresi açamıyorum.</string>
+    <string name="error_no_server">Bu adreste hiçbir Movies veya Jellyfin sunucusu yanıt vermedi.</string>
+    <string name="error_login">Kullanıcı adı veya parola yanlış.</string>
+    <string name="error_session">Oturumunuzun süresi doldu. Lütfen yeniden oturum açın.</string>
+    <string name="error_network">Sunucu yanıt vermedi. Aynı ağda mısınız?</string>
+    <string name="error_server">Sunucu bir hatayla yanıt verdi (HTTP %1$d).</string>
+    <string name="error_answer">Sunucunun yanıtı okunamadı.</string>
+    <string name="error_local_network">Movies-Cast ev ağınızdaki cihazlara erişemiyor. Uygulama ayarlarında “Yerel ağ erişimi”ne izin verin.</string>
+    <string name="open_settings">Uygulama ayarlarını aç</string>
+    <string name="retry">Yeniden dene</string>
+    <string name="library_search">Ara</string>
+    <string name="library_continue">İzlemeye devam et</string>
+    <string name="library_all">Tüm filmler</string>
+    <string name="library_empty">Bu kitaplık boş.</string>
+    <string name="library_no_match">“%1$s” ile eşleşen bir şey yok.</string>
+    <string name="library_refresh">Yeniden yükle</string>
+    <string name="logout">Oturumu kapat</string>
+    <string name="back">Geri</string>
+    <string name="play">Oynat</string>
+    <string name="play_resume">%1$s konumundan devam et</string>
+    <string name="play_restart">Baştan</string>
+    <string name="episodes">Bölümler</string>
+    <string name="episode_label">S%1$d B%2$d · %3$s</string>
+    <string name="detail_minutes">%1$d dk</string>
+    <string name="detail_audio">Ses</string>
+    <string name="detail_subtitles">Altyazılar</string>
+    <string name="detail_file">Dosya</string>
+    <string name="player_error">Oynatma başarısız: %1$s</string>
+    <string name="player_no_audio_decoder">Bu cihaz %1$s ses biçimini çözemiyor.</string>
+    <string name="player_no_video_decoder">Bu cihaz %1$s görüntü biçimini çözemiyor.</string>
+    <string name="player_converting">Sunucu bu filmi cihazınız için dönüştürüyor …</string>
+    <string name="player_cannot_convert">Sunucu da bu filmi dönüştüremiyor.</string>
+    <string name="player_close">Kapat</string>
+    <string name="language">Dil</string>
+    <string name="language_system">Sistem varsayılanı</string>
+    <string name="menu">Menü</string>
+</resources>

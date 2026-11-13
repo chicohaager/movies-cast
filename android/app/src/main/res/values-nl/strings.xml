@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="login_title">Verbind met je films</string>
+    <string name="login_hint">Het adres van je ZimaOS-apparaat of Jellyfin-server en je account daarop.</string>
+    <string name="login_server">Serveradres</string>
+    <string name="login_server_example">bijv. 192.168.x.x of nas.local</string>
+    <string name="login_user">Gebruikersnaam</string>
+    <string name="login_password">Wachtwoord</string>
+    <string name="login_button">Inloggen</string>
+    <string name="error_address">Dit adres kan ik niet openen.</string>
+    <string name="error_no_server">Op dit adres antwoordde geen Movies- of Jellyfin-server.</string>
+    <string name="error_login">Gebruikersnaam of wachtwoord is onjuist.</string>
+    <string name="error_session">Je login is verlopen. Log opnieuw in.</string>
+    <string name="error_network">De server antwoordde niet. Zit je in hetzelfde netwerk?</string>
+    <string name="error_server">De server antwoordde met een fout (HTTP %1$d).</string>
+    <string name="error_answer">Het antwoord van de server kon niet worden gelezen.</string>
+    <string name="error_local_network">Movies-Cast mag geen apparaten in je thuisnetwerk bereiken. Sta ‘Toegang tot lokaal netwerk’ toe in de app-instellingen.</string>
+    <string name="open_settings">App-instellingen openen</string>
+    <string name="retry">Opnieuw proberen</string>
+    <string name="library_search">Zoeken</string>
+    <string name="library_continue">Verder kijken</string>
+    <string name="library_all">Alle films</string>
+    <string name="library_empty">Deze bibliotheek is leeg.</string>
+    <string name="library_no_match">Niets komt overeen met ‘%1$s’.</string>
+    <string name="library_refresh">Opnieuw laden</string>
+    <string name="logout">Uitloggen</string>
+    <string name="back">Terug</string>
+    <string name="play">Afspelen</string>
+    <string name="play_resume">Verder vanaf %1$s</string>
+    <string name="play_restart">Vanaf het begin</string>
+    <string name="episodes">Afleveringen</string>
+    <string name="episode_label">S%1$d A%2$d · %3$s</string>
+    <string name="detail_minutes">%1$d min</string>
+    <string name="detail_audio">Geluid</string>
+    <string name="detail_subtitles">Ondertitels</string>
+    <string name="detail_file">Bestand</string>
+    <string name="player_error">Afspelen mislukt: %1$s</string>
+    <string name="player_no_audio_decoder">Dit apparaat kan het geluidsformaat %1$s niet decoderen.</string>
+    <string name="player_no_video_decoder">Dit apparaat kan het beeldformaat %1$s niet decoderen.</string>
+    <string name="player_converting">De server zet deze film om voor je apparaat …</string>
+    <string name="player_cannot_convert">De server kan deze film ook niet omzetten.</string>
+    <string name="player_close">Sluiten</string>
+    <string name="language">Taal</string>
+    <string name="language_system">Systeemstandaard</string>
+    <string name="menu">Menu</string>
+</resources>

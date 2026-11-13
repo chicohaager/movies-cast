@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="login_title">连接到你的影片</string>
+    <string name="login_hint">输入 ZimaOS 设备或 Jellyfin 服务器的地址，以及你在其上的账户。</string>
+    <string name="login_server">服务器地址</string>
+    <string name="login_server_example">例如 192.168.x.x 或 nas.local</string>
+    <string name="login_user">用户名</string>
+    <string name="login_password">密码</string>
+    <string name="login_button">登录</string>
+    <string name="error_address">无法打开这个地址。</string>
+    <string name="error_no_server">这个地址上没有 Movies 或 Jellyfin 服务器应答。</string>
+    <string name="error_login">用户名或密码不正确。</string>
+    <string name="error_session">登录已过期，请重新登录。</string>
+    <string name="error_network">服务器没有应答。你在同一个网络中吗？</string>
+    <string name="error_server">服务器返回了错误（HTTP %1$d）。</string>
+    <string name="error_answer">无法读取服务器的应答。</string>
+    <string name="error_local_network">Movies-Cast 无权访问家庭网络中的设备。请在应用设置中允许“本地网络访问”。</string>
+    <string name="open_settings">打开应用设置</string>
+    <string name="retry">重试</string>
+    <string name="library_search">搜索</string>
+    <string name="library_continue">继续观看</string>
+    <string name="library_all">全部影片</string>
+    <string name="library_empty">这个媒体库是空的。</string>
+    <string name="library_no_match">没有与“%1$s”匹配的内容。</string>
+    <string name="library_refresh">重新加载</string>
+    <string name="logout">退出登录</string>
+    <string name="back">返回</string>
+    <string name="play">播放</string>
+    <string name="play_resume">从 %1$s 继续</string>
+    <string name="play_restart">从头播放</string>
+    <string name="episodes">剧集</string>
+    <string name="episode_label">第%1$d季 第%2$d集 · %3$s</string>
+    <string name="detail_minutes">%1$d 分钟</string>
+    <string name="detail_audio">音频</string>
+    <string name="detail_subtitles">字幕</string>
+    <string name="detail_file">文件</string>
+    <string name="player_error">播放失败：%1$s</string>
+    <string name="player_no_audio_decoder">此设备无法解码音频格式 %1$s。</string>
+    <string name="player_no_video_decoder">此设备无法解码视频格式 %1$s。</string>
+    <string name="player_converting">服务器正在为你的设备转换这部影片 …</string>
+    <string name="player_cannot_convert">服务器也无法转换这部影片。</string>
+    <string name="player_close">关闭</string>
+    <string name="language">语言</string>
+    <string name="language_system">跟随系统</string>
+    <string name="menu">菜单</string>
+</resources>

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="login_title">映画に接続</string>
+    <string name="login_hint">ZimaOS 機器または Jellyfin サーバーのアドレスと、そのアカウントを入力してください。</string>
+    <string name="login_server">サーバーのアドレス</string>
+    <string name="login_server_example">例: 192.168.x.x または nas.local</string>
+    <string name="login_user">ユーザー名</string>
+    <string name="login_password">パスワード</string>
+    <string name="login_button">ログイン</string>
+    <string name="error_address">このアドレスは開けません。</string>
+    <string name="error_no_server">このアドレスでは Movies サーバーも Jellyfin サーバーも応答しませんでした。</string>
+    <string name="error_login">ユーザー名またはパスワードが正しくありません。</string>
+    <string name="error_session">ログインの有効期限が切れました。もう一度ログインしてください。</string>
+    <string name="error_network">サーバーが応答しませんでした。同じネットワークに接続していますか？</string>
+    <string name="error_server">サーバーがエラーを返しました (HTTP %1$d)。</string>
+    <string name="error_answer">サーバーの応答を読み取れませんでした。</string>
+    <string name="error_local_network">Movies-Cast はホームネットワーク内の機器にアクセスできません。アプリの設定で「ローカル ネットワークへのアクセス」を許可してください。</string>
+    <string name="open_settings">アプリの設定を開く</string>
+    <string name="retry">再試行</string>
+    <string name="library_search">検索</string>
+    <string name="library_continue">視聴を続ける</string>
+    <string name="library_all">すべての映画</string>
+    <string name="library_empty">このライブラリは空です。</string>
+    <string name="library_no_match">「%1$s」に一致するものはありません。</string>
+    <string name="library_refresh">再読み込み</string>
+    <string name="logout">ログアウト</string>
+    <string name="back">戻る</string>
+    <string name="play">再生</string>
+    <string name="play_resume">%1$s から再生</string>
+    <string name="play_restart">最初から</string>
+    <string name="episodes">エピソード</string>
+    <string name="episode_label">S%1$d E%2$d · %3$s</string>
+    <string name="detail_minutes">%1$d 分</string>
+    <string name="detail_audio">音声</string>
+    <string name="detail_subtitles">字幕</string>
+    <string name="detail_file">ファイル</string>
+    <string name="player_error">再生に失敗しました: %1$s</string>
+    <string name="player_no_audio_decoder">この機器は音声形式 %1$s をデコードできません。</string>
+    <string name="player_no_video_decoder">この機器は映像形式 %1$s をデコードできません。</string>
+    <string name="player_converting">サーバーがこの映画をお使いの機器向けに変換しています …</string>
+    <string name="player_cannot_convert">サーバーでもこの映画を変換できません。</string>
+    <string name="player_close">閉じる</string>
+    <string name="language">言語</string>
+    <string name="language_system">システムのデフォルト</string>
+    <string name="menu">メニュー</string>
+</resources>

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="login_title">連線到你的影片</string>
+    <string name="login_hint">輸入 ZimaOS 裝置或 Jellyfin 伺服器的位址，以及你在其上的帳號。</string>
+    <string name="login_server">伺服器位址</string>
+    <string name="login_server_example">例如 192.168.x.x 或 nas.local</string>
+    <string name="login_user">使用者名稱</string>
+    <string name="login_password">密碼</string>
+    <string name="login_button">登入</string>
+    <string name="error_address">無法開啟這個位址。</string>
+    <string name="error_no_server">這個位址上沒有 Movies 或 Jellyfin 伺服器回應。</string>
+    <string name="error_login">使用者名稱或密碼不正確。</string>
+    <string name="error_session">登入已過期，請重新登入。</string>
+    <string name="error_network">伺服器沒有回應。你在同一個網路中嗎？</string>
+    <string name="error_server">伺服器回傳了錯誤（HTTP %1$d）。</string>
+    <string name="error_answer">無法讀取伺服器的回應。</string>
+    <string name="error_local_network">Movies-Cast 無權存取家用網路中的裝置。請在應用程式設定中允許「區域網路存取」。</string>
+    <string name="open_settings">開啟應用程式設定</string>
+    <string name="retry">重試</string>
+    <string name="library_search">搜尋</string>
+    <string name="library_continue">繼續觀看</string>
+    <string name="library_all">所有影片</string>
+    <string name="library_empty">這個媒體庫是空的。</string>
+    <string name="library_no_match">沒有符合「%1$s」的內容。</string>
+    <string name="library_refresh">重新載入</string>
+    <string name="logout">登出</string>
+    <string name="back">返回</string>
+    <string name="play">播放</string>
+    <string name="play_resume">從 %1$s 繼續</string>
+    <string name="play_restart">從頭播放</string>
+    <string name="episodes">劇集</string>
+    <string name="episode_label">第%1$d季 第%2$d集 · %3$s</string>
+    <string name="detail_minutes">%1$d 分鐘</string>
+    <string name="detail_audio">音訊</string>
+    <string name="detail_subtitles">字幕</string>
+    <string name="detail_file">檔案</string>
+    <string name="player_error">播放失敗：%1$s</string>
+    <string name="player_no_audio_decoder">此裝置無法解碼音訊格式 %1$s。</string>
+    <string name="player_no_video_decoder">此裝置無法解碼視訊格式 %1$s。</string>
+    <string name="player_converting">伺服器正在為你的裝置轉換這部影片 …</string>
+    <string name="player_cannot_convert">伺服器也無法轉換這部影片。</string>
+    <string name="player_close">關閉</string>
+    <string name="language">語言</string>
+    <string name="language_system">系統預設</string>
+    <string name="menu">選單</string>
+</resources>

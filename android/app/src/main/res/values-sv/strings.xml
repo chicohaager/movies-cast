@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="login_title">Anslut till dina filmer</string>
+    <string name="login_hint">Adressen till din ZimaOS-enhet eller Jellyfin-server och ditt konto där.</string>
+    <string name="login_server">Serveradress</string>
+    <string name="login_server_example">t.ex. 192.168.x.x eller nas.local</string>
+    <string name="login_user">Användarnamn</string>
+    <string name="login_password">Lösenord</string>
+    <string name="login_button">Logga in</string>
+    <string name="error_address">Den här adressen kan jag inte öppna.</string>
+    <string name="error_no_server">Ingen Movies- eller Jellyfin-server svarade på den här adressen.</string>
+    <string name="error_login">Användarnamnet eller lösenordet är fel.</string>
+    <string name="error_session">Din inloggning har gått ut. Logga in igen.</string>
+    <string name="error_network">Servern svarade inte. Är du i samma nätverk?</string>
+    <string name="error_server">Servern svarade med ett fel (HTTP %1$d).</string>
+    <string name="error_answer">Serverns svar kunde inte läsas.</string>
+    <string name="error_local_network">Movies-Cast får inte nå enheter i ditt hemnätverk. Tillåt ”Åtkomst till lokalt nätverk” i appens inställningar.</string>
+    <string name="open_settings">Öppna appens inställningar</string>
+    <string name="retry">Försök igen</string>
+    <string name="library_search">Sök</string>
+    <string name="library_continue">Fortsätt titta</string>
+    <string name="library_all">Alla filmer</string>
+    <string name="library_empty">Det här biblioteket är tomt.</string>
+    <string name="library_no_match">Inget matchar ”%1$s”.</string>
+    <string name="library_refresh">Läs in igen</string>
+    <string name="logout">Logga ut</string>
+    <string name="back">Tillbaka</string>
+    <string name="play">Spela upp</string>
+    <string name="play_resume">Fortsätt vid %1$s</string>
+    <string name="play_restart">Från början</string>
+    <string name="episodes">Avsnitt</string>
+    <string name="episode_label">S%1$d A%2$d · %3$s</string>
+    <string name="detail_minutes">%1$d min</string>
+    <string name="detail_audio">Ljud</string>
+    <string name="detail_subtitles">Undertexter</string>
+    <string name="detail_file">Fil</string>
+    <string name="player_error">Uppspelningen misslyckades: %1$s</string>
+    <string name="player_no_audio_decoder">Den här enheten kan inte avkoda ljudformatet %1$s.</string>
+    <string name="player_no_video_decoder">Den här enheten kan inte avkoda bildformatet %1$s.</string>
+    <string name="player_converting">Servern konverterar filmen för din enhet …</string>
+    <string name="player_cannot_convert">Servern kan inte heller konvertera den här filmen.</string>
+    <string name="player_close">Stäng</string>
+    <string name="language">Språk</string>
+    <string name="language_system">Systemets standard</string>
+    <string name="menu">Meny</string>
+</resources>

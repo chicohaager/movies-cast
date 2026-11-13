@@ -1,0 +1,3 @@
+# FFmpeg source and the libraries build-ffmpeg.sh makes from it
+src/main/jni/ffmpeg/
+.cxx/

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="login_title">Подключитесь к своим фильмам</string>
+    <string name="login_hint">Адрес вашего устройства ZimaOS или сервера Jellyfin и ваша учётная запись на нём.</string>
+    <string name="login_server">Адрес сервера</string>
+    <string name="login_server_example">например, 192.168.x.x или nas.local</string>
+    <string name="login_user">Имя пользователя</string>
+    <string name="login_password">Пароль</string>
+    <string name="login_button">Войти</string>
+    <string name="error_address">Не могу открыть этот адрес.</string>
+    <string name="error_no_server">По этому адресу не ответил ни сервер Movies, ни сервер Jellyfin.</string>
+    <string name="error_login">Неверное имя пользователя или пароль.</string>
+    <string name="error_session">Срок действия входа истёк. Войдите снова.</string>
+    <string name="error_network">Сервер не ответил. Вы в той же сети?</string>
+    <string name="error_server">Сервер ответил ошибкой (HTTP %1$d).</string>
+    <string name="error_answer">Не удалось прочитать ответ сервера.</string>
+    <string name="error_local_network">Movies-Cast не может обращаться к устройствам в домашней сети. Разрешите «Доступ к локальной сети» в настройках приложения.</string>
+    <string name="open_settings">Открыть настройки приложения</string>
+    <string name="retry">Повторить</string>
+    <string name="library_search">Поиск</string>
+    <string name="library_continue">Продолжить просмотр</string>
+    <string name="library_all">Все фильмы</string>
+    <string name="library_empty">Эта библиотека пуста.</string>
+    <string name="library_no_match">По запросу «%1$s» ничего не найдено.</string>
+    <string name="library_refresh">Обновить</string>
+    <string name="logout">Выйти</string>
+    <string name="back">Назад</string>
+    <string name="play">Смотреть</string>
+    <string name="play_resume">Продолжить с %1$s</string>
+    <string name="play_restart">С начала</string>
+    <string name="episodes">Серии</string>
+    <string name="episode_label">С%1$d Э%2$d · %3$s</string>
+    <string name="detail_minutes">%1$d мин</string>
+    <string name="detail_audio">Звук</string>
+    <string name="detail_subtitles">Субтитры</string>
+    <string name="detail_file">Файл</string>
+    <string name="player_error">Не удалось воспроизвести: %1$s</string>
+    <string name="player_no_audio_decoder">Это устройство не может декодировать формат звука %1$s.</string>
+    <string name="player_no_video_decoder">Это устройство не может декодировать формат изображения %1$s.</string>
+    <string name="player_converting">Сервер преобразует этот фильм для вашего устройства …</string>
+    <string name="player_cannot_convert">Сервер тоже не может преобразовать этот фильм.</string>
+    <string name="player_close">Закрыть</string>
+    <string name="language">Язык</string>
+    <string name="language_system">Как в системе</string>
+    <string name="menu">Меню</string>
+</resources>

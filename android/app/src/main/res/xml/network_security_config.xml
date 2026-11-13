@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The ZimaOS gateway speaks plain HTTP in the home network, and the server address is
+     whatever the owner types; so cleartext cannot be limited to a list of hosts. -->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true" />
+</network-security-config>

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="login_title">Kapcsolódjon a filmjeihez</string>
+    <string name="login_hint">A ZimaOS-eszköz vagy a Jellyfin-kiszolgáló címe és az ottani fiókja.</string>
+    <string name="login_server">Kiszolgáló címe</string>
+    <string name="login_server_example">pl. 192.168.x.x vagy nas.local</string>
+    <string name="login_user">Felhasználónév</string>
+    <string name="login_password">Jelszó</string>
+    <string name="login_button">Bejelentkezés</string>
+    <string name="error_address">Ezt a címet nem tudom megnyitni.</string>
+    <string name="error_no_server">Ezen a címen nem válaszolt Movies- vagy Jellyfin-kiszolgáló.</string>
+    <string name="error_login">A felhasználónév vagy a jelszó hibás.</string>
+    <string name="error_session">A bejelentkezés lejárt. Jelentkezzen be újra.</string>
+    <string name="error_network">A kiszolgáló nem válaszolt. Ugyanazon a hálózaton van?</string>
+    <string name="error_server">A kiszolgáló hibával válaszolt (HTTP %1$d).</string>
+    <string name="error_answer">A kiszolgáló válaszát nem sikerült beolvasni.</string>
+    <string name="error_local_network">A Movies-Cast nem érheti el az otthoni hálózat eszközeit. Engedélyezze az alkalmazás beállításaiban a „Helyi hálózati hozzáférés” lehetőséget.</string>
+    <string name="open_settings">Alkalmazásbeállítások megnyitása</string>
+    <string name="retry">Újra</string>
+    <string name="library_search">Keresés</string>
+    <string name="library_continue">Megtekintés folytatása</string>
+    <string name="library_all">Minden film</string>
+    <string name="library_empty">Ez a könyvtár üres.</string>
+    <string name="library_no_match">Nincs találat erre: „%1$s”.</string>
+    <string name="library_refresh">Újratöltés</string>
+    <string name="logout">Kijelentkezés</string>
+    <string name="back">Vissza</string>
+    <string name="play">Lejátszás</string>
+    <string name="play_resume">Folytatás innen: %1$s</string>
+    <string name="play_restart">Elölről</string>
+    <string name="episodes">Epizódok</string>
+    <string name="episode_label">%1$d. évad %2$d. rész · %3$s</string>
+    <string name="detail_minutes">%1$d perc</string>
+    <string name="detail_audio">Hang</string>
+    <string name="detail_subtitles">Feliratok</string>
+    <string name="detail_file">Fájl</string>
+    <string name="player_error">A lejátszás nem sikerült: %1$s</string>
+    <string name="player_no_audio_decoder">Ez az eszköz nem tudja dekódolni a(z) %1$s hangformátumot.</string>
+    <string name="player_no_video_decoder">Ez az eszköz nem tudja dekódolni a(z) %1$s képformátumot.</string>
+    <string name="player_converting">A kiszolgáló átalakítja ezt a filmet az eszközéhez …</string>
+    <string name="player_cannot_convert">A kiszolgáló sem tudja átalakítani ezt a filmet.</string>
+    <string name="player_close">Bezárás</string>
+    <string name="language">Nyelv</string>
+    <string name="language_system">Rendszer alapértelmezése</string>
+    <string name="menu">Menü</string>
+</resources>

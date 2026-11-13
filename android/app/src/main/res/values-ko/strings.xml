@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="login_title">내 영화에 연결</string>
+    <string name="login_hint">ZimaOS 기기 또는 Jellyfin 서버의 주소와 해당 계정을 입력하세요.</string>
+    <string name="login_server">서버 주소</string>
+    <string name="login_server_example">예: 192.168.x.x 또는 nas.local</string>
+    <string name="login_user">사용자 이름</string>
+    <string name="login_password">비밀번호</string>
+    <string name="login_button">로그인</string>
+    <string name="error_address">이 주소는 열 수 없습니다.</string>
+    <string name="error_no_server">이 주소에서 Movies 또는 Jellyfin 서버가 응답하지 않았습니다.</string>
+    <string name="error_login">사용자 이름 또는 비밀번호가 올바르지 않습니다.</string>
+    <string name="error_session">로그인이 만료되었습니다. 다시 로그인하세요.</string>
+    <string name="error_network">서버가 응답하지 않았습니다. 같은 네트워크에 있나요?</string>
+    <string name="error_server">서버가 오류로 응답했습니다(HTTP %1$d).</string>
+    <string name="error_answer">서버의 응답을 읽을 수 없습니다.</string>
+    <string name="error_local_network">Movies-Cast가 홈 네트워크의 기기에 접근할 수 없습니다. 앱 설정에서 ‘로컬 네트워크 액세스’를 허용하세요.</string>
+    <string name="open_settings">앱 설정 열기</string>
+    <string name="retry">다시 시도</string>
+    <string name="library_search">검색</string>
+    <string name="library_continue">이어서 보기</string>
+    <string name="library_all">모든 영화</string>
+    <string name="library_empty">이 라이브러리는 비어 있습니다.</string>
+    <string name="library_no_match">“%1$s”와 일치하는 항목이 없습니다.</string>
+    <string name="library_refresh">새로고침</string>
+    <string name="logout">로그아웃</string>
+    <string name="back">뒤로</string>
+    <string name="play">재생</string>
+    <string name="play_resume">%1$s부터 이어서 재생</string>
+    <string name="play_restart">처음부터</string>
+    <string name="episodes">에피소드</string>
+    <string name="episode_label">S%1$d E%2$d · %3$s</string>
+    <string name="detail_minutes">%1$d분</string>
+    <string name="detail_audio">오디오</string>
+    <string name="detail_subtitles">자막</string>
+    <string name="detail_file">파일</string>
+    <string name="player_error">재생 실패: %1$s</string>
+    <string name="player_no_audio_decoder">이 기기는 오디오 형식 %1$s을(를) 디코딩할 수 없습니다.</string>
+    <string name="player_no_video_decoder">이 기기는 영상 형식 %1$s을(를) 디코딩할 수 없습니다.</string>
+    <string name="player_converting">서버가 이 영화를 기기에 맞게 변환하고 있습니다 …</string>
+    <string name="player_cannot_convert">서버도 이 영화를 변환할 수 없습니다.</string>
+    <string name="player_close">닫기</string>
+    <string name="language">언어</string>
+    <string name="language_system">시스템 기본값</string>
+    <string name="menu">메뉴</string>
+</resources>

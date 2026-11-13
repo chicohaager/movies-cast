@@ -13,6 +13,7 @@ deploy/tools/test_movies_probe.py:/Users/USERID0000
 internal/server/library_test.go:/Users/AuthenticateByName
 internal/server/library_test.go:/Users/USERID0000
 docs/TECHNICAL.md:/Users/AuthenticateByName
+android/core/src/main/kotlin/io/github/chicohaager/moviescast/core/MoviesClient.kt:/Users/AuthenticateByName
 
 # Invented LAN addresses of the test fakes and doc examples (the real ones were replaced
 # 2026-10-28); the code under test needs private-range addresses.
