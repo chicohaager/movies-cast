@@ -5,6 +5,8 @@ What changed in each version; the "why" with its measurements is in
 
 ## Unreleased
 
+- Android app 0.2.0, the first build for testers ([android/TESTERS.md](android/TESTERS.md)): everything below, signed with the release key; it installs over 0.1.0 and keeps its login.
+- Android app: a login kept by a build before 0.2.0 takes no installed certificate by itself; at a server the system does not trust it asks to log in again once (1 text in 18 languages).
 - Android app 0.1.0 (`android/`, not released): a native player for phones, tablets and Android TV that plays the original file straight from Movies or Jellyfin — login, library with search and "continue watching", film page, picture-in-picture, 18 languages; FFmpeg (LGPL build) for sound the device cannot decode; Dolby Vision profile 7 as HEVC; one server conversion when the picture cannot be decoded.
 - Android app: "About" (menu and login page) with the version, the open-source licences (every library of the build, FFmpeg with the LGPL's text first), links to the privacy policy and the source, and "Share diagnostics" — versions, device, decoders and the player's last log lines, shown before sharing, without addresses.
 - Android app: the question for "Local network access" (Android 17) comes with "Log in", no longer at the first start.

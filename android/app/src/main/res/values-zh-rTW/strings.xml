@@ -77,4 +77,5 @@
     <string name="account_remove">移除</string>
     <string name="error_certificate">此裝置不信任伺服器的憑證。請在 Android 設定中安裝該憑證，或輸入憑證所簽發的位址。</string>
     <string name="error_certificate_changed">伺服器的憑證與登入時的不同。如果是您自己更換的，請重新登入；否則可能有人位於您與伺服器之間。</string>
+    <string name="error_certificate_login_again">此登入早於應用程式記住伺服器憑證的版本。請重新登入一次，讓只有此伺服器的憑證有效。</string>
 </resources>

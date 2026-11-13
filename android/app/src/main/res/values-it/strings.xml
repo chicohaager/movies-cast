@@ -77,4 +77,5 @@
     <string name="account_remove">Rimuovi</string>
     <string name="error_certificate">Questo dispositivo non considera attendibile il certificato del server. Installa il certificato nelle impostazioni di Android oppure scrivi l’indirizzo per cui è stato emesso.</string>
     <string name="error_certificate_changed">Il certificato del server non è quello dell’accesso. Se l’hai cambiato tu, accedi di nuovo; altrimenti qualcuno potrebbe trovarsi tra te e il server.</string>
+    <string name="error_certificate_login_again">Questo accesso risale a prima che l\'app memorizzasse il certificato di un server. Accedi di nuovo una volta, così vale solo il certificato di questo server.</string>
 </resources>

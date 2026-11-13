@@ -77,4 +77,5 @@
     <string name="account_remove">Eltávolítás</string>
     <string name="error_certificate">Ez az eszköz nem bízik a szerver tanúsítványában. Telepítse a tanúsítványt az Android beállításaiban, vagy írja be azt a címet, amelyre a tanúsítványt kiállították.</string>
     <string name="error_certificate_changed">A szerver tanúsítványa nem az, amelyik a bejelentkezéskor volt. Ha ön cserélte le, jelentkezzen be újra; ha nem, valaki lehet ön és a szerver között.</string>
+    <string name="error_certificate_login_again">Ez a bejelentkezés még azelőtt történt, hogy az alkalmazás megjegyezte volna a szerver tanúsítványát. Jelentkezz be újra egyszer, hogy csak ennek a szervernek a tanúsítványa érvényes legyen.</string>
 </resources>

@@ -35,14 +35,14 @@ PLAYING. The two failures of 19:35 and 17:51 (no answer to Play within 6 s) were
 
 ## Android app (`android/`, native player)
 
-State 2026-11-13: 0.1.0, pushed, not released. What is measured is in [android/README.md](../android/README.md).
+State 2026-11-13: 0.2.0, the first build for testers (signed APK, [android/TESTERS.md](../android/TESTERS.md)), in no store. What is measured is in [android/README.md](../android/README.md).
 
 | # | What | State | Note |
 |---|---|---|---|
 | A1 | licences in the app, privacy policy, diagnostics a tester can send | done 2026-11-13 | About page; PRIVACY.md; Pixel 7 (Android 17), debug and signed release |
 | A2 | tests of the screens on a device, a workflow on GitHub | done | 7 tests on the Pixel 7 and in the Android 16 emulator (`check-android.sh --device`); the workflow's first run (588a860) passed; its emulator job is new |
 | A3 | real devices besides the Pixel 7 | open | a tablet and a real Android TV box; so far emulators only. Signed release on the Pixel 7: login and a Dolby Vision profile 7 film with TrueHD 7.1 from Movies played (2026-11-13) |
-| A4 | open test, native speakers read the 16 translations, version number for it | open | owner's decision |
+| A4 | open test, native speakers read the 16 translations, version number for it | started 2026-11-13 | 0.2.0 (versionCode 200) for testers, signed, installed over 0.1.0 on the Pixel 7 with its login kept, a film played; how testers get it and the translations' reading are open |
 | A5 | series: seasons, next episode by itself | done 2026-11-13 | Jellyfin 10.11.0, Android 16 emulator: S1E2 → S1E3 → S2E1 by themselves, the server then lists them as watched. Movies 0.4.5 (Pixel 7): the same from a "TV shows" library, S1E1 → S1E2, both then watched; episode files in a "movies" library are skipped |
 | A6 | subtitle files next to the film (the server's external streams) | done 2026-11-13 | Jellyfin 10.11.0: an SRT next to the film shows after picking it with the subtitle button; none is picked by itself. Movies 0.4.5 names such a file only in `PlaybackInfo`, which starts a conversion on the box: with Movies the app offers none (decision open, see android/README.md) |
 | A7 | mark as watched, favourites | done 2026-11-13 | `POST`/`DELETE /Users/{id}/PlayedItems/{item}`, measured against Jellyfin 10.11.0 and Movies 0.4.5 (from the app on the Pixel 7). Favourites: button and filter built 2026-11-13, the route exists in Movies' program, set and taken back from the app against Jellyfin 10.11.0 and, on the Pixel 7, against Movies 0.4.5 |

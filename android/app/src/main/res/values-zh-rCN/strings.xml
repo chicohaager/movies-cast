@@ -77,4 +77,5 @@
     <string name="account_remove">移除</string>
     <string name="error_certificate">此设备不信任服务器的证书。请在 Android 设置中安装该证书，或输入证书所签发的地址。</string>
     <string name="error_certificate_changed">服务器的证书与登录时的不同。如果是您自己更换的，请重新登录；否则可能有人位于您和服务器之间。</string>
+    <string name="error_certificate_login_again">此登录早于应用记住服务器证书的版本。请重新登录一次，以便只有此服务器的证书有效。</string>
 </resources>

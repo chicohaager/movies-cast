@@ -44,6 +44,9 @@ open class UntrustedCertificateException(message: String = "the server's certifi
 /** The server's certificate is not the one it was logged in with ([ScopedTrust]); logging in again takes the new one. */
 class CertificateChangedException : UntrustedCertificateException("the server's certificate is not the one of the login")
 
+/** A login made before the app bound logins to a certificate, at a server the system does not trust ([ScopedTrust]): log in again. */
+class CertificateNeedsLoginException : UntrustedCertificateException("the login has no certificate bound; log in again")
+
 /** Who is asking; goes into the `X-Emby-Authorization` header of every request. */
 data class Device(val id: String, val name: String, val appVersion: String)
 
@@ -337,6 +340,7 @@ class MoviesClient(http: OkHttpClient, private val device: Device) {
             } catch (e: IOException) {
                 if (e !is UnauthorizedException && e !is ServerException) {
                     if (certificateNotOfLogin(e)) throw CertificateChangedException()
+                    if (within(e) { it is LoginNotBoundException }) throw CertificateNeedsLoginException()
                     if (certificateRefused(e)) throw UntrustedCertificateException()
                 }
                 throw e

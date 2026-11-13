@@ -77,4 +77,5 @@
     <string name="account_remove">Usuń</string>
     <string name="error_certificate">To urządzenie nie ufa certyfikatowi serwera. Zainstaluj certyfikat w ustawieniach Androida albo wpisz adres, dla którego został wystawiony.</string>
     <string name="error_certificate_changed">Certyfikat serwera nie jest tym z logowania. Jeśli sam go wymieniłeś, zaloguj się ponownie; w przeciwnym razie ktoś może być między tobą a serwerem.</string>
+    <string name="error_certificate_login_again">To logowanie pochodzi z czasu, zanim aplikacja zaczęła zapamiętywać certyfikat serwera. Zaloguj się raz ponownie, aby liczył się tylko certyfikat tego serwera.</string>
 </resources>

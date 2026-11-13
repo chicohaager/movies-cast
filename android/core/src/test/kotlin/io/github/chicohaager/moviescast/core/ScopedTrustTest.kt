@@ -152,11 +152,27 @@ class ScopedTrustTest {
     }
 
     @Test
-    fun aLoginFromBeforeTheBindingIsBoundAtItsFirstConnection() {
-        serve(own)
+    fun aLoginFromBeforeTheBindingAtAServerTheSystemTrustsIsBoundToTheSystem() {
+        serve(public)
         bindings[name] = ""
         assertTrue(answers())
-        assertEquals(listOf(name to ScopedTrust.userBinding(own.certificate)), bound.distinct())
+        assertEquals(listOf(name to ScopedTrust.SYSTEM), bound.distinct())
+    }
+
+    @Test
+    fun aLoginFromBeforeTheBindingNeverTakesAnInstalledCertificateByItself() {
+        // the stranger's certificate, installed after that login, must not get bound by the first connection
+        serve(stranger)
+        bindings[name] = ""
+        refusedWith<CertificateNeedsLoginException>()
+        assertEquals(emptyList<Pair<String, String>>(), bound)
+    }
+
+    @Test
+    fun aLoginFromBeforeTheBindingIsBoundByLoggingInAgain() {
+        serve(own)
+        bindings[name] = ""
+        assertEquals(ScopedTrust.userBinding(own.certificate), loginBinding())
     }
 
     @Test

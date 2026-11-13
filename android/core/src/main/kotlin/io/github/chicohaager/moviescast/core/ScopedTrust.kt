@@ -14,6 +14,9 @@ import javax.net.ssl.X509TrustManager
 /** The certificate of a server was not the one it was logged in with; logging in again binds the new one. */
 class CertificateNotOfLoginException(val server: String) : CertificateException("the certificate of $server is not the one of the login")
 
+/** A login from before the binding at a server the system does not trust: only logging in again may take an installed certificate. */
+class LoginNotBoundException(val server: String) : CertificateException("the login at $server has no certificate bound yet")
+
 /**
  * Which certificates count for which server (the owner's decision, 2026-11-13: a certificate the person
  * installed in Android's settings counts only for their own servers, and only the one it was logged in with).
@@ -21,8 +24,11 @@ class CertificateNotOfLoginException(val server: String) : CertificateException(
  * - A server of a login bound to [SYSTEM]: the system's certificates only; no user certificate ever.
  * - A server of a login bound to a user certificate (`user:<sha-256 of it>`): that certificate only. Any
  *   other chain, also one the system trusts, fails with [CertificateNotOfLoginException].
- * - The server being logged in to ([pending]) and a login not bound yet (made before there was a
- *   binding): the system's certificates, else one of the user certificates; [onBound] is told which.
+ * - The server being logged in to ([pending]): the system's certificates, else one of the user
+ *   certificates; [onBound] is told which.
+ * - A login not bound yet (made before there was a binding): the system's certificates, and it is bound
+ *   to [SYSTEM]; a user certificate only by logging in again ([LoginNotBoundException]), so one
+ *   installed after that login never counts by itself.
  * - Every other server: the system's certificates only.
  *
  * Servers are named `host:port`. A user certificate counts when the platform's own check (PKIX) accepts the
@@ -53,9 +59,17 @@ class ScopedTrust(
         val asking = server != null && server in pending()
         when {
             // being logged in to (again): as for a new server, and the binding is made anew
-            asking || bound == "" -> {
+            asking -> {
                 val how = systemOrUser(chain, authType)
                 if (server != null) onBound(server, how)
+            }
+            bound == "" -> {
+                try {
+                    system.checkServerTrusted(chain, authType)
+                } catch (_: CertificateException) {
+                    throw LoginNotBoundException(server!!)
+                }
+                onBound(server!!, SYSTEM)
             }
             bound == SYSTEM || bound == null -> system.checkServerTrusted(chain, authType)
             else -> {

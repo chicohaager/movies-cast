@@ -77,4 +77,5 @@
     <string name="account_remove">Retirer</string>
     <string name="error_certificate">Cet appareil ne fait pas confiance au certificat du serveur. Installez le certificat dans les paramètres d’Android ou saisissez l’adresse pour laquelle il a été émis.</string>
     <string name="error_certificate_changed">Le certificat du serveur n’est plus celui de la connexion. Si vous l’avez changé vous-même, reconnectez-vous ; sinon, quelqu’un se trouve peut-être entre vous et le serveur.</string>
+    <string name="error_certificate_login_again">Cette connexion date d\'avant que l\'application retienne le certificat d\'un serveur. Reconnectez-vous une fois pour que seul le certificat de ce serveur compte.</string>
 </resources>

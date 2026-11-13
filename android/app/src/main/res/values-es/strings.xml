@@ -77,4 +77,5 @@
     <string name="account_remove">Quitar</string>
     <string name="error_certificate">Este dispositivo no confía en el certificado del servidor. Instala el certificado en los ajustes de Android o escribe la dirección para la que se emitió.</string>
     <string name="error_certificate_changed">El certificado del servidor no es el que tenía cuando iniciaste sesión. Si lo cambiaste tú, vuelve a iniciar sesión; si no, puede que alguien esté entre tú y el servidor.</string>
+    <string name="error_certificate_login_again">Este inicio de sesión es de antes de que la aplicación recordara el certificado de un servidor. Vuelve a iniciar sesión una vez para que solo cuente el certificado de este servidor.</string>
 </resources>

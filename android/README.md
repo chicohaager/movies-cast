@@ -4,12 +4,12 @@ Plays the films of IceWhale Movies (ZimaOS) or a Jellyfin server on the Android 
 the original file, straight from the server, no conversion on the box and no movies-cast server
 in between. Kotlin, Jetpack Compose, AndroidX Media3 (ExoPlayer).
 
-State 2026-11-13: first working build (0.1.0), in git, application id
+State 2026-11-13: 0.2.0, the first build for testers ([TESTERS.md](TESTERS.md)), in git, application id
 `io.github.chicohaager.moviescast` (debug builds: `.debug` appended). Runs from Android 6
 (`minSdk` 23) on phones, tablets and Android TV (remote control only, own launcher entry and
 banner). Texts in the 18 languages of movies-cast, with a language list in the app. Picture-in-picture
 from Android 8: Home during playback keeps the film in a small window. The release build (shrunk,
-APK and bundle) is built, signed and checked; nothing is published yet. "About" (menu and login page)
+APK and bundle) is built, signed and checked; it is in no store. "About" (menu and login page)
 shows the version, the licences of every library, the privacy policy's address and "Share diagnostics".
 
 ## Build
@@ -44,8 +44,8 @@ and plays with the device's own decoders only.
 
 | Module | What |
 |---|---|
-| `core` | plain Kotlin: the client for the Jellyfin-compatible API (`MoviesClient`, 24 tests against a local fake server, 4 against one with a self-signed certificate) and what the library screen shows (`LibraryView.kt`, 8 tests), the search for servers (`ServerSearch.kt`, 8 tests), the list of logins kept (`SavedLogins.kt`, 12 tests) |
-| `app` | the Android app: login, library with search and "continue watching", film page with seasons and "mark as watched", player with a queue, the list of servers and accounts, About; 18 tests (Dolby Vision base layer, shape of the small window, language list, the diagnostics text, the queue, the privacy text) and 17 on a device (`src/androidTest`) |
+| `core` | plain Kotlin: the client for the Jellyfin-compatible API (`MoviesClient`, 24 tests against a local fake server, 5 against one with a self-signed certificate) and what the library screen shows (`LibraryView.kt`, 8 tests), the search for servers (`ServerSearch.kt`, 8 tests), the list of logins kept (`SavedLogins.kt`, 14 tests), which certificate counts for which server (`ScopedTrust.kt`, 15 tests) |
+| `app` | the Android app: login, library with search and "continue watching", film page with seasons and "mark as watched", player with a queue, the list of servers and accounts, About; 18 tests (Dolby Vision base layer, shape of the small window, language list, the diagnostics text, the queue, the privacy text) and 18 on a device (`src/androidTest`) |
 | `config` | what the licences page needs besides the Gradle dependencies: FFmpeg and the copied Media3 module as libraries, the LGPL's text as FFmpeg ships it |
 | `ffmpeg` | Media3's FFmpeg audio decoder (`androidx/media` 1.11.1, `libraries/decoder_ffmpeg`, Apache 2.0), copied because Google publishes it only as source; `build-ffmpeg.sh` builds FFmpeg for it |
 
@@ -160,7 +160,11 @@ in the app takes an installed one):
   system trusts; the own one after it was removed — gives "The server's certificate is not the one
   it had when you logged in …"; logging in again binds the new one.
 - Every other server (the search in the network, an address not logged in to): the system's only.
-- A login kept by an app from before the binding is bound at its first connection over HTTPS.
+- A login kept by a build before 0.2.0 has no binding. At a server the system trusts it is bound to
+  `system` at its first connection. At any other server it takes no installed certificate by
+  itself and says "This login was made before the app remembered a server's certificate. Log in
+  again once …"; that login binds it. So a certificate installed after the login never counts
+  without the person logging in.
 
 `deploy/tools/user-ca/measure-user-ca.sh [serial]` repeats that measurement without a hand on the
 device: it makes a certificate for the test, starts a fake HTTPS server on this machine
@@ -182,7 +186,8 @@ library and film page, a wrong password, About with the licences, the diagnostic
 with its seasons, "mark as watched", the privacy page, order and filter, a favourite, the search for
 servers (what it brings is set by the test, the network of the device is not asked), a second login
 with the change back, removing a login, "Log out" with a second login kept, a certificate the
-device does not trust, the take-over of the login 0.1.0 kept, a refusal (401) that arrives after
+device does not trust, a login of a build before 0.2.0 at such a server ("log in again", no request
+past the handshake, nothing bound), the take-over of the login 0.1.0 kept, a refusal (401) that arrives after
 the change of login — against a
 fake server inside the test (MockWebServer on 127.0.0.1). The app runs as `TestApp` there, which
 keeps its login in a file of its own (`session-test`), so a real login on the device stays. The
@@ -428,3 +433,14 @@ Installed certificates for the own servers only (2026-11-13, after the owner's o
   the runners resolve `localhost` as `::1` first; OkHttp throws that error and attaches the
   certificate error of `127.0.0.1` to it. The client looks through the errors attached since
   2b7c21f; the tests resolve `localhost` the same way.
+
+0.2.0 for testers (2026-11-13):
+- A login kept by a build before 0.2.0 at a server the system does not trust says "log in again"
+  instead of binding an installed certificate at its first connection. `ScopedTrustTest` 15 cases;
+  each of the four parts (refusal, binding to `system`, the client's error, logging in again) was
+  red once with the check broken on purpose. Screen test: no request past the handshake, nothing
+  bound; red once with the old text shown in its place (Pixel 7, German).
+- Pixel 7 (Android 17): the 18 screen tests OK. The signed release APK (versionCode 200) installed
+  with `adb install -r` over the release 0.1.0 there (same key); its Movies login was kept, About
+  says "0.2.0 (200)", a film from Movies on the test box (AV1) played, first frame 561 ms after opening; the
+  resume points were saved before and put back after (`resume-guard.py`, all 8 match).

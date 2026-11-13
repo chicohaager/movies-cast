@@ -46,6 +46,7 @@ fun errorText(error: UiError): String = when (error) {
     UiError.NoServer -> stringResource(R.string.error_no_server)
     UiError.Certificate -> stringResource(R.string.error_certificate)
     UiError.CertificateChanged -> stringResource(R.string.error_certificate_changed)
+    UiError.CertificateNeedsLogin -> stringResource(R.string.error_certificate_login_again)
     UiError.Login -> stringResource(R.string.error_login)
     UiError.Session -> stringResource(R.string.error_session)
     UiError.Network -> stringResource(R.string.error_network)

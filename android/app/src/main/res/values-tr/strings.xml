@@ -77,4 +77,5 @@
     <string name="account_remove">Kaldır</string>
     <string name="error_certificate">Bu cihaz sunucunun sertifikasına güvenmiyor. Sertifikayı Android ayarlarından yükleyin veya sertifikanın düzenlendiği adresi yazın.</string>
     <string name="error_certificate_changed">Sunucunun sertifikası giriş yaptığınızdaki sertifika değil. Kendiniz değiştirdiyseniz yeniden giriş yapın; aksi halde siz ile sunucu arasında biri olabilir.</string>
+    <string name="error_certificate_login_again">Bu oturum, uygulama bir sunucunun sertifikasını hatırlamadan önce açıldı. Yalnızca bu sunucunun sertifikasının geçerli olması için bir kez yeniden oturum açın.</string>
 </resources>

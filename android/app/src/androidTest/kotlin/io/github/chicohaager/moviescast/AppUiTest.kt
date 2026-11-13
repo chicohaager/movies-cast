@@ -383,6 +383,24 @@ class AppUiTest {
     }
 
     @Test
+    fun aLoginFromBeforeTheBindingAtAServerTheSystemDoesNotTrustAsksToLogInAgain() {
+        // a login of a build before 0.2.0 (no binding kept) at a server with a certificate it signed itself
+        val own = HeldCertificate.Builder().addSubjectAlternativeName("localhost").build()
+        val https = MockWebServer().also { secure = it }
+        https.useHttps(HandshakeCertificates.Builder().heldCertificate(own).build().sslSocketFactory())
+        https.start()
+        scenario?.close()
+        InstrumentationRegistry.getInstrumentation().runOnMainSync {
+            app.setSession(io.github.chicohaager.moviescast.core.Session("https://localhost:${https.port}/movies", "invented-old-token", "u9", "old"))
+        }
+        assertEquals("", app.store.trustOf("localhost:${https.port}"))
+        scenario = ActivityScenario.launch(MainActivity::class.java)
+        compose.waitUntilAtLeastOneExists(hasText(app.getString(R.string.error_certificate_login_again)), 10_000)
+        assertEquals("no request got past the handshake", 0, https.requestCount)
+        assertEquals("nothing was bound", "", app.store.trustOf("localhost:${https.port}"))
+    }
+
+    @Test
     fun aLoginKeptByTheAppBeforeThereWasAListIsTakenOver() {
         val prefs = app.getSharedPreferences("session-test", android.content.Context.MODE_PRIVATE)
         InstrumentationRegistry.getInstrumentation().runOnMainSync {

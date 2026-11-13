@@ -77,4 +77,5 @@
     <string name="account_remove">Ta bort</string>
     <string name="error_certificate">Den här enheten litar inte på serverns certifikat. Installera certifikatet i Androids inställningar eller skriv adressen som certifikatet är utfärdat för.</string>
     <string name="error_certificate_changed">Serverns certifikat är inte det som gällde vid inloggningen. Har du bytt det själv, logga in igen; annars kan någon finnas mellan dig och servern.</string>
+    <string name="error_certificate_login_again">Den här inloggningen gjordes innan appen kom ihåg en servers certifikat. Logga in igen en gång så att bara den här serverns certifikat gäller.</string>
 </resources>

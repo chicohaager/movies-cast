@@ -18,6 +18,7 @@ import io.github.chicohaager.moviescast.core.UnauthorizedException
 import io.github.chicohaager.moviescast.core.UnexpectedAnswerException
 import io.github.chicohaager.moviescast.core.UntrustedCertificateException
 import io.github.chicohaager.moviescast.core.CertificateChangedException
+import io.github.chicohaager.moviescast.core.CertificateNeedsLoginException
 import io.github.chicohaager.moviescast.core.SavedLogins
 import java.security.cert.X509Certificate
 import io.github.chicohaager.moviescast.core.after
@@ -38,6 +39,7 @@ sealed interface UiError {
     data object NoServer : UiError
     data object Certificate : UiError
     data object CertificateChanged : UiError
+    data object CertificateNeedsLogin : UiError
     data object Login : UiError
     data object Session : UiError
     data object Network : UiError
@@ -326,6 +328,7 @@ class AppViewModel(private val app: MoviesCastApp) : ViewModel() {
 
     private fun toError(e: IOException): UiError = when {
         e is CertificateChangedException -> UiError.CertificateChanged
+        e is CertificateNeedsLoginException -> UiError.CertificateNeedsLogin
         e is UntrustedCertificateException -> UiError.Certificate
         e is ServerException -> UiError.Server(e.status)
         e is UnexpectedAnswerException -> UiError.Answer
