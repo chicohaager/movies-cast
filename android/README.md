@@ -477,7 +477,8 @@ SDK 30), 32-bit only (`armeabi-v7a`), reached by `adb connect` over the network.
   calls `loadIcon`, never `loadBanner`; `android:banner` is used by Android TV's launchers) in a square in the
   middle of a grey 16:9 tile. A 16:9 icon for `television` was cut to that square, so the square icon stays; full
   tiles (ZDF, Netflix) come from the Amazon Appstore's artwork. The launcher keeps a package's first icon across
-  `adb install -r` and a reboot; after an uninstall and a new install the new icon showed.
+  `adb install -r` and a reboot; after an uninstall and a new install the new icon showed, for the release package
+  only about a minute later (the first look still had the old one).
 - Heard and seen at the TV by the owner, the same three films again: DTS-HD picture but no sound;
   Dolby Vision profile 7 sound but no picture (black); AV1 with AAC picture and sound. A Dolby Vision
   profile 8 film (through `DVHE`) had a picture. So the stick reports DTS-HD as playable unchanged
