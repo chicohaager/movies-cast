@@ -1,7 +1,10 @@
 package io.github.chicohaager.moviescast.core
 
 import java.io.IOException
+import java.security.cert.CertificateException
 import java.util.concurrent.TimeUnit
+import javax.net.ssl.SSLHandshakeException
+import javax.net.ssl.SSLPeerUnverifiedException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -31,6 +34,12 @@ class ServerException(val status: Int, val path: String) : IOException("HTTP $st
 
 /** The answer was not the JSON this client expects (a login page, a proxy's error page). */
 class UnexpectedAnswerException : IOException("unexpected answer from the server")
+
+/**
+ * The device does not trust the server's certificate (self-signed, or signed by an authority the
+ * device does not know), or the certificate is made out for another name than the address.
+ */
+class UntrustedCertificateException : IOException("the server's certificate is not trusted")
 
 /** Who is asking; goes into the `X-Emby-Authorization` header of every request. */
 data class Device(val id: String, val name: String, val appVersion: String)
@@ -67,17 +76,17 @@ class MoviesClient(http: OkHttpClient, private val device: Device) {
      * `https://nas.example/movies`. Returns the base URL that answered and its info.
      */
     suspend fun discover(input: String): Pair<String, ServerInfo> {
-        var last: IOException = IOException("no address")
+        val errors = ArrayList<IOException>()
         for (candidate in candidates(input)) {
             try {
                 val info = publicInfo(candidate)
                 if (info.version.isNotEmpty()) return candidate to info
-                last = IOException("no server info at $candidate")
+                errors.add(IOException("no server info at $candidate"))
             } catch (e: IOException) {
-                last = e
+                errors.add(e)
             }
         }
-        throw last
+        throw reason(errors)
     }
 
     /**
@@ -301,12 +310,21 @@ class MoviesClient(http: OkHttpClient, private val device: Device) {
                 .header("Accept", "application/json")
                 .method(method, body?.toRequestBody(JSON))
                 .build()
-            http.newCall(request).execute().use { response ->
-                when {
-                    response.code == 401 -> throw UnauthorizedException()
-                    !response.isSuccessful -> throw ServerException(response.code, url.encodedPath)
-                    else -> response.body.string()
+            try {
+                http.newCall(request).execute().use { response ->
+                    when {
+                        response.code == 401 -> throw UnauthorizedException()
+                        !response.isSuccessful -> throw ServerException(response.code, url.encodedPath)
+                        else -> response.body.string()
+                    }
                 }
+            } catch (_: SSLPeerUnverifiedException) {
+                // the certificate is made out for another name
+                throw UntrustedCertificateException()
+            } catch (e: SSLHandshakeException) {
+                // a handshake fails for other reasons too (no common protocol); only a refused certificate is named
+                if (generateSequence<Throwable>(e) { it.cause }.take(8).any { it is CertificateException }) throw UntrustedCertificateException()
+                throw e
             }
         }
 
@@ -346,6 +364,14 @@ class MoviesClient(http: OkHttpClient, private val device: Device) {
          * http (the ZimaOS gateway speaks http on the LAN); a bare host is tried as a ZimaOS box
          * (`/movies`) first and as a Jellyfin server of its own second.
          */
+        /**
+         * Why no candidate answered, of the errors in the order they were tried: a certificate the
+         * device does not trust is the reason to tell, even when a later candidate (another port)
+         * failed in another way; else the last error.
+         */
+        internal fun reason(errors: List<IOException>): IOException =
+            errors.firstOrNull { it is UntrustedCertificateException } ?: errors.lastOrNull() ?: IOException("no address")
+
         fun candidates(input: String): List<String> {
             var text = input.trim()
             if (text.isEmpty()) return emptyList()

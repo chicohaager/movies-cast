@@ -10,11 +10,13 @@ import io.github.chicohaager.moviescast.core.LibrarySort
 import io.github.chicohaager.moviescast.core.FoundServer
 import io.github.chicohaager.moviescast.core.MediaItem
 import io.github.chicohaager.moviescast.core.MoviesClient
+import io.github.chicohaager.moviescast.core.SavedLogin
 import io.github.chicohaager.moviescast.core.ServerException
 import io.github.chicohaager.moviescast.core.ServerInfo
 import io.github.chicohaager.moviescast.core.Session
 import io.github.chicohaager.moviescast.core.UnauthorizedException
 import io.github.chicohaager.moviescast.core.UnexpectedAnswerException
+import io.github.chicohaager.moviescast.core.UntrustedCertificateException
 import io.github.chicohaager.moviescast.core.after
 import io.github.chicohaager.moviescast.core.arranged
 import java.io.IOException
@@ -31,6 +33,7 @@ import kotlinx.coroutines.launch
 sealed interface UiError {
     data object Address : UiError
     data object NoServer : UiError
+    data object Certificate : UiError
     data object Login : UiError
     data object Session : UiError
     data object Network : UiError
@@ -42,6 +45,7 @@ sealed interface UiError {
 sealed interface Screen {
     data object Login : Screen
     data object Library : Screen
+    data object Accounts : Screen
     data class Detail(val id: String) : Screen
     data object About : Screen
     data object Licences : Screen
@@ -52,6 +56,9 @@ sealed interface Screen {
 data class UiState(
     val stack: List<Screen> = listOf(Screen.Login),
     val userName: String = "",
+    /** The logins the device keeps (servers and accounts), and which is in use (-1: none). */
+    val logins: List<SavedLogin> = emptyList(),
+    val current: Int = -1,
     val server: ServerInfo? = null,
     val busy: Boolean = false,
     val error: UiError? = null,
@@ -83,7 +90,22 @@ class AppViewModel(private val app: MoviesCastApp) : ViewModel() {
     private val client: MoviesClient get() = app.client
     private fun storedSort(): LibrarySort = LibrarySort.entries.firstOrNull { it.name == app.store.sort } ?: LibrarySort.NAME
 
-    private val _state = MutableStateFlow(UiState(sort = storedSort()))
+    /**
+     * The state to begin from: the library of the login in use; without one the list of the
+     * logins kept, and the login page when there is none.
+     */
+    private fun start(error: UiError? = null): UiState {
+        val kept = app.store.logins()
+        val session = app.session
+        val stack: List<Screen> = when {
+            session != null -> listOf(Screen.Library)
+            kept.logins.isEmpty() -> listOf(Screen.Login)
+            else -> listOf(Screen.Accounts)
+        }
+        return UiState(stack = stack, userName = session?.userName.orEmpty(), logins = kept.logins, current = kept.current, error = error, sort = storedSort())
+    }
+
+    private val _state = MutableStateFlow(start())
     val state: StateFlow<UiState> = _state.asStateFlow()
     private var loading: Job? = null
 
@@ -91,10 +113,7 @@ class AppViewModel(private val app: MoviesCastApp) : ViewModel() {
     val lastUser: String get() = app.store.lastUser
 
     init {
-        app.session?.let { s ->
-            _state.update { it.copy(stack = listOf(Screen.Library), userName = s.userName) }
-            refresh()
-        }
+        if (app.session != null) refresh()
     }
 
     fun login(server: String, user: String, password: String) {
@@ -107,17 +126,16 @@ class AppViewModel(private val app: MoviesCastApp) : ViewModel() {
         viewModelScope.launch {
             val found = try {
                 client.discover(server)
-            } catch (_: IOException) {
-                _state.update { it.copy(busy = false, error = UiError.NoServer) }
+            } catch (e: IOException) {
+                _state.update { it.copy(busy = false, error = if (e is UntrustedCertificateException) UiError.Certificate else UiError.NoServer) }
                 return@launch
             }
             try {
                 val session = client.login(found.first, user.trim(), password)
                 app.store.rememberTyped(server.trim())
-                app.setSession(session)
-                _state.update {
-                    UiState(stack = listOf(Screen.Library), userName = session.userName, server = found.second, sort = storedSort())
-                }
+                loading?.cancel()
+                app.setSession(session, found.second.name)
+                _state.value = start().copy(server = found.second)
                 refresh()
             } catch (e: IOException) {
                 _state.update { it.copy(busy = false, error = if (e is UnauthorizedException) UiError.Login else toError(e)) }
@@ -156,7 +174,7 @@ class AppViewModel(private val app: MoviesCastApp) : ViewModel() {
                 _state.update { it.copy(busy = false, library = library, resume = resume, loaded = true) }
                 (_state.value.screen as? Screen.Detail)?.let { loadDetail(session, it.id) }
             } catch (e: IOException) {
-                fail(e)
+                fail(e, session)
             }
         }
     }
@@ -181,7 +199,7 @@ class AppViewModel(private val app: MoviesCastApp) : ViewModel() {
             try {
                 loadDetail(session, item.id)
             } catch (e: IOException) {
-                fail(e)
+                fail(e, session)
             }
         }
     }
@@ -204,7 +222,7 @@ class AppViewModel(private val app: MoviesCastApp) : ViewModel() {
                 client.setPlayed(session, item.id, played)
                 refresh()
             } catch (e: IOException) {
-                fail(e)
+                fail(e, session)
             }
         }
     }
@@ -216,7 +234,7 @@ class AppViewModel(private val app: MoviesCastApp) : ViewModel() {
                 client.setFavorite(session, item.id, favorite)
                 refresh()
             } catch (e: IOException) {
-                fail(e)
+                fail(e, session)
             }
         }
     }
@@ -229,31 +247,68 @@ class AppViewModel(private val app: MoviesCastApp) : ViewModel() {
         return true
     }
 
+    /** Logs out of the login in use; the other logins stay and are then listed. */
     fun logout() {
         val session = app.session
+        loading?.cancel()
         app.setSession(null)
-        _state.value = UiState()
-        if (session != null) {
-            app.appScope.launch {
-                try {
-                    client.logout(session)
-                } catch (_: IOException) {
-                    // the local login is gone either way
-                }
+        _state.value = start()
+        if (session != null) tellLogout(session)
+    }
+
+    /** Puts another of the logins kept in use and reads its library. */
+    fun switchTo(index: Int) {
+        if (index == _state.value.current && app.session != null) {
+            // already in use: back to its library
+            if (!back()) _state.value = start()
+            return
+        }
+        if (!app.switchTo(index)) {
+            // its token cannot be read any more (the device's key is gone): it has to be typed again
+            app.forget(index)
+            val kept = app.store.logins()
+            _state.update { it.copy(logins = kept.logins, current = kept.current, error = UiError.Session) }
+            return
+        }
+        loading?.cancel()
+        _state.value = start()
+        refresh()
+    }
+
+    /** Forgets the login at [index] and logs it out at its server; the login in use stays in use unless it is this one. */
+    fun forget(index: Int) {
+        val wasCurrent = index == app.store.logins().current
+        if (wasCurrent) loading?.cancel()
+        val gone = app.forget(index)
+        if (gone != null) tellLogout(gone)
+        val kept = app.store.logins()
+        if (wasCurrent) _state.value = start() else _state.update { it.copy(logins = kept.logins, current = kept.current) }
+    }
+
+    private fun tellLogout(session: Session) {
+        app.appScope.launch {
+            try {
+                client.logout(session)
+            } catch (_: IOException) {
+                // the local login is gone either way
             }
         }
     }
 
-    private fun fail(e: IOException) {
+    /** [of] is the login the failed request was made with: an answer that comes after a change of login must not touch the new one. */
+    private fun fail(e: IOException, of: Session) {
+        if (app.session !== of) return
         if (e is UnauthorizedException) {
+            loading?.cancel()
             app.setSession(null)
-            _state.value = UiState(error = UiError.Session)
+            _state.value = start(UiError.Session)
         } else {
             _state.update { it.copy(busy = false, error = toError(e)) }
         }
     }
 
     private fun toError(e: IOException): UiError = when {
+        e is UntrustedCertificateException -> UiError.Certificate
         e is ServerException -> UiError.Server(e.status)
         e is UnexpectedAnswerException -> UiError.Answer
         else -> UiError.Network

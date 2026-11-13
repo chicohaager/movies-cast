@@ -52,6 +52,8 @@ fun LoginScreen(
     onLogin: (String, String, String) -> Unit,
     onFind: () -> Unit,
     onOpenSettings: () -> Unit,
+    /** Back to the list of the logins kept; null when there is none to go back to. */
+    onAccounts: (() -> Unit)?,
     onAbout: () -> Unit,
 ) {
     var server by rememberSaveable { mutableStateOf(lastServer) }
@@ -70,6 +72,9 @@ fun LoginScreen(
                 Modifier.widthIn(max = 440.dp).fillMaxWidth().verticalScroll(rememberScrollState()).padding(24.dp),
                 verticalArrangement = Arrangement.spacedBy(14.dp),
             ) {
+                onAccounts?.let {
+                    TextButton(onClick = it, modifier = Modifier.testTag("accounts")) { Text("‹ " + stringResource(R.string.accounts)) }
+                }
                 Text(stringResource(R.string.app_name), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
                 Text(stringResource(R.string.login_title), style = MaterialTheme.typography.headlineMedium)
                 Text(

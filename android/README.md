@@ -43,8 +43,8 @@ and plays with the device's own decoders only.
 
 | Module | What |
 |---|---|
-| `core` | plain Kotlin: the client for the Jellyfin-compatible API (`MoviesClient`, 24 tests against a local fake server) and what the library screen shows (`LibraryView.kt`, 8 tests), the search for servers (`ServerSearch.kt`, 8 tests) |
-| `app` | the Android app: login, library with search and "continue watching", film page with seasons and "mark as watched", player with a queue, About; 18 tests (Dolby Vision base layer, shape of the small window, language list, the diagnostics text, the queue, the privacy text) and 9 on a device (`src/androidTest`) |
+| `core` | plain Kotlin: the client for the Jellyfin-compatible API (`MoviesClient`, 24 tests against a local fake server, 4 against one with a self-signed certificate) and what the library screen shows (`LibraryView.kt`, 8 tests), the search for servers (`ServerSearch.kt`, 8 tests), the list of logins kept (`SavedLogins.kt`, 12 tests) |
+| `app` | the Android app: login, library with search and "continue watching", film page with seasons and "mark as watched", player with a queue, the list of servers and accounts, About; 18 tests (Dolby Vision base layer, shape of the small window, language list, the diagnostics text, the queue, the privacy text) and 17 on a device (`src/androidTest`) |
 | `config` | what the licences page needs besides the Gradle dependencies: FFmpeg and the copied Media3 module as libraries, the LGPL's text as FFmpeg ships it |
 | `ffmpeg` | Media3's FFmpeg audio decoder (`androidx/media` 1.11.1, `libraries/decoder_ffmpeg`, Apache 2.0), copied because Google publishes it only as source; `build-ffmpeg.sh` builds FFmpeg for it |
 
@@ -119,12 +119,39 @@ address into the field. On Android 17 the question for "Local network access" co
 `ServerSearch.kt` in `core` holds the call, the choice of addresses and the check (8 tests, the call
 against a fake on the loopback); `ZimaSearch.kt` in `app` is the mDNS part.
 
+## More than one server or account
+
+The app keeps every login (`SavedLogins` in `core`, written by `SessionStore`): a server's address,
+the account and its token, encrypted with the keystore's key as before. "Servers and accounts" in
+the menu lists them; a tap puts another one in use without its password, "Add a server or account"
+opens the login page, "Remove" logs that login out at its server and forgets it. "Log out" does the
+same for the login in use; if others are kept, their list is shown and not the login page. A second
+account at the same server is a login of its own. Jellyfin's Android TV app keeps servers and their
+users the same way (`AuthenticationStore`). The one login that 0.1.0 kept in four keys is taken
+over into the list at the first start.
+
+An answer that comes after the change of login does not touch the new one: a request that fails
+with 401 logs out only the login it was made with.
+
+## HTTPS with a certificate of the owner's own
+
+A server with a self-signed certificate (or one of an authority of the owner's own) is reached
+once that certificate is installed on the device, in Android's settings ("Install a certificate" →
+"CA certificate"): `network_security_config.xml` trusts the certificates the user installed besides
+the system's, as Jellyfin's Android TV app does. Until then the login page says "This device does
+not trust the server's certificate …" (also when the certificate is made out for another name than
+the address typed). Decision of the owner (2026-11-13): there is no button "accept the certificate
+anyway", and none is to be built.
+
 ## Tests on a device
 
 `check-android.sh --device` installs the debug build and the test APK and runs `AppUiTest`: login,
 library and film page, a wrong password, About with the licences, the diagnostics text, a series
 with its seasons, "mark as watched", the privacy page, order and filter, a favourite, the search for
-servers (what it brings is set by the test, the network of the device is not asked) — against a
+servers (what it brings is set by the test, the network of the device is not asked), a second login
+with the change back, removing a login, "Log out" with a second login kept, a certificate the
+device does not trust, the take-over of the login 0.1.0 kept, a refusal (401) that arrives after
+the change of login — against a
 fake server inside the test (MockWebServer on 127.0.0.1). The app runs as `TestApp` there, which
 keeps its login in a file of its own (`session-test`), so a real login on the device stays. The
 script installs with `adb install -r` and not with Gradle's `connectedDebugAndroidTest`. It stops
@@ -320,3 +347,22 @@ Jellyfin 10.11.0 on a third machine):
 - `check-android.sh --device` on the Pixel 7: OK (11 tests); the two new ones red once with the app
   broken on purpose (the tap does nothing, no "nothing found" text, no list), the 8 new tests in
   `core` likewise.
+
+More than one login, HTTPS with a self-signed certificate (2026-11-13):
+- `check-android.sh --device` in the Android 16 emulator: OK (17 tests). The 6 new ones were red
+  once with the app broken on purpose (the change of login refused; "Remove" does not tell the
+  server; "Log out" goes to the login page; the certificate error shown as "no server"; the old
+  login not taken over: `Tests run: 16, Failures: 5`; a late 401 of the old login not told apart:
+  `Tests run: 17, Failures: 1`, the new login was gone). The 16 new tests in `core` likewise, each
+  with a break of its own; two of them stayed green at first (they asked only for the login in use,
+  which is none for an index behind the list) and now also ask for the index.
+- A self-signed certificate from the app: a fake server on the workstation with a certificate made
+  for the test (`subjectAltName` the address under which the emulator reaches the workstation,
+  `basicConstraints=CA:TRUE`), the debug app in the
+  Android 16 emulator (Play Store image, no root). Before the certificate was installed the login
+  page showed the text above and the server saw no request. After installing it in Android's
+  settings ("Encryption & credentials" → "Install a certificate" → "CA certificate"; it then stands
+  under "Trusted credentials" → "User") the same login showed the library with the server's one
+  film; the server saw `AuthenticateByName` and the two list requests. After removing the
+  certificate again the app refused the server as before. Not played: the fake server has no film
+  file. Not measured on a device other than this emulator.

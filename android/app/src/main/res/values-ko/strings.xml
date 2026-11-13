@@ -72,4 +72,8 @@
     <string name="filter_favourites">즐겨찾기</string>
     <string name="favourite_add">즐겨찾기에 추가</string>
     <string name="favourite_remove">즐겨찾기에서 삭제</string>
+    <string name="accounts">서버 및 계정</string>
+    <string name="account_add">서버 또는 계정 추가</string>
+    <string name="account_remove">삭제</string>
+    <string name="error_certificate">이 기기는 서버의 인증서를 신뢰하지 않습니다. Android 설정에서 인증서를 설치하거나 인증서가 발급된 주소를 입력하세요.</string>
 </resources>

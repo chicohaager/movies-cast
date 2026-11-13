@@ -72,4 +72,8 @@
     <string name="filter_favourites">Favoriter</string>
     <string name="favourite_add">Lägg till i favoriter</string>
     <string name="favourite_remove">Ta bort från favoriter</string>
+    <string name="accounts">Servrar och konton</string>
+    <string name="account_add">Lägg till en server eller ett konto</string>
+    <string name="account_remove">Ta bort</string>
+    <string name="error_certificate">Den här enheten litar inte på serverns certifikat. Installera certifikatet i Androids inställningar eller skriv adressen som certifikatet är utfärdat för.</string>
 </resources>

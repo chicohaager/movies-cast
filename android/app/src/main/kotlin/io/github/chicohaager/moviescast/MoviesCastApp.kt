@@ -73,9 +73,32 @@ open class MoviesCastApp : Application(), SingletonImageLoader.Factory {
         out
     }
 
-    fun setSession(value: Session?) {
+    /** A new login is kept and put in use; null forgets the login in use (the others stay). */
+    fun setSession(value: Session?, serverName: String = "") {
         session = value
-        if (value == null) store.clear() else store.save(value)
+        if (value == null) store.clear() else store.save(value, serverName)
+    }
+
+    /** Puts another of the logins kept in use; false when it cannot be read any more. */
+    fun switchTo(index: Int): Boolean {
+        val next = store.choose(index) ?: return false
+        session = next
+        return true
+    }
+
+    /** Forgets the login at [index] and returns it, so the server can be told; the one in use is then none. */
+    fun forget(index: Int): Session? {
+        val gone = store.session(index)
+        val wasCurrent = store.logins().current == index
+        store.remove(index)
+        if (wasCurrent) session = null
+        return gone
+    }
+
+    /** Forgets every login; for the tests on a device. */
+    fun forgetAll() {
+        session = null
+        store.clearAll()
     }
 
     override fun newImageLoader(context: PlatformContext): ImageLoader =

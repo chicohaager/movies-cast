@@ -70,6 +70,7 @@ fun LibraryScreen(
     onRefresh: () -> Unit,
     onLogout: () -> Unit,
     onOpenSettings: () -> Unit,
+    onAccounts: () -> Unit,
     onAbout: () -> Unit,
 ) {
     val searchField = rememberRemoteField()
@@ -103,6 +104,11 @@ fun LibraryScreen(
                             text = { Text(stringResource(R.string.language)) },
                             onClick = { menu = false; languages = true },
                             modifier = Modifier.testTag("language"),
+                        )
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.accounts)) },
+                            onClick = { menu = false; onAccounts() },
+                            modifier = Modifier.testTag("accounts"),
                         )
                         DropdownMenuItem(
                             text = { Text(stringResource(R.string.about)) },

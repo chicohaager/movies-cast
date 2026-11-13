@@ -139,5 +139,6 @@ dependencies {
     // "NoSuchMethodException: InputManager.getInstance" (Pixel 7, measured 2026-11-13).
     androidTestImplementation(libs.androidx.test.espresso.core)
     androidTestImplementation(libs.okhttp.mockwebserver)
+    androidTestImplementation(libs.okhttp.tls)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 }

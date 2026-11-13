@@ -44,6 +44,7 @@ import io.github.chicohaager.moviescast.core.MediaItem
 fun errorText(error: UiError): String = when (error) {
     UiError.Address -> stringResource(R.string.error_address)
     UiError.NoServer -> stringResource(R.string.error_no_server)
+    UiError.Certificate -> stringResource(R.string.error_certificate)
     UiError.Login -> stringResource(R.string.error_login)
     UiError.Session -> stringResource(R.string.error_session)
     UiError.Network -> stringResource(R.string.error_network)

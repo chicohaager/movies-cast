@@ -22,6 +22,7 @@ import androidx.annotation.OptIn
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.decoder.ffmpeg.FfmpegLibrary
 import io.github.chicohaager.moviescast.ui.AboutScreen
+import io.github.chicohaager.moviescast.ui.AccountsScreen
 import io.github.chicohaager.moviescast.ui.DetailScreen
 import io.github.chicohaager.moviescast.ui.Languages
 import io.github.chicohaager.moviescast.ui.LicenceScreen
@@ -55,9 +56,12 @@ class MainActivity : AppCompatActivity() {
             MoviesCastTheme {
                 val state by model.state.collectAsStateWithLifecycle()
                 BackHandler(enabled = state.stack.size > 1) { model.back() }
+                // the login page and the list of logins can be the first page (nothing to go back to) or lie on top of another
+                val goBack: (() -> Unit)? = if (state.stack.size > 1) ({ model.back() }) else null
                 when (val screen = state.screen) {
-                    Screen.Login -> LoginScreen(state, model.lastServer, model.lastUser, ::login, ::findServers, ::openAppSettings) { model.show(Screen.About) }
-                    Screen.Library -> LibraryScreen(state, model::search, model::sort, model::filter, model::open, ::refresh, model::logout, ::openAppSettings) { model.show(Screen.About) }
+                    Screen.Login -> LoginScreen(state, model.lastServer, model.lastUser, ::login, ::findServers, ::openAppSettings, goBack) { model.show(Screen.About) }
+                    Screen.Library -> LibraryScreen(state, model::search, model::sort, model::filter, model::open, ::refresh, model::logout, ::openAppSettings, { model.show(Screen.Accounts) }) { model.show(Screen.About) }
+                    Screen.Accounts -> AccountsScreen(state, goBack, ::switchTo, model::forget) { model.show(Screen.Login) }
                     is Screen.Detail -> DetailScreen(state, { model.back() }, model::open, ::play, model::setPlayed, model::setFavorite)
                     Screen.About -> AboutScreen({ model.back() }, { model.show(Screen.Licences) }, { model.show(Screen.Privacy) }, ::openWeb, ::diagnostics, ::share)
                     Screen.Licences -> LicencesScreen({ model.back() }) { model.show(Screen.Licence(it)) }
@@ -85,6 +89,8 @@ class MainActivity : AppCompatActivity() {
     private fun login(server: String, user: String, password: String) = withLocalNetwork { model.login(server, user, password) }
 
     private fun refresh() = withLocalNetwork { model.refresh() }
+
+    private fun switchTo(index: Int) = withLocalNetwork { model.switchTo(index) }
 
     /** The search talks to the home network, so on Android 17 the question comes first, as with "Log in". */
     private fun findServers() = withLocalNetwork { model.findServers() }

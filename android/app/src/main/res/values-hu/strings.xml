@@ -72,4 +72,8 @@
     <string name="filter_favourites">Kedvencek</string>
     <string name="favourite_add">Hozzáadás a kedvencekhez</string>
     <string name="favourite_remove">Eltávolítás a kedvencek közül</string>
+    <string name="accounts">Szerverek és fiókok</string>
+    <string name="account_add">Szerver vagy fiók hozzáadása</string>
+    <string name="account_remove">Eltávolítás</string>
+    <string name="error_certificate">Ez az eszköz nem bízik a szerver tanúsítványában. Telepítse a tanúsítványt az Android beállításaiban, vagy írja be azt a címet, amelyre a tanúsítványt kiállították.</string>
 </resources>

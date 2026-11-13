@@ -72,4 +72,8 @@
     <string name="filter_favourites">Favorieten</string>
     <string name="favourite_add">Toevoegen aan favorieten</string>
     <string name="favourite_remove">Verwijderen uit favorieten</string>
+    <string name="accounts">Servers en accounts</string>
+    <string name="account_add">Server of account toevoegen</string>
+    <string name="account_remove">Verwijderen</string>
+    <string name="error_certificate">Dit apparaat vertrouwt het certificaat van de server niet. Installeer het certificaat in de Android-instellingen of typ het adres waarvoor het is uitgegeven.</string>
 </resources>

@@ -74,4 +74,8 @@
     <string name="filter_favourites">Favourites</string>
     <string name="favourite_add">Add to favourites</string>
     <string name="favourite_remove">Remove from favourites</string>
+    <string name="accounts">Servers and accounts</string>
+    <string name="account_add">Add a server or account</string>
+    <string name="account_remove">Remove</string>
+    <string name="error_certificate">This device does not trust the server\'s certificate. Install the certificate in the settings of Android, or type the address the certificate was made out for.</string>
 </resources>

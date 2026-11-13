@@ -72,4 +72,8 @@
     <string name="filter_favourites">Избранное</string>
     <string name="favourite_add">Добавить в избранное</string>
     <string name="favourite_remove">Убрать из избранного</string>
+    <string name="accounts">Серверы и учётные записи</string>
+    <string name="account_add">Добавить сервер или учётную запись</string>
+    <string name="account_remove">Удалить</string>
+    <string name="error_certificate">Это устройство не доверяет сертификату сервера. Установите сертификат в настройках Android или введите адрес, для которого он выдан.</string>
 </resources>

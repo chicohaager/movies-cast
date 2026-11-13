@@ -72,4 +72,8 @@
     <string name="filter_favourites">Favoritos</string>
     <string name="favourite_add">Adicionar aos favoritos</string>
     <string name="favourite_remove">Remover dos favoritos</string>
+    <string name="accounts">Servidores e contas</string>
+    <string name="account_add">Adicionar um servidor ou uma conta</string>
+    <string name="account_remove">Remover</string>
+    <string name="error_certificate">Este dispositivo não confia no certificado do servidor. Instale o certificado nas definições do Android ou escreva o endereço para o qual foi emitido.</string>
 </resources>

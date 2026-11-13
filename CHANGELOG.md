@@ -13,6 +13,8 @@ What changed in each version; the "why" with its measurements is in
 - Android app: subtitle files lying next to the film (SRT, WebVTT, ASS/SSA) are offered by the player's subtitle button.
 - Android app: the library can be ordered (name, recently added, year, rating; kept) and filtered (unwatched, started, favourites, a genre), with the words of the phone page; "Add to favourites" / "Remove from favourites"; an episode without a title of its own is listed as "S1 E2".
 - Android app: "Search the network for servers" on the login page finds Jellyfin servers (their UDP call on port 7359) and ZimaOS boxes with Movies (mDNS, `_zimaos._tcp`) and lists what answers; a tap fills in the address.
+- Android app: "Servers and accounts" in the menu keeps every login (several servers, several accounts at one); a tap changes to another without its password, "Remove" logs it out at its server. "Log out" with other logins kept shows their list.
+- Android app: a server with a self-signed certificate is reached once the certificate is installed in Android's settings; until then the login page says that the device does not trust the certificate. There is no "accept anyway".
 - Android app: the privacy policy is a page of the app (the build copies PRIVACY.md into the APK), readable on a TV without a browser.
 - `deploy/tools/movies-probe.py`: a list on the way of a field name is walked (`MediaStreams.Codec`), and `--digest` prints status, type, length and SHA-256 of an answer that is no JSON.
 - PRIVACY.md: what the Android app, the server and the TV apps store and talk to.

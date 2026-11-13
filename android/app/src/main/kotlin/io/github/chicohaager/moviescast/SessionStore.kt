@@ -4,6 +4,8 @@ import android.content.Context
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
 import android.util.Base64
+import io.github.chicohaager.moviescast.core.SavedLogin
+import io.github.chicohaager.moviescast.core.SavedLogins
 import io.github.chicohaager.moviescast.core.Session
 import java.security.GeneralSecurityException
 import java.security.KeyStore
@@ -14,9 +16,10 @@ import javax.crypto.SecretKey
 import javax.crypto.spec.GCMParameterSpec
 
 /**
- * Keeps the login across app starts. The token is stored encrypted with an AES key that lives in
- * the Android keystore and never leaves the device; address and user name are stored in the clear
- * so the login screen can offer them again.
+ * Keeps the logins across app starts: every server and account the person logged in to, and which
+ * of them is in use. Each token is stored encrypted with an AES key that lives in the Android
+ * keystore and never leaves the device; addresses and user names are stored in the clear so the
+ * screens can show them.
  */
 class SessionStore(context: Context, name: String = "session") {
     private val prefs = context.getSharedPreferences(name, Context.MODE_PRIVATE)
@@ -39,36 +42,64 @@ class SessionStore(context: Context, name: String = "session") {
         prefs.edit().putString(KEY_SERVER_TYPED, server).apply()
     }
 
-    fun save(s: Session) {
+    /** The logins kept, and which is in use. A login of the app before there was a list is taken over once. */
+    fun logins(): SavedLogins {
+        prefs.getString(KEY_LOGINS, null)?.let { return SavedLogins.decode(it) }
+        val base = prefs.getString(KEY_BASE, null)
+        val userId = prefs.getString(KEY_USER_ID, null)
+        val sealed = prefs.getString(KEY_TOKEN, null)
+        val taken = if (base != null && userId != null && sealed != null) SavedLogins().with(SavedLogin(base, userId, lastUser, sealed)) else SavedLogins()
+        prefs.edit().putString(KEY_LOGINS, taken.encode()).remove(KEY_BASE).remove(KEY_USER_ID).remove(KEY_TOKEN).apply()
+        return taken
+    }
+
+    private fun write(logins: SavedLogins) = prefs.edit().putString(KEY_LOGINS, logins.encode()).apply()
+
+    /** Keeps the login and puts it in use; [serverName] is what the server calls itself. */
+    fun save(s: Session, serverName: String = "") {
         val sealed = try {
             encrypt(s.token)
         } catch (_: GeneralSecurityException) {
             return // without a keystore the login lasts until the app is closed
         }
-        prefs.edit()
-            .putString(KEY_BASE, s.baseUrl)
-            .putString(KEY_USER_ID, s.userId)
-            .putString(KEY_USER_NAME, s.userName)
-            .putString(KEY_TOKEN, sealed)
-            .apply()
+        write(logins().with(SavedLogin(s.baseUrl, s.userId, s.userName, sealed, serverName)))
+        prefs.edit().putString(KEY_USER_NAME, s.userName).apply()
     }
 
-    fun load(): Session? {
-        val base = prefs.getString(KEY_BASE, null) ?: return null
-        val userId = prefs.getString(KEY_USER_ID, null) ?: return null
-        val sealed = prefs.getString(KEY_TOKEN, null) ?: return null
+    /** The login in use, or null. */
+    fun load(): Session? = logins().active?.let(::open)
+
+    /** The login at [index] with its token, or null when the index does not exist or the token cannot be read. */
+    fun session(index: Int): Session? = logins().logins.getOrNull(index)?.let(::open)
+
+    /** Puts the login at [index] in use and returns it; null (and nothing changed) when it cannot be read. */
+    fun choose(index: Int): Session? {
+        val session = session(index) ?: return null
+        write(logins().chosen(index))
+        return session
+    }
+
+    /** Forgets the login at [index]. */
+    fun remove(index: Int) = write(logins().without(index))
+
+    /** Forgets the login in use; the others stay. */
+    fun clear() {
+        val all = logins()
+        write(all.without(all.current))
+    }
+
+    /** Forgets every login. */
+    fun clearAll() = write(SavedLogins())
+
+    private fun open(login: SavedLogin): Session? {
         val token = try {
-            decrypt(sealed)
+            decrypt(login.sealedToken)
         } catch (_: GeneralSecurityException) {
             return null
         } catch (_: IllegalArgumentException) {
             return null
         }
-        return Session(base, token, userId, lastUser)
-    }
-
-    fun clear() {
-        prefs.edit().remove(KEY_BASE).remove(KEY_USER_ID).remove(KEY_TOKEN).apply()
+        return Session(login.baseUrl, token, login.userId, login.userName)
     }
 
     private fun key(): SecretKey {
@@ -111,5 +142,6 @@ class SessionStore(context: Context, name: String = "session") {
         const val KEY_USER_NAME = "user_name"
         const val KEY_TOKEN = "token_sealed"
         const val KEY_SORT = "sort"
+        const val KEY_LOGINS = "logins"
     }
 }

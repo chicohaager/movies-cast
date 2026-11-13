@@ -6,8 +6,9 @@ stores and which machines it talks to, so that the statement can be checked agai
 
 ## Movies-Cast for Android (`android/`, application id `io.github.chicohaager.moviescast`)
 
-**Talks to:** the one server whose address is typed on the login page (IceWhale Movies on a ZimaOS
-box, or a Jellyfin server); only when you press "Search the network for servers", also to what
+**Talks to:** the server whose address is typed on the login page (IceWhale Movies on a ZimaOS
+box, or a Jellyfin server), and the other servers you logged in to and kept under "Servers and
+accounts" when you change to one of them; only when you press "Search the network for servers", also to what
 answers that search in the home network (below). To nothing else. The app carries no library for analytics,
 advertising or crash reports (`android/app/build.gradle.kts` lists every dependency), and the list
 of dependencies that Google Play can read out of an app is switched off (`dependenciesInfo`).
@@ -23,10 +24,12 @@ the app's version (the `X-Emby-Authorization` header, as every Jellyfin client s
 film plays, the film's id and the position, so that "continue watching" is right on other devices;
 "Mark as watched", "Add to favourites" and their opposites, when you press them.
 
-**Stores on the device:** the address as typed, the user name, the installation id, the order
-chosen for the library and the login token. The token is encrypted with a key of the Android keystore that does not leave the device;
+**Stores on the device:** the address as typed, the installation id, the order chosen for the
+library, and for every login kept under "Servers and accounts" the server's address and name, the
+user name and the login token. Each token is encrypted with a key of the Android keystore that does not leave the device;
 the password is not stored. The app takes no part in Android's backup (`allowBackup="false"`).
-"Log out" deletes the token on the device and at the server; uninstalling the app deletes all of it.
+"Log out" deletes the token of the login in use on the device and at the server, "Remove" under
+"Servers and accounts" does it for any other; uninstalling the app deletes all of it.
 
 **Permissions:** Internet, and from Android 17 "Local network access", without which a server in
 the home network cannot be reached. No location, contacts, microphone, camera or storage.

@@ -16,6 +16,7 @@ import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTextReplacement
 import androidx.compose.ui.test.onAllNodesWithTag
+import androidx.compose.ui.test.onAllNodesWithText
 import androidx.test.core.app.ActivityScenario
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
@@ -23,6 +24,8 @@ import mockwebserver3.Dispatcher
 import mockwebserver3.MockResponse
 import mockwebserver3.MockWebServer
 import mockwebserver3.RecordedRequest
+import okhttp3.tls.HandshakeCertificates
+import okhttp3.tls.HeldCertificate
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -48,6 +51,13 @@ class AppUiTest {
     private var password = "right"
     private lateinit var app: MoviesCastApp
     private var scenario: ActivityScenario<MainActivity>? = null
+    private var secure: MockWebServer? = null
+
+    @Volatile
+    private var lateRefusal = false
+
+    /** The tokens the server was told to log out, in order. */
+    private val loggedOut = ArrayList<String>()
 
     private fun json(code: Int, body: String) =
         MockResponse.Builder().code(code).addHeader("Content-Type", "application/json").body(body).build()
@@ -58,6 +68,7 @@ class AppUiTest {
     @Volatile
     private var filmFavorite = false
     private val film get() = """{"Id":"f1","Name":"Invented Film","Type":"Movie","ProductionYear":2001,"RunTimeTicks":54000000000,"Overview":"A film that does not exist.","Genres":["Drama"],"DateCreated":"2026-01-01T10:00:00Z","UserData":{"Played":$filmPlayed,"IsFavorite":$filmFavorite}}"""
+    private val otherFilm = """{"Id":"f2","Name":"Second Film","Type":"Movie","ProductionYear":2003,"UserData":{"Played":false}}"""
     private val series = """{"Id":"s1","Name":"Invented Show","Type":"Series","ProductionYear":2002,"Genres":["Comedy"],"DateCreated":"2026-02-01T10:00:00Z","UserData":{"Played":true}}"""
     private fun episode(id: String, name: String, season: Int, number: Int, played: Boolean) =
         """{"Id":"$id","Name":"$name","Type":"Episode","SeriesId":"s1","SeriesName":"Invented Show","ParentIndexNumber":$season,"IndexNumber":$number,"UserData":{"Played":$played}}"""
@@ -72,7 +83,7 @@ class AppUiTest {
             instrumentation.uiAutomation.grantRuntimePermission(app.packageName, "android.permission.ACCESS_LOCAL_NETWORK")
         }
         instrumentation.runOnMainSync {
-            app.setSession(null)
+            app.forgetAll()
             app.store.sort = ""
             (app as TestApp).announcedByTest = emptyList()
         }
@@ -82,9 +93,20 @@ class AppUiTest {
                 synchronized(paths) { paths.add("${request.method} $path") }
                 return when {
                     path == "/movies/System/Info/Public" -> json(200, """{"ProductName":"Fake Movies","ServerName":"fake","Version":"10.11.0"}""")
-                    path == "/movies/Users/AuthenticateByName" ->
-                        if (request.body!!.utf8().contains("\"Pw\":\"$password\"")) json(200, """{"AccessToken":"invented-token","User":{"Id":"u1","Name":"demo"}}""")
-                        else json(401, "{}")
+                    path == "/movies/Users/AuthenticateByName" -> {
+                        val body = request.body!!.utf8()
+                        when {
+                            !body.contains("\"Pw\":\"$password\"") -> json(401, "{}")
+                            // a second account at the same server, with a library of its own
+                            body.contains("\"Username\":\"second\"") -> json(200, """{"AccessToken":"invented-token-2","User":{"Id":"u2","Name":"second"}}""")
+                            else -> json(200, """{"AccessToken":"invented-token","User":{"Id":"u1","Name":"demo"}}""")
+                        }
+                    }
+                    path == "/movies/Users/u2/Items/Resume" -> json(200, """{"Items":[],"TotalRecordCount":0}""")
+                    // answers late and refuses the token: by then the test has changed to the other login
+                    path == "/movies/Users/u2/Items/f2" && lateRefusal ->
+                        MockResponse.Builder().code(401).headersDelay(3, java.util.concurrent.TimeUnit.SECONDS).body("{}").build()
+                    path == "/movies/Users/u2/Items" -> json(200, """{"Items":[$otherFilm],"TotalRecordCount":1}""")
                     path == "/movies/Users/u1/Items/Resume" -> json(200, """{"Items":[],"TotalRecordCount":0}""")
                     path == "/movies/Users/u1/Items" -> json(200, """{"Items":[$film,$series],"TotalRecordCount":2}""")
                     path == "/movies/Users/u1/Items/f1" -> json(200, film)
@@ -101,7 +123,11 @@ class AppUiTest {
                         filmPlayed = request.method == "POST"
                         json(200, """{"Played":$filmPlayed}""")
                     }
-                    path == "/movies/Sessions/Logout" -> json(204, "")
+                    path == "/movies/Sessions/Logout" -> {
+                        val token = Regex("Token=\"([^\"]+)\"").find(request.headers["X-Emby-Authorization"].orEmpty())?.groupValues?.get(1).orEmpty()
+                        synchronized(loggedOut) { loggedOut.add(token) }
+                        json(204, "")
+                    }
                     else -> json(404, "{}")
                 }
             }
@@ -113,13 +139,14 @@ class AppUiTest {
     @After
     fun stop() {
         scenario?.close()
-        InstrumentationRegistry.getInstrumentation().runOnMainSync { app.setSession(null) }
+        InstrumentationRegistry.getInstrumentation().runOnMainSync { app.forgetAll() }
         server.close()
+        secure?.close()
     }
 
-    private fun login(pw: String) {
+    private fun login(pw: String, user: String = "demo") {
         compose.onNodeWithTag("server").performTextReplacement("127.0.0.1:${server.port}")
-        compose.onNodeWithTag("user").performTextReplacement("demo")
+        compose.onNodeWithTag("user").performTextReplacement(user)
         compose.onNodeWithTag("password").performTextInput(pw)
         compose.onNodeWithTag("login").performScrollTo().performClick()
     }
@@ -271,5 +298,131 @@ class AppUiTest {
         compose.onNodeWithTag("filter_FAVOURITES").performClick()
         assertEquals(1, compose.onAllNodesWithTag("tile").fetchSemanticsNodes().size)
         compose.onAllNodesWithTag("tile").onFirst().assertTextContains("Invented Film")
+    }
+
+    private fun logins() = synchronized(paths) { paths.count { it == "POST /movies/Users/AuthenticateByName" } }
+
+    /** Logs in as "demo", then from the menu's list of logins as "second"; the library shown is then the second one's. */
+    private fun loginTwice() {
+        login("right")
+        compose.waitUntilAtLeastOneExists(hasText("Invented Film"), 10_000)
+        compose.onNodeWithTag("menu").performClick()
+        compose.onNodeWithTag("accounts").performClick()
+        compose.waitUntilAtLeastOneExists(hasTestTag("account_add"), 10_000)
+        assertEquals(1, compose.onAllNodesWithTag("account").fetchSemanticsNodes().size)
+        compose.onNodeWithTag("account_add").performClick()
+        compose.waitUntilAtLeastOneExists(hasTestTag("login"), 10_000)
+        login("right", "second")
+        compose.waitUntilAtLeastOneExists(hasText("Second Film"), 10_000)
+        assertEquals(1, compose.onAllNodesWithTag("tile").fetchSemanticsNodes().size)
+    }
+
+    @Test
+    fun aSecondLoginIsKeptAndATapChangesBackWithoutAPassword() {
+        loginTwice()
+        compose.onNodeWithTag("menu").performClick()
+        compose.onNodeWithTag("accounts").performClick()
+        compose.waitUntilAtLeastOneExists(hasTestTag("account"), 10_000)
+        assertEquals(2, compose.onAllNodesWithTag("account").fetchSemanticsNodes().size)
+        // the one in use carries the mark, the other does not
+        compose.onNodeWithText("✓  second · fake").assertExists()
+        compose.onNodeWithText("demo · fake").assertExists().performClick()
+        compose.waitUntilAtLeastOneExists(hasText("Invented Film"), 10_000)
+        assertEquals(0, compose.onAllNodesWithText("Second Film").fetchSemanticsNodes().size)
+        assertEquals("no password was sent for the change", 2, logins())
+        assertEquals(emptyList<String>(), synchronized(loggedOut) { loggedOut.toList() })
+        // the choice outlives the app: what the store answers is the first login again
+        assertEquals("demo", app.store.load()?.userName)
+        assertEquals(2, app.store.logins().logins.size)
+    }
+
+    @Test
+    fun removingTheLoginInUseLogsItOutAndLeavesTheOtherToChoose() {
+        loginTwice()
+        compose.onNodeWithTag("menu").performClick()
+        compose.onNodeWithTag("accounts").performClick()
+        compose.waitUntilAtLeastOneExists(hasTestTag("account"), 10_000)
+        // the second row is the login in use
+        compose.onAllNodesWithTag("account_remove")[1].performClick()
+        compose.waitUntil(10_000) { compose.onAllNodesWithTag("account").fetchSemanticsNodes().size == 1 }
+        compose.onNodeWithText("demo · fake").assertExists()
+        // no login is in use now: the list is the first page, there is nothing to go back to
+        assertEquals(0, compose.onAllNodesWithTag("back").fetchSemanticsNodes().size)
+        compose.waitUntil(10_000) { synchronized(loggedOut) { loggedOut.size } == 1 }
+        assertEquals(listOf("invented-token-2"), synchronized(loggedOut) { loggedOut.toList() })
+        compose.onNodeWithTag("account").performClick()
+        compose.waitUntilAtLeastOneExists(hasText("Invented Film"), 10_000)
+        assertEquals(2, logins())
+    }
+
+    @Test
+    fun logOutWithASecondLoginKeptShowsTheListAndNotTheLoginPage() {
+        loginTwice()
+        compose.onNodeWithTag("menu").performClick()
+        compose.onNodeWithTag("logout").performClick()
+        compose.waitUntilAtLeastOneExists(hasTestTag("account"), 10_000)
+        assertEquals(1, compose.onAllNodesWithTag("account").fetchSemanticsNodes().size)
+        compose.onNodeWithText("demo · fake").assertExists()
+        assertEquals(0, compose.onAllNodesWithTag("login").fetchSemanticsNodes().size)
+    }
+
+    @Test
+    fun aCertificateTheDeviceDoesNotTrustIsNamedOnTheLoginPage() {
+        // a server with a certificate it signed itself, made here; nobody installed it on the device
+        val own = HeldCertificate.Builder().addSubjectAlternativeName("localhost").build()
+        val https = MockWebServer().also { secure = it }
+        https.useHttps(HandshakeCertificates.Builder().heldCertificate(own).build().sslSocketFactory())
+        https.start()
+        compose.onNodeWithTag("server").performTextReplacement("https://localhost:${https.port}")
+        compose.onNodeWithTag("user").performTextReplacement("demo")
+        compose.onNodeWithTag("password").performTextInput("right")
+        compose.onNodeWithTag("login").performScrollTo().performClick()
+        compose.waitUntilAtLeastOneExists(hasText(app.getString(R.string.error_certificate)), 10_000)
+        compose.onNodeWithTag("login").assertExists()
+        assertEquals(0, logins())
+    }
+
+    @Test
+    fun aLoginKeptByTheAppBeforeThereWasAListIsTakenOver() {
+        val prefs = app.getSharedPreferences("session-test", android.content.Context.MODE_PRIVATE)
+        InstrumentationRegistry.getInstrumentation().runOnMainSync {
+            app.setSession(io.github.chicohaager.moviescast.core.Session("http://192.0.2.10/movies", "invented-old-token", "u9", "old"))
+        }
+        val sealed = app.store.logins().logins.single().sealedToken
+        // the file as 0.1.0 wrote it: one login in four keys, no list
+        assertTrue(prefs.edit().remove("logins").putString("base_url", "http://192.0.2.10/movies").putString("user_id", "u9")
+            .putString("user_name", "old").putString("token_sealed", sealed).commit())
+        val taken = app.store.logins()
+        assertEquals(1, taken.logins.size)
+        assertEquals(0, taken.current)
+        val session = app.store.load()
+        assertEquals("http://192.0.2.10/movies", session?.baseUrl)
+        assertEquals("u9", session?.userId)
+        assertEquals("old", session?.userName)
+        assertEquals("invented-old-token", session?.token)
+        // taken over once: the four keys are gone, the list stands in their place
+        assertFalse(prefs.contains("base_url") || prefs.contains("user_id") || prefs.contains("token_sealed"))
+        assertTrue(prefs.contains("logins"))
+    }
+
+    @Test
+    fun aRefusalThatComesAfterTheChangeOfLoginLeavesTheNewLoginAlone() {
+        loginTwice()
+        lateRefusal = true
+        // the film page asks the server; the answer (401) is three seconds away
+        compose.onNodeWithText("Second Film").performClick()
+        compose.waitUntilAtLeastOneExists(hasTestTag("back"), 10_000)
+        compose.onNodeWithTag("back").performClick()
+        compose.onNodeWithTag("menu").performClick()
+        compose.onNodeWithTag("accounts").performClick()
+        compose.waitUntilAtLeastOneExists(hasTestTag("account"), 10_000)
+        compose.onNodeWithText("demo · fake").performClick()
+        compose.waitUntilAtLeastOneExists(hasText("Invented Film"), 10_000)
+        assertTrue(paths.toString(), synchronized(paths) { paths.contains("GET /movies/Users/u2/Items/f2") })
+        Thread.sleep(4_000)
+        compose.waitForIdle()
+        compose.onNodeWithText("Invented Film").assertExists()
+        assertEquals("demo", app.store.load()?.userName)
+        assertEquals(2, app.store.logins().logins.size)
     }
 }

@@ -72,4 +72,8 @@
     <string name="filter_favourites">Oblíbené</string>
     <string name="favourite_add">Přidat do oblíbených</string>
     <string name="favourite_remove">Odebrat z oblíbených</string>
+    <string name="accounts">Servery a účty</string>
+    <string name="account_add">Přidat server nebo účet</string>
+    <string name="account_remove">Odebrat</string>
+    <string name="error_certificate">Toto zařízení nedůvěřuje certifikátu serveru. Nainstalujte certifikát v nastavení Androidu nebo zadejte adresu, pro kterou byl vydán.</string>
 </resources>

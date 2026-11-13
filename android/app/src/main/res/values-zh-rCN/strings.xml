@@ -72,4 +72,8 @@
     <string name="filter_favourites">收藏</string>
     <string name="favourite_add">加入收藏</string>
     <string name="favourite_remove">取消收藏</string>
+    <string name="accounts">服务器和账号</string>
+    <string name="account_add">添加服务器或账号</string>
+    <string name="account_remove">移除</string>
+    <string name="error_certificate">此设备不信任服务器的证书。请在 Android 设置中安装该证书，或输入证书所签发的地址。</string>
 </resources>
