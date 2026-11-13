@@ -97,4 +97,22 @@ class SavedLoginsTest {
     fun theTextFormOfALoginDoesNotCarryTheToken() {
         assertFalse(a.toString().contains("sealed-a"))
     }
+
+    @Test
+    fun theServerOfALoginIsHostAndPortWithTheSchemesPortWhenNoneIsWritten() {
+        assertEquals("192.0.2.10:80", a.server)
+        assertEquals("192.0.2.20:8096", b.server)
+        assertEquals("nas.example:443", SavedLogins.serverOf("https://nas.example/movies"))
+        assertEquals("", SavedLogins.serverOf("not an address"))
+    }
+
+    @Test
+    fun aBindingGoesToEveryLoginAtThatServerAndIsReadFromThere() {
+        val list = SavedLogins().with(a).with(b).with(c).bound("192.0.2.10:80", "user:ab")
+        assertEquals(listOf("user:ab", "", "user:ab"), list.logins.map { it.trust })
+        assertEquals("user:ab", list.trustOf("192.0.2.10:80"))
+        assertEquals("", list.trustOf("192.0.2.20:8096"))
+        assertNull(list.trustOf("192.0.2.30:80"))
+        assertEquals(list, SavedLogins.decode(list.encode()))
+    }
 }

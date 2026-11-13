@@ -76,4 +76,5 @@
     <string name="account_add">Server oder Konto hinzufügen</string>
     <string name="account_remove">Entfernen</string>
     <string name="error_certificate">Dieses Gerät vertraut dem Zertifikat des Servers nicht. Installiere das Zertifikat in den Android-Einstellungen oder gib die Adresse ein, für die es ausgestellt ist.</string>
+    <string name="error_certificate_changed">Das Zertifikat des Servers ist nicht das von der Anmeldung. Hast du es selbst getauscht, melde dich neu an; sonst steht womöglich jemand zwischen dir und dem Server.</string>
 </resources>

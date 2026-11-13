@@ -76,4 +76,5 @@
     <string name="account_add">Aggiungi un server o un account</string>
     <string name="account_remove">Rimuovi</string>
     <string name="error_certificate">Questo dispositivo non considera attendibile il certificato del server. Installa il certificato nelle impostazioni di Android oppure scrivi l’indirizzo per cui è stato emesso.</string>
+    <string name="error_certificate_changed">Il certificato del server non è quello dell’accesso. Se l’hai cambiato tu, accedi di nuovo; altrimenti qualcuno potrebbe trovarsi tra te e il server.</string>
 </resources>

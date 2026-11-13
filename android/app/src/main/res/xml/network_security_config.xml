@@ -2,13 +2,13 @@
 <!-- The ZimaOS gateway speaks plain HTTP in the home network, and the server address is
      whatever the owner types; so cleartext cannot be limited to a list of hosts. -->
 <network-security-config>
-<!-- A server in the home network often has a certificate its owner made (self-signed, or of an
-     authority of their own). Such a certificate counts once the owner installed it in Android's
-     settings; Jellyfin's own Android clients do the same. -->
+<!-- The system's certificates only, for every connection of the app and of its libraries.
+     A certificate the person installed in Android's settings counts only for the servers they log
+     in to, and only the one they logged in with: the app's own check does that for its HTTP client
+     (ScopedTrust in core; the owner's decision, 2026-11-13). Here it would count for every server. -->
     <base-config cleartextTrafficPermitted="true">
         <trust-anchors>
             <certificates src="system" />
-            <certificates src="user" />
         </trust-anchors>
     </base-config>
 </network-security-config>

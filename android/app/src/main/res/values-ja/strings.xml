@@ -76,4 +76,5 @@
     <string name="account_add">サーバーまたはアカウントを追加</string>
     <string name="account_remove">削除</string>
     <string name="error_certificate">この端末はサーバーの証明書を信頼していません。Android の設定で証明書をインストールするか、証明書の発行先のアドレスを入力してください。</string>
+    <string name="error_certificate_changed">サーバーの証明書がログイン時のものと異なります。ご自身で変更した場合は再度ログインしてください。そうでない場合、誰かがあなたとサーバーの間にいる可能性があります。</string>
 </resources>

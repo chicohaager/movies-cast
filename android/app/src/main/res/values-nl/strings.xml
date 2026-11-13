@@ -76,4 +76,5 @@
     <string name="account_add">Server of account toevoegen</string>
     <string name="account_remove">Verwijderen</string>
     <string name="error_certificate">Dit apparaat vertrouwt het certificaat van de server niet. Installeer het certificaat in de Android-instellingen of typ het adres waarvoor het is uitgegeven.</string>
+    <string name="error_certificate_changed">Het certificaat van de server is niet dat van de aanmelding. Heb je het zelf vervangen, meld je dan opnieuw aan; anders zit er mogelijk iemand tussen jou en de server.</string>
 </resources>

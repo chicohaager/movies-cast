@@ -26,7 +26,8 @@ film plays, the film's id and the position, so that "continue watching" is right
 
 **Stores on the device:** the address as typed, the installation id, the order chosen for the
 library, and for every login kept under "Servers and accounts" the server's address and name, the
-user name and the login token. Each token is encrypted with a key of the Android keystore that does not leave the device;
+user name, the login token and which certificate the server is to show (the word "system", or the
+SHA-256 fingerprint of a certificate you installed in Android's settings). Each token is encrypted with a key of the Android keystore that does not leave the device;
 the password is not stored. The app takes no part in Android's backup (`allowBackup="false"`).
 "Log out" deletes the token of the login in use on the device and at the server, "Remove" under
 "Servers and accounts" does it for any other; uninstalling the app deletes all of it.

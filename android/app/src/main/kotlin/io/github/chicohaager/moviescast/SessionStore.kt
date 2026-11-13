@@ -55,14 +55,19 @@ class SessionStore(context: Context, name: String = "session") {
 
     private fun write(logins: SavedLogins) = prefs.edit().putString(KEY_LOGINS, logins.encode()).apply()
 
-    /** Keeps the login and puts it in use; [serverName] is what the server calls itself. */
-    fun save(s: Session, serverName: String = "") {
+    /**
+     * Keeps the login and puts it in use; [serverName] is what the server calls itself, [trust] what its
+     * certificates must come from ([io.github.chicohaager.moviescast.core.ScopedTrust]); every login at the
+     * same server gets that binding.
+     */
+    fun save(s: Session, serverName: String = "", trust: String = "") {
         val sealed = try {
             encrypt(s.token)
         } catch (_: GeneralSecurityException) {
             return // without a keystore the login lasts until the app is closed
         }
-        write(logins().with(SavedLogin(s.baseUrl, s.userId, s.userName, sealed, serverName)))
+        val login = SavedLogin(s.baseUrl, s.userId, s.userName, sealed, serverName, trust)
+        write(logins().with(login).bound(login.server, trust))
         prefs.edit().putString(KEY_USER_NAME, s.userName).apply()
     }
 
@@ -77,6 +82,15 @@ class SessionStore(context: Context, name: String = "session") {
         val session = session(index) ?: return null
         write(logins().chosen(index))
         return session
+    }
+
+    /** The binding of the logins at [server] (`host:port`), null when there is none. */
+    fun trustOf(server: String): String? = logins().trustOf(server)
+
+    /** A login made before there was a binding is bound at its first connection. */
+    fun bind(server: String, trust: String) {
+        val all = logins()
+        if (all.trustOf(server) == "") write(all.bound(server, trust))
     }
 
     /** Forgets the login at [index]. */

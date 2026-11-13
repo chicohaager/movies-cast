@@ -17,6 +17,9 @@ import io.github.chicohaager.moviescast.core.Session
 import io.github.chicohaager.moviescast.core.UnauthorizedException
 import io.github.chicohaager.moviescast.core.UnexpectedAnswerException
 import io.github.chicohaager.moviescast.core.UntrustedCertificateException
+import io.github.chicohaager.moviescast.core.CertificateChangedException
+import io.github.chicohaager.moviescast.core.SavedLogins
+import java.security.cert.X509Certificate
 import io.github.chicohaager.moviescast.core.after
 import io.github.chicohaager.moviescast.core.arranged
 import java.io.IOException
@@ -34,6 +37,7 @@ sealed interface UiError {
     data object Address : UiError
     data object NoServer : UiError
     data object Certificate : UiError
+    data object CertificateChanged : UiError
     data object Login : UiError
     data object Session : UiError
     data object Network : UiError
@@ -123,23 +127,36 @@ class AppViewModel(private val app: MoviesCastApp) : ViewModel() {
             return
         }
         _state.update { it.copy(busy = true, error = null) }
+        // While this login is made, an installed certificate may count for the address typed (and only for it).
+        app.loggingIn = MoviesClient.candidates(server).map { SavedLogins.serverOf(it) }.toSet()
         viewModelScope.launch {
-            val found = try {
-                client.discover(server)
-            } catch (e: IOException) {
-                _state.update { it.copy(busy = false, error = if (e is UntrustedCertificateException) UiError.Certificate else UiError.NoServer) }
-                return@launch
-            }
             try {
-                val session = client.login(found.first, user.trim(), password)
-                app.store.rememberTyped(server.trim())
-                loading?.cancel()
-                app.setSession(session, found.second.name)
-                _state.value = start().copy(server = found.second)
-                refresh()
-            } catch (e: IOException) {
-                _state.update { it.copy(busy = false, error = if (e is UnauthorizedException) UiError.Login else toError(e)) }
+                loginNow(server, user, password)
+            } finally {
+                app.loggingIn = emptySet()
             }
+        }
+    }
+
+    private suspend fun loginNow(server: String, user: String, password: String) {
+        val found = try {
+            client.discover(server)
+        } catch (e: IOException) {
+            _state.update { it.copy(busy = false, error = if (e is UntrustedCertificateException) UiError.Certificate else UiError.NoServer) }
+            return
+        }
+        try {
+            val chain = ArrayList<X509Certificate>()
+            val session = client.login(found.first, user.trim(), password, chain)
+            // bound to what issued the certificates of this answer; none found cannot be after a login the check let through
+            val bound = app.trust.bindingOf(chain) ?: throw UntrustedCertificateException()
+            app.store.rememberTyped(server.trim())
+            loading?.cancel()
+            app.setSession(session, found.second.name, bound)
+            _state.value = start().copy(server = found.second)
+            refresh()
+        } catch (e: IOException) {
+            _state.update { it.copy(busy = false, error = if (e is UnauthorizedException) UiError.Login else toError(e)) }
         }
     }
 
@@ -308,6 +325,7 @@ class AppViewModel(private val app: MoviesCastApp) : ViewModel() {
     }
 
     private fun toError(e: IOException): UiError = when {
+        e is CertificateChangedException -> UiError.CertificateChanged
         e is UntrustedCertificateException -> UiError.Certificate
         e is ServerException -> UiError.Server(e.status)
         e is UnexpectedAnswerException -> UiError.Answer

@@ -8,9 +8,16 @@ import coil3.SingletonImageLoader
 import coil3.network.okhttp.OkHttpNetworkFetcherFactory
 import io.github.chicohaager.moviescast.core.Device
 import io.github.chicohaager.moviescast.core.MoviesClient
+import io.github.chicohaager.moviescast.core.ScopedTrust
 import io.github.chicohaager.moviescast.core.ServerSearch
 import io.github.chicohaager.moviescast.core.Session
+import java.security.GeneralSecurityException
+import java.security.KeyStore
+import java.security.cert.X509Certificate
 import java.util.concurrent.TimeUnit
+import javax.net.ssl.SSLContext
+import javax.net.ssl.TrustManagerFactory
+import javax.net.ssl.X509TrustManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -47,7 +54,10 @@ open class MoviesCastApp : Application(), SingletonImageLoader.Factory {
     override fun onCreate() {
         super.onCreate()
         store = SessionStore(this, storeName)
+        trust = ScopedTrust(systemTrust(), ::userCertificates, store::trustOf, { loggingIn }, store::bind)
+        val tls = SSLContext.getInstance("TLS").apply { init(null, arrayOf(trust), null) }
         val http = OkHttpClient.Builder()
+            .sslSocketFactory(tls.socketFactory, trust)
             .connectTimeout(8, TimeUnit.SECONDS)
             .readTimeout(20, TimeUnit.SECONDS)
             .build()
@@ -74,10 +84,18 @@ open class MoviesCastApp : Application(), SingletonImageLoader.Factory {
     }
 
     /** A new login is kept and put in use; null forgets the login in use (the others stay). */
-    fun setSession(value: Session?, serverName: String = "") {
+    fun setSession(value: Session?, serverName: String = "", trust: String = "") {
         session = value
-        if (value == null) store.clear() else store.save(value, serverName)
+        if (value == null) store.clear() else store.save(value, serverName, trust)
     }
+
+    /** The servers (`host:port`) being logged in to now: only for them an installed certificate may count without a login. */
+    @Volatile
+    var loggingIn: Set<String> = emptySet()
+
+    /** Which certificate counts for which server (the owner's decision, 2026-11-13; see [ScopedTrust]). */
+    lateinit var trust: ScopedTrust
+        private set
 
     /** Puts another of the logins kept in use; false when it cannot be read any more. */
     fun switchTo(index: Int): Boolean {
@@ -100,6 +118,25 @@ open class MoviesCastApp : Application(), SingletonImageLoader.Factory {
         session = null
         store.clearAll()
     }
+
+    /** The system's certificates: `network_security_config.xml` names no others. */
+    private fun systemTrust(): X509TrustManager =
+        TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm())
+            .apply { init(null as KeyStore?) }
+            .trustManagers.filterIsInstance<X509TrustManager>().single()
+
+    /** The certificates the person installed in Android's settings ("user:" in Android's CA store). */
+    private fun userCertificates(): List<X509Certificate> =
+        try {
+            val store = KeyStore.getInstance("AndroidCAStore").apply { load(null) }
+            store.aliases().toList().filter { it.startsWith("user:") }.mapNotNull { store.getCertificate(it) as? X509Certificate }
+        } catch (e: GeneralSecurityException) {
+            AppLog.w("user certificates: ${e.javaClass.simpleName}")
+            emptyList()
+        } catch (e: java.io.IOException) {
+            AppLog.w("user certificates: ${e.javaClass.simpleName}")
+            emptyList()
+        }
 
     override fun newImageLoader(context: PlatformContext): ImageLoader =
         ImageLoader.Builder(context)

@@ -76,4 +76,5 @@
     <string name="account_add">Sunucu veya hesap ekle</string>
     <string name="account_remove">Kaldır</string>
     <string name="error_certificate">Bu cihaz sunucunun sertifikasına güvenmiyor. Sertifikayı Android ayarlarından yükleyin veya sertifikanın düzenlendiği adresi yazın.</string>
+    <string name="error_certificate_changed">Sunucunun sertifikası giriş yaptığınızdaki sertifika değil. Kendiniz değiştirdiyseniz yeniden giriş yapın; aksi halde siz ile sunucu arasında biri olabilir.</string>
 </resources>

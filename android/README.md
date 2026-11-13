@@ -138,18 +138,38 @@ with 401 logs out only the login it was made with.
 
 A server with a self-signed certificate (or one of an authority of the owner's own) is reached
 once that certificate is installed on the device, in Android's settings ("Install a certificate" →
-"CA certificate"): `network_security_config.xml` trusts the certificates the user installed besides
-the system's, as Jellyfin's Android TV app does. Until then the login page says "This device does
-not trust the server's certificate …" (also when the certificate is made out for another name than
-the address typed). Decision of the owner (2026-11-13): there is no button "accept the certificate
-anyway", and none is to be built.
+"CA certificate"). Until then the login page says "This device does not trust the server's
+certificate …" (also when the certificate is made out for another name than the address typed).
+Decisions of the owner (2026-11-13): there is no button "accept the certificate anyway"; and an
+installed certificate counts only for the person's own servers, and only the one they logged in
+with. (Jellyfin's Android TV app lets an installed certificate count for every server; 9674f37 did
+the same.)
+
+How (`ScopedTrust` in `core`, the trust manager of the app's HTTP client, which posters and the
+player use too; `network_security_config.xml` names the system's certificates only, so nothing else
+in the app takes an installed one):
+
+- While a login is made, for the address typed: the system's certificates, else an installed one.
+  The login is bound to what issued the certificates of its answer — `system`, or `user:` and the
+  SHA-256 of the installed certificate — and every login at that `host:port` gets that binding. The
+  certificates are read from the answer, not from the handshake: a TLS session that is taken up
+  again has no handshake (measured in the tests).
+- A server bound to `system`: the system's certificates only, never an installed one.
+- A server bound to an installed certificate: that certificate only (the platform's PKIX check with
+  it as the only root). Another chain — the certificate of a stranger, also installed; one the
+  system trusts; the own one after it was removed — gives "The server's certificate is not the one
+  it had when you logged in …"; logging in again binds the new one.
+- Every other server (the search in the network, an address not logged in to): the system's only.
+- A login kept by an app from before the binding is bound at its first connection over HTTPS.
 
 `deploy/tools/user-ca/measure-user-ca.sh [serial]` repeats that measurement without a hand on the
 device: it makes a certificate for the test, starts a fake HTTPS server on this machine
-(`fake-https.py`, reached from the device through `adb reverse`), and logs in from the app's login
-page three times — before the certificate is in Android's user store, after it was put there as the
-settings put it (`/data/misc/user/0/cacerts-added/<subject hash>.0`), after it was taken out again —
-and fails unless the app refuses, trusts, refuses. Putting a file into that store needs root, so it
+(`fake-https.py`, reached from the device through `adb reverse`), and goes through four cases with two
+certificates put into Android's user store as the settings put them
+(`/data/misc/user/0/cacerts-added/<subject hash>.0`): none installed, log in (refused); the own one
+installed, log in (the library); the other one installed too and shown by the server, the app
+started again with its login (changed, no request reaches the server); both removed, log in
+(refused). Putting a file into that store needs root, so it
 runs on an emulator with an image "Google APIs" (a "Google Play" image gives none); one such:
 
     sdkmanager "system-images;android-36;google_apis;x86_64"
@@ -395,3 +415,16 @@ the one named.
   accounts" listed both; a tap changed to the Movies login and back, the films were each server's,
   and Jellyfin's log had one password login only. "Remove" on the Jellyfin login: Jellyfin logged
   its token out and dropped the device from its list; the Movies login stayed in use.
+
+Installed certificates for the own servers only (2026-11-13, after the owner's objection to 9674f37):
+- `ScopedTrustTest` (13 cases) against a fake HTTPS server with three authorities made in the test:
+  "public" as the system's, the own one and a stranger's as installed. Each rule was red once with
+  the check broken on purpose (7 breaks); one break stayed green at first, as the other branch also
+  refused, with "changed" in place of "not trusted"; the test now asks for the message.
+- `measure-user-ca.sh` on the emulator `mc-api36-root`: refused, trusted, changed, refused. With the
+  app built to take any installed certificate for a bound server it failed at the third case: the
+  server with the stranger's certificate showed the library.
+- GitHub's run of 9674f37 failed in two `CertificateTest` cases with `ConnectException` to `::1`:
+  the runners resolve `localhost` as `::1` first; OkHttp throws that error and attaches the
+  certificate error of `127.0.0.1` to it. The client looks through the errors attached since
+  2b7c21f; the tests resolve `localhost` the same way.

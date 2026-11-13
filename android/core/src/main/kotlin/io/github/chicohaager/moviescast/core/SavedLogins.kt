@@ -3,6 +3,7 @@ package io.github.chicohaager.moviescast.core
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.json.Json
+import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 
 /**
  * One login the device keeps: a server and an account there. [sealedToken] is the token as the
@@ -16,7 +17,12 @@ data class SavedLogin(
     val sealedToken: String,
     /** The server's own name, for the list; may be empty. */
     val serverName: String = "",
+    /** What its certificates must come from ([ScopedTrust]): "system", "user:<sha-256>", or "" before there was a binding. */
+    val trust: String = "",
 ) {
+    /** `host:port` of the server, as [ScopedTrust] names it; "" for an address that cannot be read. */
+    val server: String get() = SavedLogins.serverOf(baseUrl)
+
     /** "account · server name"; the account alone when the server told no name. */
     val title: String get() = if (serverName.isBlank()) userName else "$userName · $serverName"
 
@@ -53,10 +59,19 @@ data class SavedLogins(val logins: List<SavedLogin> = emptyList(), val current: 
         return SavedLogins(logins.filterIndexed { i, _ -> i != index }, next)
     }
 
+    /** The binding of the logins at [server] (`host:port`): that of the one added last, null when there is none. */
+    fun trustOf(server: String): String? = logins.lastOrNull { it.server == server }?.trust
+
+    /** Every login at [server] gets the binding [trust] (two accounts at one server share the certificate). */
+    fun bound(server: String, trust: String): SavedLogins = copy(logins = logins.map { if (it.server == server) it.copy(trust = trust) else it })
+
     fun encode(): String = json.encodeToString(serializer(), this)
 
     companion object {
         private val json = Json { ignoreUnknownKeys = true }
+
+        /** `host:port` of a base URL (the scheme's port when none is written); "" when it cannot be read. */
+        fun serverOf(baseUrl: String): String = baseUrl.toHttpUrlOrNull()?.let { "${it.host}:${it.port}" }.orEmpty()
 
         /** What [encode] wrote; a text that is not that gives an empty list, and a [current] outside the list gives none in use. */
         fun decode(text: String?): SavedLogins {

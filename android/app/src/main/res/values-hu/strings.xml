@@ -76,4 +76,5 @@
     <string name="account_add">Szerver vagy fiók hozzáadása</string>
     <string name="account_remove">Eltávolítás</string>
     <string name="error_certificate">Ez az eszköz nem bízik a szerver tanúsítványában. Telepítse a tanúsítványt az Android beállításaiban, vagy írja be azt a címet, amelyre a tanúsítványt kiállították.</string>
+    <string name="error_certificate_changed">A szerver tanúsítványa nem az, amelyik a bejelentkezéskor volt. Ha ön cserélte le, jelentkezzen be újra; ha nem, valaki lehet ön és a szerver között.</string>
 </resources>

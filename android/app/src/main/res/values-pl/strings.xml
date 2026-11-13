@@ -76,4 +76,5 @@
     <string name="account_add">Dodaj serwer lub konto</string>
     <string name="account_remove">Usuń</string>
     <string name="error_certificate">To urządzenie nie ufa certyfikatowi serwera. Zainstaluj certyfikat w ustawieniach Androida albo wpisz adres, dla którego został wystawiony.</string>
+    <string name="error_certificate_changed">Certyfikat serwera nie jest tym z logowania. Jeśli sam go wymieniłeś, zaloguj się ponownie; w przeciwnym razie ktoś może być między tobą a serwerem.</string>
 </resources>

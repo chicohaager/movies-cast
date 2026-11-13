@@ -78,4 +78,5 @@
     <string name="account_add">Add a server or account</string>
     <string name="account_remove">Remove</string>
     <string name="error_certificate">This device does not trust the server\'s certificate. Install the certificate in the settings of Android, or type the address the certificate was made out for.</string>
+    <string name="error_certificate_changed">The server\'s certificate is not the one it had when you logged in. If you changed it yourself, log in again; otherwise someone may be between you and the server.</string>
 </resources>

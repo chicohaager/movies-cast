@@ -2,6 +2,7 @@ package io.github.chicohaager.moviescast.core
 
 import java.io.IOException
 import java.security.cert.CertificateException
+import java.security.cert.X509Certificate
 import java.util.concurrent.TimeUnit
 import javax.net.ssl.SSLPeerUnverifiedException
 import kotlinx.coroutines.Dispatchers
@@ -38,7 +39,10 @@ class UnexpectedAnswerException : IOException("unexpected answer from the server
  * The device does not trust the server's certificate (self-signed, or signed by an authority the
  * device does not know), or the certificate is made out for another name than the address.
  */
-class UntrustedCertificateException : IOException("the server's certificate is not trusted")
+open class UntrustedCertificateException(message: String = "the server's certificate is not trusted") : IOException(message)
+
+/** The server's certificate is not the one it was logged in with ([ScopedTrust]); logging in again takes the new one. */
+class CertificateChangedException : UntrustedCertificateException("the server's certificate is not the one of the login")
 
 /** Who is asking; goes into the `X-Emby-Authorization` header of every request. */
 data class Device(val id: String, val name: String, val appVersion: String)
@@ -113,9 +117,14 @@ class MoviesClient(http: OkHttpClient, private val device: Device) {
         }.awaitAll().filterNotNull().distinctBy { it.address }
     }
 
-    suspend fun login(baseUrl: String, user: String, password: String): Session {
+    /**
+     * Logs in. [chain], when given, gets the certificates the server showed for this answer (none over
+     * plain HTTP): the login is bound to what issued them ([ScopedTrust.bindingOf]). Read from the
+     * answer, not from the handshake, as a TLS session that is taken up again has no handshake.
+     */
+    suspend fun login(baseUrl: String, user: String, password: String, chain: MutableList<X509Certificate>? = null): Session {
         val body = JsonObject(mapOf("Username" to JsonPrimitive(user), "Pw" to JsonPrimitive(password))).toString()
-        val dto = decode<AuthDto>(call(baseUrl, null, "POST", "/Users/AuthenticateByName", body))
+        val dto = decode<AuthDto>(call(url(baseUrl, "/Users/AuthenticateByName") {}, null, "POST", body, chain = chain))
         if (dto.accessToken.isEmpty() || dto.user.id.isEmpty()) throw IOException("login answer without token")
         return Session(baseUrl, dto.accessToken, dto.user.id, dto.user.name.ifEmpty { user })
     }
@@ -302,7 +311,14 @@ class MoviesClient(http: OkHttpClient, private val device: Device) {
     private suspend fun call(baseUrl: String, token: String?, method: String, path: String, body: String?): String =
         call(url(baseUrl, path) {}, token, method, body)
 
-    private suspend fun call(url: HttpUrl, token: String?, method: String, body: String?, http: OkHttpClient = this.http): String =
+    private suspend fun call(
+        url: HttpUrl,
+        token: String?,
+        method: String,
+        body: String?,
+        http: OkHttpClient = this.http,
+        chain: MutableList<X509Certificate>? = null,
+    ): String =
         withContext(Dispatchers.IO) {
             val request = Request.Builder().url(url)
                 .header("X-Emby-Authorization", authHeader(token))
@@ -311,6 +327,7 @@ class MoviesClient(http: OkHttpClient, private val device: Device) {
                 .build()
             try {
                 http.newCall(request).execute().use { response ->
+                    chain?.addAll(response.handshake?.peerCertificates.orEmpty().filterIsInstance<X509Certificate>())
                     when {
                         response.code == 401 -> throw UnauthorizedException()
                         !response.isSuccessful -> throw ServerException(response.code, url.encodedPath)
@@ -318,7 +335,10 @@ class MoviesClient(http: OkHttpClient, private val device: Device) {
                     }
                 }
             } catch (e: IOException) {
-                if (e !is UnauthorizedException && e !is ServerException && certificateRefused(e)) throw UntrustedCertificateException()
+                if (e !is UnauthorizedException && e !is ServerException) {
+                    if (certificateNotOfLogin(e)) throw CertificateChangedException()
+                    if (certificateRefused(e)) throw UntrustedCertificateException()
+                }
                 throw e
             }
         }
@@ -371,13 +391,18 @@ class MoviesClient(http: OkHttpClient, private val device: Device) {
          * (`localhost` as ::1 and 127.0.0.1 on GitHub's runners, 2026-11-13). A handshake that fails
          * for another reason (no common protocol) is not a refused certificate.
          */
-        internal fun certificateRefused(e: Throwable): Boolean {
+        internal fun certificateRefused(e: Throwable): Boolean = within(e) { it is SSLPeerUnverifiedException || it is CertificateException }
+
+        /** A certificate other than the one of the login ([ScopedTrust]), in [e] as in [certificateRefused]. */
+        internal fun certificateNotOfLogin(e: Throwable): Boolean = within(e) { it is CertificateNotOfLoginException }
+
+        private fun within(e: Throwable, test: (Throwable) -> Boolean): Boolean {
             val seen = HashSet<Throwable>()
             val todo = ArrayDeque(listOf(e))
             while (todo.isNotEmpty() && seen.size < 32) {
                 val t = todo.removeFirst()
                 if (!seen.add(t)) continue
-                if (t is SSLPeerUnverifiedException || t is CertificateException) return true
+                if (test(t)) return true
                 t.cause?.let(todo::add)
                 todo.addAll(t.suppressed)
             }

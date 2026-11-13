@@ -76,4 +76,5 @@
     <string name="account_add">Přidat server nebo účet</string>
     <string name="account_remove">Odebrat</string>
     <string name="error_certificate">Toto zařízení nedůvěřuje certifikátu serveru. Nainstalujte certifikát v nastavení Androidu nebo zadejte adresu, pro kterou byl vydán.</string>
+    <string name="error_certificate_changed">Certifikát serveru není ten, který měl při přihlášení. Pokud jste ho vyměnili sami, přihlaste se znovu; jinak může být mezi vámi a serverem někdo jiný.</string>
 </resources>

@@ -76,4 +76,5 @@
     <string name="account_add">新增伺服器或帳號</string>
     <string name="account_remove">移除</string>
     <string name="error_certificate">此裝置不信任伺服器的憑證。請在 Android 設定中安裝該憑證，或輸入憑證所簽發的位址。</string>
+    <string name="error_certificate_changed">伺服器的憑證與登入時的不同。如果是您自己更換的，請重新登入；否則可能有人位於您與伺服器之間。</string>
 </resources>
