@@ -13,7 +13,7 @@ Movies-Cast is tested on few TVs. What helps most:
 
 ## Code
 
-- `./check.sh` must pass: gofmt + vet, the Go tests, the browser tests (`e2e/`), the scan for private data.
+- `./check.sh` must pass: gofmt + vet, the Go tests, the browser tests (`e2e/`), the Android app (`--no-android` without an Android SDK), the scan for private data.
 - Every message the user sees is keyed and exists in all 18 language files (`internal/server/web/i18n/`).
 - A new test should fail without the change it tests (break the code once, see it red, restore).
 - Statements in docs and comments say what was measured, on which device and when; "not measured" is fine.

@@ -39,7 +39,7 @@ git -C "$repo" worktree add --detach "$wt" HEAD >/dev/null
 
 echo "== 1/5 check.sh (worktree of $commit)"
 # shellcheck disable=SC2086 # CHECK_ARGS is empty or one flag
-"$wt/check.sh" ${CHECK_ARGS:-}
+"$wt/check.sh" --no-android ${CHECK_ARGS:-}
 
 echo "== 2/5 static build ($version+$commit)"
 (cd "$wt" && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -ldflags "-s -w -X main.version=$version+$commit" -o "$ctx/movies-cast" ./cmd/movies-cast)

@@ -5,8 +5,8 @@
 #   deploy/zimaos/build-on-host.sh <ssh-user>@<host> [version] [--switch]   (-version prints <version>+<commit>)
 #
 # Steps, each with its witness:
-#   1. check.sh (vet, tests, browser tests, public-data scan; CHECK_ARGS=--no-e2e
-#      skips the browser tests), then a static build here (CGO_ENABLED=0); sha256 printed
+#   1. check.sh --no-android (vet, tests, browser tests, public-data scan; the Android app
+#      is not part of this image; CHECK_ARGS=--no-e2e skips the browser tests), then a static build here (CGO_ENABLED=0); sha256 printed
 #   2. binary + Dockerfile to <host>:/DATA/AppData/movies-cast-build/ — next to,
 #      never inside, /DATA/AppData/movies-cast (a ZimaOS uninstall deletes that)
 #   3. sha256 compared on the host before the build
@@ -65,7 +65,7 @@ git -C "$repo" worktree add --detach "$wt" HEAD >/dev/null
 
 echo "== 1/5 check.sh + static build ($version, worktree of HEAD)"
 # shellcheck disable=SC2086 # CHECK_ARGS is empty or one flag
-"$wt/check.sh" ${CHECK_ARGS:-}
+"$wt/check.sh" --no-android ${CHECK_ARGS:-}
 (cd "$wt" && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -trimpath -ldflags "-s -w -X main.version=$version" -o "$out/movies-cast" ./cmd/movies-cast)
 cp "$wt/Dockerfile" "$out/Dockerfile"
 cp "$wt/deploy/zimaos/switch-image.sh" "$out/switch-image.sh"
