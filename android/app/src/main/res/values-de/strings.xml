@@ -78,4 +78,8 @@
     <string name="error_certificate">Dieses Gerät vertraut dem Zertifikat des Servers nicht. Installiere das Zertifikat in den Android-Einstellungen oder gib die Adresse ein, für die es ausgestellt ist.</string>
     <string name="error_certificate_changed">Das Zertifikat des Servers ist nicht das von der Anmeldung. Hast du es selbst getauscht, melde dich neu an; sonst steht womöglich jemand zwischen dir und dem Server.</string>
     <string name="error_certificate_login_again">Diese Anmeldung stammt aus der Zeit, bevor sich die App das Zertifikat eines Servers gemerkt hat. Melde dich einmal neu an, damit nur das Zertifikat dieses Servers gilt.</string>
+    <string name="sound">Ton</string>
+    <string name="sound_intro">Ton in diesen Formaten dekodiert die App selbst, so spielt ihn jeder Fernseher ab. Nimmt dein Fernseher oder AV-Verstärker ein Format unverändert (etwa für Dolby Atmos oder DTS:X), stelle es auf „Über HDMI durchreichen“: Dann geht es unverändert hinaus, wann immer das Gerät meldet, dass es das kann.</string>
+    <string name="sound_pass_on">Über HDMI durchreichen (automatisch)</string>
+    <string name="sound_decode">In der App dekodieren</string>
 </resources>

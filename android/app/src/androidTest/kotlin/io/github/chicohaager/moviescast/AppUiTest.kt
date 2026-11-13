@@ -92,6 +92,8 @@ class AppUiTest {
         instrumentation.runOnMainSync {
             app.forgetAll()
             app.store.sort = ""
+            // as on a device where the sound page was never touched
+            app.store.forgetPassthrough()
             (app as TestApp).announcedByTest = emptyList()
         }
         server.dispatcher = object : Dispatcher() {
@@ -229,6 +231,31 @@ class AppUiTest {
         compose.onAllNodesWithTag("licence_row").onFirst().assertTextContains("FFmpeg", substring = true).performClick()
         compose.waitUntilAtLeastOneExists(hasTestTag("licence_text"), 10_000)
         compose.onNodeWithTag("licence_text").assertTextContains("GNU LESSER GENERAL PUBLIC LICENSE", substring = true)
+    }
+
+    @Test
+    fun soundIsDecodedInTheAppUntilAFormatIsSetToPassOnWhichIsKeptAndCanBeTurnedBack() {
+        login("right")
+        compose.waitUntilAtLeastOneExists(hasTestTag("tile"), 10_000)
+        val all = io.github.chicohaager.moviescast.core.Passthrough.Format.entries.toSet()
+        // nothing set: every format decoded in the app (Kodi's default), so a TV that cannot take DTS still has sound
+        assertEquals(all, app.store.passthroughOff)
+        compose.onNodeWithTag("menu").performClick()
+        compose.onNodeWithTag("sound").performClick()
+        val pass = app.getString(R.string.sound_pass_on)
+        val decode = app.getString(R.string.sound_decode)
+        for (key in listOf("ac3", "eac3", "dts", "truehd")) compose.onNodeWithTag("sound_$key").assertTextContains(decode, substring = true)
+        compose.onNodeWithTag("sound_dts").performClick()
+        compose.onNodeWithTag("sound_dts").assertTextContains(pass, substring = true)
+        assertEquals(all - io.github.chicohaager.moviescast.core.Passthrough.Format.DTS, app.store.passthroughOff)
+        // the others stay as they were
+        compose.onNodeWithTag("sound_truehd").assertTextContains(decode, substring = true)
+        // shown so again when the page is opened anew
+        compose.onNodeWithTag("back").performClick()
+        compose.onNodeWithTag("menu").performClick()
+        compose.onNodeWithTag("sound").performClick()
+        compose.onNodeWithTag("sound_dts").assertTextContains(pass, substring = true).performClick()
+        assertEquals(all, app.store.passthroughOff)
     }
 
     @Test

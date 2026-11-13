@@ -78,4 +78,8 @@
     <string name="error_certificate">To urządzenie nie ufa certyfikatowi serwera. Zainstaluj certyfikat w ustawieniach Androida albo wpisz adres, dla którego został wystawiony.</string>
     <string name="error_certificate_changed">Certyfikat serwera nie jest tym z logowania. Jeśli sam go wymieniłeś, zaloguj się ponownie; w przeciwnym razie ktoś może być między tobą a serwerem.</string>
     <string name="error_certificate_login_again">To logowanie pochodzi z czasu, zanim aplikacja zaczęła zapamiętywać certyfikat serwera. Zaloguj się raz ponownie, aby liczył się tylko certyfikat tego serwera.</string>
+    <string name="sound">Dźwięk</string>
+    <string name="sound_intro">Dźwięk w tych formatach aplikacja dekoduje sama, więc odtworzy go każdy telewizor. Jeśli twój telewizor lub amplituner AV przyjmuje format bez zmian (np. dla Dolby Atmos lub DTS:X), ustaw go na „Przekazuj przez HDMI”: wtedy wychodzi bez zmian, gdy tylko urządzenie zgłosi, że to potrafi.</string>
+    <string name="sound_pass_on">Przekazuj przez HDMI (automatycznie)</string>
+    <string name="sound_decode">Dekoduj w aplikacji</string>
 </resources>

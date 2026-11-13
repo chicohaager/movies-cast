@@ -24,6 +24,7 @@ import androidx.media3.decoder.ffmpeg.FfmpegLibrary
 import io.github.chicohaager.moviescast.ui.AboutScreen
 import io.github.chicohaager.moviescast.ui.AccountsScreen
 import io.github.chicohaager.moviescast.ui.DetailScreen
+import io.github.chicohaager.moviescast.ui.SoundScreen
 import io.github.chicohaager.moviescast.ui.Languages
 import io.github.chicohaager.moviescast.ui.LicenceScreen
 import io.github.chicohaager.moviescast.ui.LicencesScreen
@@ -60,13 +61,14 @@ class MainActivity : AppCompatActivity() {
                 val goBack: (() -> Unit)? = if (state.stack.size > 1) ({ model.back() }) else null
                 when (val screen = state.screen) {
                     Screen.Login -> LoginScreen(state, model.lastServer, model.lastUser, ::login, ::findServers, ::openAppSettings, goBack) { model.show(Screen.About) }
-                    Screen.Library -> LibraryScreen(state, model::search, model::sort, model::filter, model::open, ::refresh, model::logout, ::openAppSettings, { model.show(Screen.Accounts) }) { model.show(Screen.About) }
+                    Screen.Library -> LibraryScreen(state, model::search, model::sort, model::filter, model::open, ::refresh, model::logout, ::openAppSettings, { model.show(Screen.Accounts) }, onSound = { model.show(Screen.Sound) }) { model.show(Screen.About) }
                     Screen.Accounts -> AccountsScreen(state, goBack, ::switchTo, model::forget) { model.show(Screen.Login) }
                     is Screen.Detail -> DetailScreen(state, { model.back() }, model::open, ::play, model::setPlayed, model::setFavorite)
                     Screen.About -> AboutScreen({ model.back() }, { model.show(Screen.Licences) }, { model.show(Screen.Privacy) }, ::openWeb, ::diagnostics, ::share)
                     Screen.Licences -> LicencesScreen({ model.back() }) { model.show(Screen.Licence(it)) }
                     is Screen.Licence -> LicenceScreen(screen.id) { model.back() }
                     Screen.Privacy -> PrivacyScreen { model.back() }
+                    Screen.Sound -> SoundScreen((application as MoviesCastApp).store.passthroughOff, { model.back() }) { (application as MoviesCastApp).store.passthroughOff = it }
                 }
             }
         }

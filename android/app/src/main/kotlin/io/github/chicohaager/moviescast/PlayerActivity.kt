@@ -113,7 +113,8 @@ class PlayerActivity : AppCompatActivity() {
 
         // The device's own decoders first; FFmpeg (module :ffmpeg, LGPL build) only for formats the
         // device cannot decode, e.g. TrueHD and DTS on a Pixel 7 (measured 2026-11-12).
-        val renderers = MoviesCastRenderersFactory(this)
+        val store = (application as MoviesCastApp).store
+        val renderers = MoviesCastRenderersFactory(this) { store.passthroughOff }
             .setEnableDecoderFallback(true)
             .setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_ON)
         AppLog.i("ffmpeg ${if (FfmpegLibrary.isAvailable()) "available ${FfmpegLibrary.getVersion()}" else "not available"}")

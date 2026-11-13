@@ -29,7 +29,8 @@ phone ──HTTP(S)──> Movies-Cast :8097 ──Jellyfin API──> Movies / 
 
 **Android app (first build 0.1.0, not released yet):** [android/](android/README.md) is a player of its
 own for phones, tablets and Android TV. It plays the original file straight from Movies or Jellyfin on the
-device, without the Movies-Cast container, with FFmpeg for the sound formats the device lacks (DTS, TrueHD).
+device, without the Movies-Cast container, with FFmpeg for the sound formats the device lacks (DTS, TrueHD); it decodes AC3, E-AC3, DTS and TrueHD itself by
+default, so every TV plays the sound; "Sound" in its menu passes a format on to a receiver that takes it.
 
 ## Requirements
 

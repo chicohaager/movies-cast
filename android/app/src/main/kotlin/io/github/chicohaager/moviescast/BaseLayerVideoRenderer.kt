@@ -12,6 +12,8 @@ import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.FormatHolder
 import androidx.media3.exoplayer.Renderer
 import androidx.media3.exoplayer.RendererCapabilities
+import androidx.media3.exoplayer.audio.AudioSink
+import io.github.chicohaager.moviescast.core.Passthrough
 import androidx.media3.exoplayer.mediacodec.MediaCodecSelector
 import androidx.media3.exoplayer.video.MediaCodecVideoRenderer
 import androidx.media3.exoplayer.video.VideoRendererEventListener
@@ -68,9 +70,15 @@ class BaseLayerVideoRenderer(builder: Builder, private val selector: MediaCodecS
     private var announced = false
 }
 
-/** [DefaultRenderersFactory] with [BaseLayerVideoRenderer] in place of the stock video renderer. */
+/**
+ * [DefaultRenderersFactory] with [BaseLayerVideoRenderer] in place of the stock video renderer, and the audio sink
+ * wrapped in [SoundSink] so the sound formats in [passthroughOff] are decoded and never handed on.
+ */
 @UnstableApi
-class MoviesCastRenderersFactory(context: Context) : DefaultRenderersFactory(context) {
+class MoviesCastRenderersFactory(context: Context, private val passthroughOff: () -> Set<Passthrough.Format> = { emptySet() }) : DefaultRenderersFactory(context) {
+    override fun buildAudioSink(context: Context, enableFloatOutput: Boolean, enableAudioOutputPlaybackParams: Boolean): AudioSink =
+        SoundSink(super.buildAudioSink(context, enableFloatOutput, enableAudioOutputPlaybackParams)!!, passthroughOff)
+
     override fun buildVideoRenderers(
         context: Context,
         extensionRendererMode: Int,

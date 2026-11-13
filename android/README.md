@@ -44,8 +44,8 @@ and plays with the device's own decoders only.
 
 | Module | What |
 |---|---|
-| `core` | plain Kotlin: the client for the Jellyfin-compatible API (`MoviesClient`, 24 tests against a local fake server, 5 against one with a self-signed certificate) and what the library screen shows (`LibraryView.kt`, 8 tests), the search for servers (`ServerSearch.kt`, 8 tests), the list of logins kept (`SavedLogins.kt`, 14 tests), which certificate counts for which server (`ScopedTrust.kt`, 15 tests) |
-| `app` | the Android app: login, library with search and "continue watching", film page with seasons and "mark as watched", player with a queue, the list of servers and accounts, About; 18 tests (Dolby Vision base layer, shape of the small window, language list, the diagnostics text, the queue, the privacy text) and 18 on a device (`src/androidTest`) |
+| `core` | plain Kotlin: the client for the Jellyfin-compatible API (`MoviesClient`, 24 tests against a local fake server, 5 against one with a self-signed certificate) and what the library screen shows (`LibraryView.kt`, 8 tests), the search for servers (`ServerSearch.kt`, 8 tests), the list of logins kept (`SavedLogins.kt`, 14 tests), which certificate counts for which server (`ScopedTrust.kt`, 15 tests), which sound format may be passed on (`Passthrough.kt`, 6 tests) |
+| `app` | the Android app: login, library with search and "continue watching", film page with seasons and "mark as watched", player with a queue, the list of servers and accounts, "Sound", About; 22 tests (Dolby Vision base layer, shape of the small window, language list, the diagnostics text, the queue, the privacy text, the audio sink) and 19 on a device (`src/androidTest`) |
 | `config` | what the licences page needs besides the Gradle dependencies: FFmpeg and the copied Media3 module as libraries, the LGPL's text as FFmpeg ships it |
 | `ffmpeg` | Media3's FFmpeg audio decoder (`androidx/media` 1.11.1, `libraries/decoder_ffmpeg`, Apache 2.0), copied because Google publishes it only as source; `build-ffmpeg.sh` builds FFmpeg for it |
 
@@ -470,4 +470,17 @@ SDK 30), 32-bit only (`armeabi-v7a`), reached by `adb connect` over the network.
   - Dolby Vision profile 7 with TrueHD 7.1: "no decoder, playing the HEVC base layer", first frame
     913 ms; TrueHD went out unchanged (`AUDIO_FORMAT_DOLBY_TRUEHD`).
   The stick's own audio decoders (`/vendor/etc/media_codecs*.xml`): AC3, E-AC3, E-AC3-JOC, AC4; none
-  for DTS or TrueHD. What the device behind the HDMI port made of the sound was not heard from here.
+  for DTS or TrueHD.
+- Heard and seen at the TV by the owner, the same three films again: DTS-HD picture but no sound;
+  Dolby Vision profile 7 sound but no picture (black); AV1 with AAC picture and sound. A Dolby Vision
+  profile 8 film (through `DVHE`) had a picture. So the stick reports DTS-HD as playable unchanged
+  (`AudioTrack.isDirectPlaybackSupported`, which Media3 asks), while the TV behind it does not play it.
+- "Sound" in the menu (as Jellyfin's Android TV app and Kodi offer it): for AC3, E-AC3, DTS and TrueHD
+  each, "Pass on over HDMI (automatic)" or "Decode in the app"; by default all four are decoded in the
+  app, as Kodi 21 ships (`audiooutput.passthrough` and each format's switch default `false`; Jellyfin's
+  default is "auto", which is what gave no sound on the stick). A format set to decode is refused by
+  the app's audio sink (`SoundSink`), so Media3 decodes it (a decoder of the device, else FFmpeg).
+  Each audio output is logged, so "Share diagnostics" shows it. On the stick with DTS set to decode:
+  `ffmpegLavc60.3.100-dca`, `audio output pcm channels=6 rate=48000`, first frame 1633 ms, and the owner
+  heard the sound at the TV. With the default unset the screen test finds all four on "Decode in the
+  app" (19 of 19 on the stick; red with the old default, "expected:<[AC3, EAC3, DTS, TRUEHD]> but was:<[]>"). Resume points saved before and put back after (all 8 match).

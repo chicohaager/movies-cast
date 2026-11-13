@@ -78,4 +78,8 @@
     <string name="error_certificate">Cet appareil ne fait pas confiance au certificat du serveur. Installez le certificat dans les paramètres d’Android ou saisissez l’adresse pour laquelle il a été émis.</string>
     <string name="error_certificate_changed">Le certificat du serveur n’est plus celui de la connexion. Si vous l’avez changé vous-même, reconnectez-vous ; sinon, quelqu’un se trouve peut-être entre vous et le serveur.</string>
     <string name="error_certificate_login_again">Cette connexion date d\'avant que l\'application retienne le certificat d\'un serveur. Reconnectez-vous une fois pour que seul le certificat de ce serveur compte.</string>
+    <string name="sound">Son</string>
+    <string name="sound_intro">L\'app décode elle-même le son dans ces formats, ainsi tout téléviseur le lit. Si votre téléviseur ou amplificateur AV accepte un format tel quel (par exemple pour Dolby Atmos ou DTS:X), réglez-le sur « Transmettre par HDMI » : il sort alors tel quel chaque fois que l\'appareil indique qu\'il le peut.</string>
+    <string name="sound_pass_on">Transmettre par HDMI (automatique)</string>
+    <string name="sound_decode">Décoder dans l\'app</string>
 </resources>

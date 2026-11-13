@@ -78,4 +78,8 @@
     <string name="error_certificate">Este dispositivo não confia no certificado do servidor. Instale o certificado nas configurações do Android ou digite o endereço para o qual ele foi emitido.</string>
     <string name="error_certificate_changed">O certificado do servidor não é o mesmo do login. Se você o trocou, faça login de novo; caso contrário, alguém pode estar entre você e o servidor.</string>
     <string name="error_certificate_login_again">Este login é de antes de o app guardar o certificado de um servidor. Entre de novo uma vez para que só o certificado deste servidor valha.</string>
+    <string name="sound">Som</string>
+    <string name="sound_intro">O app decodifica sozinho o som nestes formatos, assim qualquer TV o reproduz. Se a sua TV ou receiver AV aceita um formato inalterado (por exemplo para Dolby Atmos ou DTS:X), mude-o para “Passar pelo HDMI”: ele sai inalterado sempre que o dispositivo informar que consegue.</string>
+    <string name="sound_pass_on">Passar pelo HDMI (automático)</string>
+    <string name="sound_decode">Decodificar no app</string>
 </resources>

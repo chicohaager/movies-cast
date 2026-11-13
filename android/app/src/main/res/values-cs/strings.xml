@@ -78,4 +78,8 @@
     <string name="error_certificate">Toto zařízení nedůvěřuje certifikátu serveru. Nainstalujte certifikát v nastavení Androidu nebo zadejte adresu, pro kterou byl vydán.</string>
     <string name="error_certificate_changed">Certifikát serveru není ten, který měl při přihlášení. Pokud jste ho vyměnili sami, přihlaste se znovu; jinak může být mezi vámi a serverem někdo jiný.</string>
     <string name="error_certificate_login_again">Toto přihlášení vzniklo dříve, než si aplikace začala pamatovat certifikát serveru. Přihlaste se jednou znovu, aby platil jen certifikát tohoto serveru.</string>
+    <string name="sound">Zvuk</string>
+    <string name="sound_intro">Zvuk v těchto formátech dekóduje aplikace sama, takže ho přehraje každý televizor. Pokud váš televizor nebo AV receiver přijímá formát beze změny (třeba kvůli Dolby Atmos nebo DTS:X), nastavte ho na „Předávat přes HDMI“: pak jde ven beze změny, kdykoli zařízení hlásí, že to umí.</string>
+    <string name="sound_pass_on">Předávat přes HDMI (automaticky)</string>
+    <string name="sound_decode">Dekódovat v aplikaci</string>
 </resources>

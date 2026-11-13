@@ -57,6 +57,7 @@ sealed interface Screen {
     data object Licences : Screen
     data class Licence(val id: String) : Screen
     data object Privacy : Screen
+    data object Sound : Screen
 }
 
 data class UiState(

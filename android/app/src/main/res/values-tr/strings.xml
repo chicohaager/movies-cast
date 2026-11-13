@@ -78,4 +78,8 @@
     <string name="error_certificate">Bu cihaz sunucunun sertifikasına güvenmiyor. Sertifikayı Android ayarlarından yükleyin veya sertifikanın düzenlendiği adresi yazın.</string>
     <string name="error_certificate_changed">Sunucunun sertifikası giriş yaptığınızdaki sertifika değil. Kendiniz değiştirdiyseniz yeniden giriş yapın; aksi halde siz ile sunucu arasında biri olabilir.</string>
     <string name="error_certificate_login_again">Bu oturum, uygulama bir sunucunun sertifikasını hatırlamadan önce açıldı. Yalnızca bu sunucunun sertifikasının geçerli olması için bir kez yeniden oturum açın.</string>
+    <string name="sound">Ses</string>
+    <string name="sound_intro">Bu biçimlerdeki sesi uygulama kendisi çözer, böylece her TV çalar. TV\'niz veya AV alıcınız bir biçimi değiştirilmeden alıyorsa (örneğin Dolby Atmos veya DTS:X için), onu “HDMI üzerinden aktar” olarak ayarlayın: cihaz yapabildiğini bildirdiğinde değiştirilmeden çıkar.</string>
+    <string name="sound_pass_on">HDMI üzerinden aktar (otomatik)</string>
+    <string name="sound_decode">Uygulamada çöz</string>
 </resources>

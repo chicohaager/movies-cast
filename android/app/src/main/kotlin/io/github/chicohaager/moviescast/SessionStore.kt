@@ -6,6 +6,7 @@ import android.security.keystore.KeyProperties
 import android.util.Base64
 import io.github.chicohaager.moviescast.core.SavedLogin
 import io.github.chicohaager.moviescast.core.SavedLogins
+import io.github.chicohaager.moviescast.core.Passthrough
 import io.github.chicohaager.moviescast.core.Session
 import java.security.GeneralSecurityException
 import java.security.KeyStore
@@ -37,6 +38,16 @@ class SessionStore(context: Context, name: String = "session") {
     var sort: String
         get() = prefs.getString(KEY_SORT, "").orEmpty()
         set(value) = prefs.edit().putString(KEY_SORT, value).apply()
+
+    /** The sound formats the person does not want handed on over HDMI ([Passthrough]); the app decodes them. */
+    var passthroughOff: Set<Passthrough.Format>
+        get() = Passthrough.decode(prefs.getString(KEY_PASSTHROUGH_OFF, null))
+        set(value) = prefs.edit().putString(KEY_PASSTHROUGH_OFF, Passthrough.encode(value)).apply()
+
+    /** Back to the default of [passthroughOff] (every format decoded in the app), as if the page was never touched. */
+    fun forgetPassthrough() {
+        prefs.edit().remove(KEY_PASSTHROUGH_OFF).commit()
+    }
 
     fun rememberTyped(server: String) {
         prefs.edit().putString(KEY_SERVER_TYPED, server).apply()
@@ -156,6 +167,7 @@ class SessionStore(context: Context, name: String = "session") {
         const val KEY_USER_NAME = "user_name"
         const val KEY_TOKEN = "token_sealed"
         const val KEY_SORT = "sort"
+        const val KEY_PASSTHROUGH_OFF = "passthrough_off"
         const val KEY_LOGINS = "logins"
     }
 }

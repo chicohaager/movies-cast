@@ -78,4 +78,8 @@
     <string name="error_certificate">Dit apparaat vertrouwt het certificaat van de server niet. Installeer het certificaat in de Android-instellingen of typ het adres waarvoor het is uitgegeven.</string>
     <string name="error_certificate_changed">Het certificaat van de server is niet dat van de aanmelding. Heb je het zelf vervangen, meld je dan opnieuw aan; anders zit er mogelijk iemand tussen jou en de server.</string>
     <string name="error_certificate_login_again">Deze aanmelding stamt van voordat de app het certificaat van een server onthield. Meld je één keer opnieuw aan, zodat alleen het certificaat van deze server telt.</string>
+    <string name="sound">Geluid</string>
+    <string name="sound_intro">Geluid in deze formaten decodeert de app zelf, zo speelt elke tv het af. Neemt je tv of AV-receiver een formaat ongewijzigd aan (bijvoorbeeld voor Dolby Atmos of DTS:X), zet het dan op ‚Via HDMI doorgeven‘: dan gaat het ongewijzigd naar buiten zodra het apparaat meldt dat het dat kan.</string>
+    <string name="sound_pass_on">Via HDMI doorgeven (automatisch)</string>
+    <string name="sound_decode">In de app decoderen</string>
 </resources>
