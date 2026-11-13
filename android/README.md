@@ -444,3 +444,19 @@ Installed certificates for the own servers only (2026-11-13, after the owner's o
   with `adb install -r` over the release 0.1.0 there (same key); its Movies login was kept, About
   says "0.2.0 (200)", a film from Movies on the test box (AV1) played, first frame 561 ms after opening; the
   resume points were saved before and put back after (`resume-guard.py`, all 8 match).
+
+Fire TV Stick 4K (2026-11-13), the first real TV device: Amazon `AFTKRT`, Fire OS 8.1.8.5 (Android 11,
+SDK 30), 32-bit only (`armeabi-v7a`), reached by `adb connect` over the network.
+- First run: 13 of the 18 screen tests red, all "Failed to perform text input … IsEditable = 'false'": on
+  a TV a text field stays read-only until OK is pressed on it (`rememberRemoteField`), and the tests
+  typed into it as on a phone. They now do what the viewer does (focus, OK, then type: `field()` in
+  `AppUiTest`); 18 of 18 on the stick and on the Pixel 7. With the app broken so that OK does not open
+  the field, 13 were red with "server after OK on the remote expected:<true> but was:<false>".
+- Two more red runs had the device go to sleep mid-run: the Pixel 7 turned its screen off after its
+  120 s and locked, the stick started its screensaver ("starting new dream"); every test after that
+  failed with "No compose hierarchies found". `check-android.sh --device` now keeps the screen on while
+  powered and the screensaver off during the run and puts the device's own values back afterwards
+  (stick: 0 and 1 before and after). With the Pixel's screen timeout set to 15 s for the test the run
+  passed, and the Pixel locked within 15 s once the script had put the values back. The whole output of
+  each run is kept in `android/build/device-test-<serial>.log`.
+- The release APK 0.2.0 installs on the stick, appears in the TV launcher and starts on the login page.

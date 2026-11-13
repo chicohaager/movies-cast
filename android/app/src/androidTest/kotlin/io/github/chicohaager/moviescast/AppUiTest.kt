@@ -15,6 +15,13 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTextReplacement
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.test.SemanticsNodeInteraction
+import androidx.compose.ui.test.performKeyInput
+import androidx.compose.ui.test.performSemanticsAction
+import androidx.compose.ui.test.pressKey
+import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.test.core.app.ActivityScenario
@@ -144,10 +151,25 @@ class AppUiTest {
         secure?.close()
     }
 
+    /**
+     * The text field [tag], ready to be typed into. On a TV a field stays read-only until OK is pressed on it
+     * (rememberRemoteField); the test then does what the viewer does: focus and OK on the remote.
+     */
+    private fun field(tag: String): SemanticsNodeInteraction {
+        val node = compose.onNodeWithTag(tag)
+        if (node.fetchSemanticsNode().config.getOrNull(SemanticsProperties.IsEditable) == false) {
+            node.performSemanticsAction(SemanticsActions.RequestFocus)
+            node.performKeyInput { pressKey(Key.DirectionCenter) }
+            compose.waitForIdle()
+            assertEquals("$tag after OK on the remote", true, node.fetchSemanticsNode().config.getOrNull(SemanticsProperties.IsEditable))
+        }
+        return node
+    }
+
     private fun login(pw: String, user: String = "demo") {
-        compose.onNodeWithTag("server").performTextReplacement("127.0.0.1:${server.port}")
-        compose.onNodeWithTag("user").performTextReplacement(user)
-        compose.onNodeWithTag("password").performTextInput(pw)
+        field("server").performTextReplacement("127.0.0.1:${server.port}")
+        field("user").performTextReplacement(user)
+        field("password").performTextInput(pw)
         compose.onNodeWithTag("login").performScrollTo().performClick()
     }
 
@@ -183,8 +205,8 @@ class AppUiTest {
         compose.onNodeWithText("fake · Fake Movies 10.11.0").assertExists()
         compose.onNodeWithTag("found").performScrollTo().performClick()
         compose.onNodeWithTag("server").assertTextContains(movies)
-        compose.onNodeWithTag("user").performTextReplacement("demo")
-        compose.onNodeWithTag("password").performTextInput("right")
+        field("user").performTextReplacement("demo")
+        field("password").performTextInput("right")
         compose.onNodeWithTag("login").performScrollTo().performClick()
         compose.waitUntilAtLeastOneExists(hasTestTag("tile"), 10_000)
     }
@@ -373,9 +395,9 @@ class AppUiTest {
         val https = MockWebServer().also { secure = it }
         https.useHttps(HandshakeCertificates.Builder().heldCertificate(own).build().sslSocketFactory())
         https.start()
-        compose.onNodeWithTag("server").performTextReplacement("https://localhost:${https.port}")
-        compose.onNodeWithTag("user").performTextReplacement("demo")
-        compose.onNodeWithTag("password").performTextInput("right")
+        field("server").performTextReplacement("https://localhost:${https.port}")
+        field("user").performTextReplacement("demo")
+        field("password").performTextInput("right")
         compose.onNodeWithTag("login").performScrollTo().performClick()
         compose.waitUntilAtLeastOneExists(hasText(app.getString(R.string.error_certificate)), 10_000)
         compose.onNodeWithTag("login").assertExists()

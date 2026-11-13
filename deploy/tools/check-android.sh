@@ -30,6 +30,21 @@ if [[ "$device" == 1 ]]; then
   ./gradlew -q :app:assembleDebug :app:assembleDebugAndroidTest
   adb install -r app/build/outputs/apk/debug/app-debug.apk >/dev/null
   adb install -r app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk >/dev/null
+  # A run takes minutes: the Pixel 7 turned its screen off and locked after its 120 s mid-run, the Fire TV
+  # stick started its screensaver (2026-11-13); every test after that failed with "No compose hierarchies
+  # found". While the tests run the screen stays on while powered and the screensaver is off; the
+  # device's own values come back afterwards, also when the run fails or is broken off.
+  stay="$(adb shell settings get global stay_on_while_plugged_in | tr -d '\r')"
+  saver="$(adb shell settings get secure screensaver_enabled | tr -d '\r')"
+  restore_screen() {
+    if [[ "$stay" == null ]]; then adb shell settings delete global stay_on_while_plugged_in >/dev/null || true
+    else adb shell settings put global stay_on_while_plugged_in "$stay" || true; fi
+    if [[ "$saver" == null ]]; then adb shell settings delete secure screensaver_enabled >/dev/null || true
+    else adb shell settings put secure screensaver_enabled "$saver" || true; fi
+  }
+  trap restore_screen EXIT
+  adb shell settings put global stay_on_while_plugged_in 7
+  adb shell settings put secure screensaver_enabled 0
   adb shell input keyevent KEYCODE_WAKEUP
   adb shell wm dismiss-keyguard
   sleep 2
@@ -41,9 +56,13 @@ if [[ "$device" == 1 ]]; then
   fi
   # "am instrument" ends with 0 also when tests fail; its last lines say what happened.
   out="$(adb shell am instrument -w io.github.chicohaager.moviescast.debug.test/io.github.chicohaager.moviescast.TestRunner)"
+  # The whole output stays, so a red run can be read afterwards even when only the last line was looked at.
+  log="$repo/android/build/device-test-${ANDROID_SERIAL//[^A-Za-z0-9._-]/_}.log"
+  mkdir -p "$(dirname "$log")"
+  printf '%s\n' "$out" > "$log"
   if ! grep -qE '^OK \([0-9]+ tests?\)' <<<"$out"; then
     echo "$out" >&2
-    echo "the tests on the device failed" >&2
+    echo "the tests on the device failed; the whole output: $log" >&2
     exit 1
   fi
   echo "android on $(adb shell getprop ro.product.model | tr -d '\r') (Android $(adb shell getprop ro.build.version.release | tr -d '\r')): $(grep -E '^OK \(' <<<"$out")"
