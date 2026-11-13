@@ -6,6 +6,7 @@ Cases: allowlisted fields only; URL-like fields as path only; the token never ap
 errors, not when the server echoes it in an error body); logout runs on success and on error; the tool checks that
 the token answers 401 after logout and fails if it does not; token-like field names are refused before any login.
 """
+import hashlib
 import http.server
 import json
 import os
@@ -69,6 +70,8 @@ def handler_for(st):
             if self.path.startswith("/Users/USERID0000/Items"):
                 return self.send(200, {"TotalRecordCount": 2, "Items": [
                     {"Id": "a1", "Name": "Film One", "Path": "/srv/media/one.mkv", "ProductionYear": 1999,
+                     "MediaStreams": [{"Type": "Video", "Codec": "hevc", "Path": "/srv/media/one.mkv"},
+                                      {"Type": "Subtitle", "Codec": "subrip", "IsExternal": True, "Path": "/srv/media/one.de.srt"}],
                      "ImageUrl": f"http://198.51.100.7/Items/a1/Images/Primary?api_key={TOKEN}",
                      "UserData": {"PlaybackPositionTicks": 600000000, "Played": False}},
                     {"Id": "a2", "Name": "Film Two", "Path": "/srv/media/two.mkv", "ProductionYear": 2004,
@@ -76,6 +79,14 @@ def handler_for(st):
                      "UserData": {"PlaybackPositionTicks": 0, "Played": True}}]})
             if self.path == "/System/Info":
                 return self.send(200, {"ServerName": "fake", "Version": "0.0.1", "LocalAddress": f"http://198.51.100.7:8096/?t={TOKEN}"})
+            if self.path == "/Sub.srt":
+                raw = f"1\n00:00:01,000 --> 00:00:02,000\nline with {TOKEN}\n".encode()
+                self.send_response(200)
+                self.send_header("Content-Type", "text/plain")
+                self.send_header("Content-Length", str(len(raw)))
+                self.end_headers()
+                self.wfile.write(raw)
+                return None
             if self.path == "/Boom":
                 return self.send(500, {"error": f"internal, token {TOKEN}"})
             self.send(404)
@@ -120,6 +131,17 @@ check("items: ImageUrl as path only", "/Items/a1/Images/Primary" in r.stdout and
       and "api_key" not in r.all, r)
 check("items: token nowhere in output", TOKEN not in r.all and PASSWORD not in r.all, r)
 check("items: logged out once, token answered 401 afterwards", r.st.logouts == 1 and "401" in r.stdout, r)
+
+r = run(["--fields", "Name,MediaStreams.Codec,MediaStreams.IsExternal", "/Users/{uid}/Items?Recursive=true"])
+check("list on the way: one value per element, only the named field (no stream Path)",
+      r.returncode == 0 and 'MediaStreams.Codec=["hevc", "subrip"]' in r.stdout and "MediaStreams.IsExternal=[true]" in r.stdout
+      and "MediaStreams.Codec=<missing>" in r.stdout and "/srv/media" not in r.all, r)
+
+r = run(["--fields", "Name", "--digest", "/Sub.srt"])
+want = hashlib.sha256(f"1\n00:00:01,000 --> 00:00:02,000\nline with {TOKEN}\n".encode()).hexdigest()
+check("--digest: status, type, length and hash of a non-JSON answer, no line of the body, logged out",
+      r.returncode == 0 and f"sha256={want}" in r.stdout and "type=text/plain" in r.stdout and "bytes=" in r.stdout
+      and "line with" not in r.all and TOKEN not in r.all and r.st.logouts == 1, r)
 
 r = run(["--fields", "ServerName,LocalAddress", "/System/Info"])
 check("object: LocalAddress (…Address is not URL-named) — token scrubbed anyway", r.returncode == 0 and TOKEN not in r.all

@@ -7,8 +7,10 @@ This tool is the only way to query Movies from a session (memory project-movies-
 
 - Login like resume-guard.py: MOVIES_URL, MOVIES_USER, MOVIES_PASSWORD_FILE (the password is read from the file).
 - `{uid}` in a path is replaced by the logged-in user's Id.
-- Output is an allowlist: only the fields named in --fields (dotted for nested, e.g. UserData.Played). A response
+- Output is an allowlist: only the fields named in --fields (dotted for nested, e.g. UserData.Played; a list on the
+  way is walked, e.g. MediaStreams.Codec). A response
   with "Items" prints one line per item; a list prints one line per element; an object prints one line.
+- `--digest`: for answers that are no JSON (a subtitle file): status, content type, length and SHA-256, never the body.
 - Fields whose name contains Url/Uri/Href/Link print as urlsplit().path only (no host, no query: query strings can
   carry api_key). Field names that look like secrets (token, password, pw, secret, key) are refused before login.
 - The token is never printed: every output line is checked and the token replaced; errors print the HTTP status
@@ -18,6 +20,7 @@ This tool is the only way to query Movies from a session (memory project-movies-
 Exit: 0 ok · 1 a request failed · 2 usage/login failed · 3 token still valid after logout
 """
 import argparse
+import hashlib
 import importlib.util
 import json
 import os
@@ -50,8 +53,14 @@ class Out:
 
 
 def pick(obj, dotted):
+    """The value at a dotted name. A list on the way is walked element by element: `MediaStreams.Codec`
+    answers one codec per stream, and nothing else of the streams (their `Path` stays unprinted)."""
     cur = obj
-    for part in dotted.split("."):
+    parts = dotted.split(".")
+    for i, part in enumerate(parts):
+        if isinstance(cur, list):
+            rest = ".".join(parts[i:])
+            return [v for v, found in (pick(e, rest) for e in cur) if found], True
         if not isinstance(cur, dict) or part not in cur:
             return None, False
         cur = cur[part]
@@ -87,8 +96,20 @@ def err_text(e):
     return type(e).__name__
 
 
+def digest(m, path):
+    """A GET whose answer is not JSON (a subtitle file, a picture): status, type, length and SHA-256, never the body."""
+    auth = f'MediaBrowser Client="resume-guard", Device="resume-guard", DeviceId="{m.device}", Version="1", Token="{m.token}"'
+    req = urllib.request.Request(m.base + path, headers={"X-Emby-Authorization": auth})
+    with urllib.request.urlopen(req, timeout=15) as r:
+        raw = r.read()
+        kind = r.headers.get("Content-Type", "")
+    return f"HTTP 200  type={kind}  bytes={len(raw)}  sha256={hashlib.sha256(raw).hexdigest()}"
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    ap.add_argument("--digest", action="store_true",
+                    help="the answers are not JSON: print status, content type, length and SHA-256 of each, no field of it")
     ap.add_argument("--fields", required=True, help="comma-separated allowlist, dotted for nested fields")
     ap.add_argument("paths", nargs="+", help="GET paths, e.g. /System/Info or /Users/{uid}/Items?Recursive=true")
     a = ap.parse_args()
@@ -119,6 +140,9 @@ def main():
             path = p.replace("{uid}", urllib.parse.quote(m.uid))
             shown = urllib.parse.urlsplit(path).path
             try:
+                if a.digest:
+                    out(f"{shown}: {digest(m, path)}")
+                    continue
                 res = m.call("GET", path)
             except Exception as e:  # noqa: BLE001
                 out(f"{shown}: request failed: {err_text(e)}", err=True)

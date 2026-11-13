@@ -234,7 +234,25 @@ Android 16 emulator against Jellyfin 10.11.0 (a test series of three 15 s and on
 next to it: `queue of 1, subtitle files 1`, `subtitle tracks 1: de`; the subtitle button offered
 "Deutsch" and the file's second line showed at 0:11. `check-android.sh --device` there and on the
 Pixel 7: OK (7 tests); the three new ones and the four new unit tests were red once with the app
-broken on purpose. Movies on the test NAS has 8 films and no series (asked 2026-11-13); subtitle
-files and "watched" are not measured against Movies.
+broken on purpose.
+
+Against Movies 0.4.5 on the test NAS (2026-11-13, one library of the kind "movies", 8 films):
+
+- "Mark as watched" and its opposite work: pressed in the app on the Pixel 7, Movies then answered
+  `Played=True, PlayCount=1` and afterwards `Played=False, PlayCount=0` for the film.
+- Series: two episode files in `Test series/Season 01/` inside that library were not taken in
+  (`[scan] library 1: 3 new … 2 skipped`, `3 movies + 0 shows`); the film next to them was. Whether
+  Movies has a library kind for series was not tried: it would be a new library on the owner's box.
+- Subtitle files: Movies does not name a `.de.srt` next to the film in the item
+  (`/Users/{user}/Items/{id}?Fields=MediaStreams,MediaSources` lists video and sound only), so the app
+  offers none. `GET /Items/{id}/PlaybackInfo` names it (`IsExternal`, index 2, `DeliveryUrl`), and
+  `/Videos/{id}/{id}/Subtitles/2/Stream.srt` answered the file byte for byte (SHA-256 equal);
+  `Stream.vtt` answered 404. But the same `PlaybackInfo` started `movies-ffmpeg` for an HEVC film
+  (`transcode … from seg 0`; the process was gone 41 s later), which is why the app does not call it.
+- `PlaybackInfo` also lists more streams than the item does (17 against 2 for one film), so the
+  film page shows fewer sound and subtitle tracks with Movies than the file has; the player reads
+  the tracks inside the file itself.
+
+The test files were removed again and Movies dropped the film (`removed=1`, 8 films).
 
 The workflow's first run on GitHub (commit 588a860) passed: FFmpeg built, `check-android.sh` green.

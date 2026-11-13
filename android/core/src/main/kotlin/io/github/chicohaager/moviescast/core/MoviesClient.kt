@@ -131,6 +131,8 @@ class MoviesClient(http: OkHttpClient, private val device: Device) {
      * the address the server hands each out at. As Jellyfin's Android TV app builds it for external
      * players: `DeliveryUrl` is empty without `PlaybackInfo`, so the format comes from the file's name.
      * Measured against Jellyfin 10.11.0 (2026-11-13): `…/Subtitles/0/Stream.srt` answered the file.
+     * Movies 0.4.5 serves such a file at the same address but does not name it in the item's streams
+     * (only `PlaybackInfo` does, which this client does not call), so with Movies this list is empty.
      */
     fun subtitleFiles(s: Session, item: MediaItem): List<SubtitleFile> =
         item.subtitles.filter { it.external }.mapNotNull { track ->
