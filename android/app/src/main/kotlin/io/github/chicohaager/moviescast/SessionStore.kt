@@ -30,6 +30,11 @@ class SessionStore(context: Context, name: String = "session") {
     val lastServer: String get() = prefs.getString(KEY_SERVER_TYPED, "").orEmpty()
     val lastUser: String get() = prefs.getString(KEY_USER_NAME, "").orEmpty()
 
+    /** The order of the library chosen last ([io.github.chicohaager.moviescast.core.LibrarySort]'s name), or "". */
+    var sort: String
+        get() = prefs.getString(KEY_SORT, "").orEmpty()
+        set(value) = prefs.edit().putString(KEY_SORT, value).apply()
+
     fun rememberTyped(server: String) {
         prefs.edit().putString(KEY_SERVER_TYPED, server).apply()
     }
@@ -105,5 +110,6 @@ class SessionStore(context: Context, name: String = "session") {
         const val KEY_USER_ID = "user_id"
         const val KEY_USER_NAME = "user_name"
         const val KEY_TOKEN = "token_sealed"
+        const val KEY_SORT = "sort"
     }
 }

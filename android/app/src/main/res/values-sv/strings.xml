@@ -56,4 +56,18 @@
     <string name="mark_watched">Markera som sedd</string>
     <string name="mark_unwatched">Markera som osedd</string>
     <string name="watched">Sedd</string>
+    <string name="sort_label">Sortera</string>
+    <string name="sort_name">Namn</string>
+    <string name="sort_added">Nyligen tillagda</string>
+    <string name="sort_year">År</string>
+    <string name="sort_score">Betyg</string>
+    <string name="filter_label">Filter</string>
+    <string name="filter_all">Alla</string>
+    <string name="filter_unwatched">Osedda</string>
+    <string name="filter_started">Påbörjade</string>
+    <string name="filter_genre">Genre: %1$s</string>
+    <string name="library_none">Inget matchar sökningen eller filtret.</string>
+    <string name="filter_favourites">Favoriter</string>
+    <string name="favourite_add">Lägg till i favoriter</string>
+    <string name="favourite_remove">Ta bort från favoriter</string>
 </resources>

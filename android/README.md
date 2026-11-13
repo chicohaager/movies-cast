@@ -43,8 +43,8 @@ and plays with the device's own decoders only.
 
 | Module | What |
 |---|---|
-| `core` | plain Kotlin: the client for the Jellyfin-compatible API (`MoviesClient`), 23 tests against a local fake server |
-| `app` | the Android app: login, library with search and "continue watching", film page with seasons and "mark as watched", player with a queue, About; 18 tests (Dolby Vision base layer, shape of the small window, language list, the diagnostics text, the queue, the privacy text) and 7 on a device (`src/androidTest`) |
+| `core` | plain Kotlin: the client for the Jellyfin-compatible API (`MoviesClient`, 24 tests against a local fake server) and what the library screen shows (`LibraryView.kt`, 8 tests) |
+| `app` | the Android app: login, library with search and "continue watching", film page with seasons and "mark as watched", player with a queue, About; 18 tests (Dolby Vision base layer, shape of the small window, language list, the diagnostics text, the queue, the privacy text) and 9 on a device (`src/androidTest`) |
 | `config` | what the licences page needs besides the Gradle dependencies: FFmpeg and the copied Media3 module as libraries, the LGPL's text as FFmpeg ships it |
 | `ffmpeg` | Media3's FFmpeg audio decoder (`androidx/media` 1.11.1, `libraries/decoder_ffmpeg`, Apache 2.0), copied because Google publishes it only as source; `build-ffmpeg.sh` builds FFmpeg for it |
 
@@ -86,14 +86,30 @@ page of a film, series or episode; watched posters and episodes carry a ✓.
 The privacy policy is a page of the app: the build copies the repository's `PRIVACY.md` into the
 APK (`assets/PRIVACY.md`, task `privacyAsset`).
 
+## Library: order, filter, favourites
+
+Two menus above the grid, as on movies-cast's phone page and with its words (10 of the texts are
+taken from `internal/server/web/i18n`): the order (name, recently added, year, rating; kept for the
+next start) and a filter (all, unwatched, started, favourites, one genre of the library). The app
+orders and filters the library it has in memory (`LibraryView.kt` in `core`); the server is not asked
+again. "Recently added" goes by the moment, not by the text: Movies writes
+`2026-10-27T18:04:21.329122815+01:00`, local time with an offset that changes with summer time.
+"Continue watching" stands above the grid only while nothing is searched or filtered.
+
+"Add to favourites" / "Remove from favourites" on the page of a film, series or episode
+(`POST` / `DELETE /Users/{user}/FavoriteItems/{item}`). An episode that carries its series' name as
+its own is listed as "S1 E2" without the name.
+
 ## Tests on a device
 
 `check-android.sh --device` installs the debug build and the test APK and runs `AppUiTest`: login,
 library and film page, a wrong password, About with the licences, the diagnostics text, a series
-with its seasons, "mark as watched", the privacy page — against a
+with its seasons, "mark as watched", the privacy page, order and filter, a favourite — against a
 fake server inside the test (MockWebServer on 127.0.0.1). The app runs as `TestApp` there, which
 keeps its login in a file of its own (`session-test`), so a real login on the device stays. The
-script installs with `adb install -r` and not with Gradle's `connectedDebugAndroidTest`.
+script installs with `adb install -r` and not with Gradle's `connectedDebugAndroidTest`. It stops
+with "the device is locked" when the lock screen stays: behind it no activity starts and every test
+fails with "No compose hierarchies found" (Pixel 7, 2026-11-13).
 Espresso is pinned to 3.7.0: the 3.5.0 that Compose's test library brings fails on Android 17
 (`NoSuchMethodException: InputManager.getInstance`).
 
@@ -260,3 +276,11 @@ Against Movies 0.4.5 on the test NAS (2026-11-13, one library of the kind "movie
 The test files were removed again and Movies dropped the film (`removed=1`, 8 films).
 
 The workflow's first run on GitHub (commit 588a860) passed: FFmpeg built, `check-android.sh` green.
+
+Order, filter and favourites (2026-11-13): Movies 0.4.5 on the test NAS answers `ProductionYear`,
+`CommunityRating`, `DateCreated`, `Genres` and `UserData.IsFavorite` for its films (one film was a
+favourite, set in Movies' own page; two films have no rating, one no year). `check-android.sh
+--device` in the Android 16 emulator: OK (9 tests), the two new ones red once with the app broken on
+purpose; the 9 new unit tests in `core` likewise. A favourite set and taken back from the app in the
+emulator: Jellyfin 10.11.0 answered `IsFavorite=True`, then `False`. Against Movies the same press
+is not measured yet (the route `/Users/:userId/FavoriteItems/:itemId` is in Movies' program).

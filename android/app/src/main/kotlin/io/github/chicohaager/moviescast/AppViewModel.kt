@@ -5,6 +5,8 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import io.github.chicohaager.moviescast.core.LibraryFilter
+import io.github.chicohaager.moviescast.core.LibrarySort
 import io.github.chicohaager.moviescast.core.MediaItem
 import io.github.chicohaager.moviescast.core.MoviesClient
 import io.github.chicohaager.moviescast.core.ServerException
@@ -13,6 +15,7 @@ import io.github.chicohaager.moviescast.core.Session
 import io.github.chicohaager.moviescast.core.UnauthorizedException
 import io.github.chicohaager.moviescast.core.UnexpectedAnswerException
 import io.github.chicohaager.moviescast.core.after
+import io.github.chicohaager.moviescast.core.arranged
 import java.io.IOException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
@@ -55,6 +58,8 @@ data class UiState(
     val resume: List<MediaItem> = emptyList(),
     val loaded: Boolean = false,
     val query: String = "",
+    val sort: LibrarySort = LibrarySort.NAME,
+    val filter: LibraryFilter = LibraryFilter(),
     val detail: MediaItem? = null,
     val episodes: List<MediaItem> = emptyList(),
     /** For an episode: the episodes of its series that come after it; they play one after the other. */
@@ -63,12 +68,17 @@ data class UiState(
     val screen: Screen get() = stack.last()
 
     val shown: List<MediaItem>
-        get() = if (query.isBlank()) library else library.filter { it.name.contains(query.trim(), ignoreCase = true) }
+        get() = library.arranged(query, sort, filter)
+
+    /** True when the list shows everything in the server's order: only then "continue watching" stands above it. */
+    val plain: Boolean get() = query.isBlank() && filter.kind == LibraryFilter.Kind.ALL
 }
 
 class AppViewModel(private val app: MoviesCastApp) : ViewModel() {
     private val client: MoviesClient get() = app.client
-    private val _state = MutableStateFlow(UiState())
+    private fun storedSort(): LibrarySort = LibrarySort.entries.firstOrNull { it.name == app.store.sort } ?: LibrarySort.NAME
+
+    private val _state = MutableStateFlow(UiState(sort = storedSort()))
     val state: StateFlow<UiState> = _state.asStateFlow()
     private var loading: Job? = null
 
@@ -101,7 +111,7 @@ class AppViewModel(private val app: MoviesCastApp) : ViewModel() {
                 app.store.rememberTyped(server.trim())
                 app.setSession(session)
                 _state.update {
-                    UiState(stack = listOf(Screen.Library), userName = session.userName, server = found.second)
+                    UiState(stack = listOf(Screen.Library), userName = session.userName, server = found.second, sort = storedSort())
                 }
                 refresh()
             } catch (e: IOException) {
@@ -135,6 +145,14 @@ class AppViewModel(private val app: MoviesCastApp) : ViewModel() {
 
     fun search(query: String) = _state.update { it.copy(query = query) }
 
+    /** The order is kept for the next start; a filter is a look at the moment and is not. */
+    fun sort(sort: LibrarySort) {
+        app.store.sort = sort.name
+        _state.update { it.copy(sort = sort) }
+    }
+
+    fun filter(filter: LibraryFilter) = _state.update { it.copy(filter = filter) }
+
     fun open(item: MediaItem) {
         val session = app.session ?: return
         _state.update { it.copy(stack = it.stack + Screen.Detail(item.id), detail = item, episodes = emptyList(), following = emptyList(), error = null) }
@@ -163,6 +181,18 @@ class AppViewModel(private val app: MoviesCastApp) : ViewModel() {
         viewModelScope.launch {
             try {
                 client.setPlayed(session, item.id, played)
+                refresh()
+            } catch (e: IOException) {
+                fail(e)
+            }
+        }
+    }
+
+    fun setFavorite(item: MediaItem, favorite: Boolean) {
+        val session = app.session ?: return
+        viewModelScope.launch {
+            try {
+                client.setFavorite(session, item.id, favorite)
                 refresh()
             } catch (e: IOException) {
                 fail(e)

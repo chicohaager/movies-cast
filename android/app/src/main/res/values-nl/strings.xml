@@ -56,4 +56,18 @@
     <string name="mark_watched">Markeren als bekeken</string>
     <string name="mark_unwatched">Markeren als niet bekeken</string>
     <string name="watched">Bekeken</string>
+    <string name="sort_label">Sorteren</string>
+    <string name="sort_name">Naam</string>
+    <string name="sort_added">Onlangs toegevoegd</string>
+    <string name="sort_year">Jaar</string>
+    <string name="sort_score">Beoordeling</string>
+    <string name="filter_label">Filter</string>
+    <string name="filter_all">Alles</string>
+    <string name="filter_unwatched">Niet bekeken</string>
+    <string name="filter_started">Begonnen</string>
+    <string name="filter_genre">Genre: %1$s</string>
+    <string name="library_none">Niets past bij de zoekopdracht of het filter.</string>
+    <string name="filter_favourites">Favorieten</string>
+    <string name="favourite_add">Toevoegen aan favorieten</string>
+    <string name="favourite_remove">Verwijderen uit favorieten</string>
 </resources>

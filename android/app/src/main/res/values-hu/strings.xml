@@ -56,4 +56,18 @@
     <string name="mark_watched">Megjelölés megnézettként</string>
     <string name="mark_unwatched">Megjelölés nem megnézettként</string>
     <string name="watched">Megnézve</string>
+    <string name="sort_label">Rendezés</string>
+    <string name="sort_name">Név</string>
+    <string name="sort_added">Nemrég hozzáadott</string>
+    <string name="sort_year">Év</string>
+    <string name="sort_score">Értékelés</string>
+    <string name="filter_label">Szűrő</string>
+    <string name="filter_all">Mind</string>
+    <string name="filter_unwatched">Nem nézett</string>
+    <string name="filter_started">Elkezdett</string>
+    <string name="filter_genre">Műfaj: %1$s</string>
+    <string name="library_none">Semmi sem felel meg a keresésnek vagy a szűrőnek.</string>
+    <string name="filter_favourites">Kedvencek</string>
+    <string name="favourite_add">Hozzáadás a kedvencekhez</string>
+    <string name="favourite_remove">Eltávolítás a kedvencek közül</string>
 </resources>

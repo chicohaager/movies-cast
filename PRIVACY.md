@@ -15,10 +15,10 @@ of dependencies that Google Play can read out of an app is switched off (`depend
 server answered with, a random installation id made on the first start, the device's model name and
 the app's version (the `X-Emby-Authorization` header, as every Jellyfin client sends it); while a
 film plays, the film's id and the position, so that "continue watching" is right on other devices;
-"Mark as watched" and its opposite, when you press them.
+"Mark as watched", "Add to favourites" and their opposites, when you press them.
 
-**Stores on the device:** the address as typed, the user name, the installation id and the login
-token. The token is encrypted with a key of the Android keystore that does not leave the device;
+**Stores on the device:** the address as typed, the user name, the installation id, the order
+chosen for the library and the login token. The token is encrypted with a key of the Android keystore that does not leave the device;
 the password is not stored. The app takes no part in Android's backup (`allowBackup="false"`).
 "Log out" deletes the token on the device and at the server; uninstalling the app deletes all of it.
 

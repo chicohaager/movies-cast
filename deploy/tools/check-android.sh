@@ -24,6 +24,14 @@ if [[ "$device" == 1 ]]; then
   adb install -r app/build/outputs/apk/debug/app-debug.apk >/dev/null
   adb install -r app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk >/dev/null
   adb shell input keyevent KEYCODE_WAKEUP
+  adb shell wm dismiss-keyguard
+  sleep 2
+  # Behind the lock screen no activity starts and every test fails with "No compose hierarchies found"
+  # (Pixel 7, 2026-11-13); a lock with a PIN cannot be opened from here.
+  if adb shell dumpsys window | grep -q 'isKeyguardShowing=true'; then
+    echo "the device is locked; unlock it and run this again" >&2
+    exit 1
+  fi
   # "am instrument" ends with 0 also when tests fail; its last lines say what happened.
   out="$(adb shell am instrument -w io.github.chicohaager.moviescast.debug.test/io.github.chicohaager.moviescast.TestRunner)"
   if ! grep -qE '^OK \([0-9]+ tests?\)' <<<"$out"; then

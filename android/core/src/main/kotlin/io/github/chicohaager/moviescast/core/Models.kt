@@ -69,6 +69,9 @@ data class MediaItem(
     val episode: Int = 0,
     val childCount: Int = 0,
     val sourceId: String = "",
+    /** When the server took the item in, as it writes it (ISO 8601, so the text sorts like the time). */
+    val added: String = "",
+    val favorite: Boolean = false,
 ) {
     /** A series is a folder of episodes; everything else is a file. */
     val playable: Boolean get() = type != "Series"
@@ -117,6 +120,7 @@ internal data class ItemsDto(
 internal data class UserDataDto(
     @SerialName("PlaybackPositionTicks") val positionTicks: Long = 0,
     @SerialName("Played") val played: Boolean = false,
+    @SerialName("IsFavorite") val favorite: Boolean = false,
 )
 
 @Serializable
@@ -173,6 +177,7 @@ internal data class ItemDto(
     @SerialName("IndexNumber") val index: Int = 0,
     @SerialName("RecursiveItemCount") val recursiveCount: Int = 0,
     @SerialName("ChildCount") val childCount: Int = 0,
+    @SerialName("DateCreated") val dateCreated: String = "",
 ) {
     fun toItem(): MediaItem {
         val source = sources.firstOrNull()
@@ -211,6 +216,8 @@ internal data class ItemDto(
             episode = if (type == "Episode") index else 0,
             childCount = if (recursiveCount != 0) recursiveCount else childCount,
             sourceId = source?.id?.ifEmpty { id } ?: id,
+            added = dateCreated,
+            favorite = userData.favorite,
         )
     }
 }

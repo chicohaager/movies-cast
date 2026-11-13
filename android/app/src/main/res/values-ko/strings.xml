@@ -56,4 +56,18 @@
     <string name="mark_watched">시청함으로 표시</string>
     <string name="mark_unwatched">시청 안 함으로 표시</string>
     <string name="watched">시청함</string>
+    <string name="sort_label">정렬</string>
+    <string name="sort_name">이름</string>
+    <string name="sort_added">최근 추가</string>
+    <string name="sort_year">연도</string>
+    <string name="sort_score">평점</string>
+    <string name="filter_label">필터</string>
+    <string name="filter_all">전체</string>
+    <string name="filter_unwatched">안 본 항목</string>
+    <string name="filter_started">보는 중</string>
+    <string name="filter_genre">장르: %1$s</string>
+    <string name="library_none">검색 또는 필터와 일치하는 항목이 없습니다.</string>
+    <string name="filter_favourites">즐겨찾기</string>
+    <string name="favourite_add">즐겨찾기에 추가</string>
+    <string name="favourite_remove">즐겨찾기에서 삭제</string>
 </resources>

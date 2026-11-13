@@ -56,4 +56,18 @@
     <string name="mark_watched">Отметить как просмотренное</string>
     <string name="mark_unwatched">Отметить как непросмотренное</string>
     <string name="watched">Просмотрено</string>
+    <string name="sort_label">Сортировка</string>
+    <string name="sort_name">Название</string>
+    <string name="sort_added">Недавно добавленные</string>
+    <string name="sort_year">Год</string>
+    <string name="sort_score">Рейтинг</string>
+    <string name="filter_label">Фильтр</string>
+    <string name="filter_all">Все</string>
+    <string name="filter_unwatched">Непросмотренные</string>
+    <string name="filter_started">Начатые</string>
+    <string name="filter_genre">Жанр: %1$s</string>
+    <string name="library_none">Ничего не найдено по поиску или фильтру.</string>
+    <string name="filter_favourites">Избранное</string>
+    <string name="favourite_add">Добавить в избранное</string>
+    <string name="favourite_remove">Убрать из избранного</string>
 </resources>

@@ -56,4 +56,18 @@
     <string name="mark_watched">Označit jako zhlédnuté</string>
     <string name="mark_unwatched">Označit jako nezhlédnuté</string>
     <string name="watched">Zhlédnuto</string>
+    <string name="sort_label">Řadit</string>
+    <string name="sort_name">Název</string>
+    <string name="sort_added">Nedávno přidané</string>
+    <string name="sort_year">Rok</string>
+    <string name="sort_score">Hodnocení</string>
+    <string name="filter_label">Filtr</string>
+    <string name="filter_all">Vše</string>
+    <string name="filter_unwatched">Nezhlédnuté</string>
+    <string name="filter_started">Rozkoukané</string>
+    <string name="filter_genre">Žánr: %1$s</string>
+    <string name="library_none">Hledání ani filtru nic neodpovídá.</string>
+    <string name="filter_favourites">Oblíbené</string>
+    <string name="favourite_add">Přidat do oblíbených</string>
+    <string name="favourite_remove">Odebrat z oblíbených</string>
 </resources>

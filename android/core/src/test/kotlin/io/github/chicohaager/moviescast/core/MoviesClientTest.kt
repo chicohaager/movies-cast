@@ -362,4 +362,15 @@ class MoviesClientTest {
         assertEquals(emptyList<String>(), episodes.after("e3").map { it.id })
         assertEquals(emptyList<String>(), episodes.after("unknown").map { it.id })
     }
+
+    @Test
+    fun setFavoritePostsAndUnsetDeletesAndTheItemSaysIt() = runBlocking {
+        routes = { json(200, """{"Id":"f1","Name":"Film","Type":"Movie","DateCreated":"2026-03-01T10:00:00Z","UserData":{"IsFavorite":true}}""") }
+        client.setFavorite(session, "f1", true)
+        client.setFavorite(session, "f1", false)
+        assertEquals(listOf("POST /movies/Users/user-1/FavoriteItems/f1", "DELETE /movies/Users/user-1/FavoriteItems/f1"), seen.map { "${it.method} ${it.url.encodedPath}" })
+        val item = client.item(session, "f1")
+        assertTrue(item.favorite)
+        assertEquals("2026-03-01T10:00:00Z", item.added)
+    }
 }

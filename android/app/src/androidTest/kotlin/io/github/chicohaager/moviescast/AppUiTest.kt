@@ -54,8 +54,11 @@ class AppUiTest {
 
     @Volatile
     private var filmPlayed = false
-    private val film get() = """{"Id":"f1","Name":"Invented Film","Type":"Movie","ProductionYear":2001,"RunTimeTicks":54000000000,"Overview":"A film that does not exist.","UserData":{"Played":$filmPlayed}}"""
-    private val series = """{"Id":"s1","Name":"Invented Show","Type":"Series","ProductionYear":2002}"""
+
+    @Volatile
+    private var filmFavorite = false
+    private val film get() = """{"Id":"f1","Name":"Invented Film","Type":"Movie","ProductionYear":2001,"RunTimeTicks":54000000000,"Overview":"A film that does not exist.","Genres":["Drama"],"DateCreated":"2026-01-01T10:00:00Z","UserData":{"Played":$filmPlayed,"IsFavorite":$filmFavorite}}"""
+    private val series = """{"Id":"s1","Name":"Invented Show","Type":"Series","ProductionYear":2002,"Genres":["Comedy"],"DateCreated":"2026-02-01T10:00:00Z","UserData":{"Played":true}}"""
     private fun episode(id: String, name: String, season: Int, number: Int, played: Boolean) =
         """{"Id":"$id","Name":"$name","Type":"Episode","SeriesId":"s1","SeriesName":"Invented Show","ParentIndexNumber":$season,"IndexNumber":$number,"UserData":{"Played":$played}}"""
 
@@ -68,7 +71,10 @@ class AppUiTest {
         if (Build.VERSION.SDK_INT >= 37) {
             instrumentation.uiAutomation.grantRuntimePermission(app.packageName, "android.permission.ACCESS_LOCAL_NETWORK")
         }
-        instrumentation.runOnMainSync { app.setSession(null) }
+        instrumentation.runOnMainSync {
+            app.setSession(null)
+            app.store.sort = ""
+        }
         server.dispatcher = object : Dispatcher() {
             override fun dispatch(request: RecordedRequest): MockResponse {
                 val path = request.url.encodedPath
@@ -86,6 +92,10 @@ class AppUiTest {
                         200,
                         """{"Items":[${episode("e1", "One", 1, 1, true)},${episode("e2", "Two", 1, 2, false)},${episode("e3", "Three", 2, 1, false)}],"TotalRecordCount":3}""",
                     )
+                    path == "/movies/Users/u1/FavoriteItems/f1" -> {
+                        filmFavorite = request.method == "POST"
+                        json(200, """{"IsFavorite":$filmFavorite}""")
+                    }
                     path == "/movies/Users/u1/PlayedItems/f1" -> {
                         filmPlayed = request.method == "POST"
                         json(200, """{"Played":$filmPlayed}""")
@@ -195,5 +205,44 @@ class AppUiTest {
         compose.waitUntilAtLeastOneExists(hasTestTag("privacy_text"), 10_000)
         compose.onNodeWithText("no analytics", substring = true).assertExists()
         compose.onNodeWithText("Movies-Cast for Android", substring = true).assertExists()
+    }
+
+    @Test
+    fun sortAndFilterChangeWhatTheLibraryShows() {
+        login("right")
+        compose.waitUntilAtLeastOneExists(hasTestTag("tile"), 10_000)
+        assertEquals(2, compose.onAllNodesWithTag("tile").fetchSemanticsNodes().size)
+        compose.onAllNodesWithTag("tile").onFirst().assertTextContains("Invented Film")
+        // the latest first: the series is of 2002, the film of 2001
+        compose.onNodeWithTag("sort").performClick()
+        compose.onNodeWithTag("sort_YEAR").performClick()
+        compose.onAllNodesWithTag("tile").onFirst().assertTextContains("Invented Show")
+        compose.onNodeWithTag("filter").performClick()
+        compose.onNodeWithTag("filter_UNWATCHED").performClick()
+        assertEquals(1, compose.onAllNodesWithTag("tile").fetchSemanticsNodes().size)
+        compose.onAllNodesWithTag("tile").onFirst().assertTextContains("Invented Film")
+        compose.onNodeWithTag("filter").performClick()
+        compose.onNodeWithText(app.getString(R.string.filter_genre, "Comedy")).performClick()
+        compose.onAllNodesWithTag("tile").onFirst().assertTextContains("Invented Show")
+        compose.onNodeWithTag("filter").performClick()
+        compose.onNodeWithTag("filter_FAVOURITES").performClick()
+        assertEquals(0, compose.onAllNodesWithTag("tile").fetchSemanticsNodes().size)
+        compose.onNodeWithText(app.getString(R.string.library_none)).assertExists()
+    }
+
+    @Test
+    fun aFavouriteIsSetAtTheServerAndThenFoundByTheFilter() {
+        login("right")
+        compose.waitUntilAtLeastOneExists(hasTestTag("tile"), 10_000)
+        compose.onNodeWithText("Invented Film").performClick()
+        compose.waitUntilAtLeastOneExists(hasTestTag("favourite"), 10_000)
+        compose.onNodeWithTag("favourite").performScrollTo().performClick()
+        compose.waitUntilAtLeastOneExists(hasText(app.getString(R.string.favourite_remove), substring = true), 10_000)
+        assertTrue(paths.toString(), synchronized(paths) { paths.contains("POST /movies/Users/u1/FavoriteItems/f1") })
+        compose.onNodeWithTag("back").performClick()
+        compose.onNodeWithTag("filter").performClick()
+        compose.onNodeWithTag("filter_FAVOURITES").performClick()
+        assertEquals(1, compose.onAllNodesWithTag("tile").fetchSemanticsNodes().size)
+        compose.onAllNodesWithTag("tile").onFirst().assertTextContains("Invented Film")
     }
 }

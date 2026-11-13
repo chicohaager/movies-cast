@@ -56,4 +56,18 @@
     <string name="mark_watched">İzlendi olarak işaretle</string>
     <string name="mark_unwatched">İzlenmedi olarak işaretle</string>
     <string name="watched">İzlendi</string>
+    <string name="sort_label">Sırala</string>
+    <string name="sort_name">Ad</string>
+    <string name="sort_added">Son eklenenler</string>
+    <string name="sort_year">Yıl</string>
+    <string name="sort_score">Puan</string>
+    <string name="filter_label">Filtre</string>
+    <string name="filter_all">Tümü</string>
+    <string name="filter_unwatched">İzlenmemiş</string>
+    <string name="filter_started">Başlanmış</string>
+    <string name="filter_genre">Tür: %1$s</string>
+    <string name="library_none">Arama veya filtreyle eşleşen bir şey yok.</string>
+    <string name="filter_favourites">Favoriler</string>
+    <string name="favourite_add">Favorilere ekle</string>
+    <string name="favourite_remove">Favorilerden çıkar</string>
 </resources>

@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -53,13 +54,18 @@ import androidx.compose.ui.unit.dp
 import io.github.chicohaager.moviescast.R
 import io.github.chicohaager.moviescast.UiError
 import io.github.chicohaager.moviescast.UiState
+import io.github.chicohaager.moviescast.core.LibraryFilter
+import io.github.chicohaager.moviescast.core.LibrarySort
 import io.github.chicohaager.moviescast.core.MediaItem
+import io.github.chicohaager.moviescast.core.genres
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LibraryScreen(
     state: UiState,
     onSearch: (String) -> Unit,
+    onSort: (LibrarySort) -> Unit,
+    onFilter: (LibraryFilter) -> Unit,
     onOpen: (MediaItem) -> Unit,
     onRefresh: () -> Unit,
     onLogout: () -> Unit,
@@ -133,6 +139,7 @@ fun LibraryScreen(
                         modifier = Modifier.fillMaxWidth().then(searchField.modifier).testTag("search"),
                     )
                 }
+                item(span = { GridItemSpan(maxLineSpan) }) { SortAndFilter(state, onSort, onFilter) }
                 state.error?.let { error ->
                     item(span = { GridItemSpan(maxLineSpan) }) {
                         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -144,7 +151,7 @@ fun LibraryScreen(
                         }
                     }
                 }
-                if (state.query.isBlank() && state.resume.isNotEmpty()) {
+                if (state.plain && state.resume.isNotEmpty()) {
                     item(span = { GridItemSpan(maxLineSpan) }) { Heading(stringResource(R.string.library_continue)) }
                     item(span = { GridItemSpan(maxLineSpan) }) {
                         LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -159,7 +166,8 @@ fun LibraryScreen(
                     if (state.shown.isEmpty()) {
                         item(span = { GridItemSpan(maxLineSpan) }) {
                             Text(
-                                if (state.query.isBlank()) stringResource(R.string.library_empty)
+                                if (state.library.isEmpty()) stringResource(R.string.library_empty)
+                                else if (state.query.isBlank()) stringResource(R.string.library_none)
                                 else stringResource(R.string.library_no_match, state.query.trim()),
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
@@ -169,6 +177,55 @@ fun LibraryScreen(
                 items(state.shown, key = { it.id }) { item -> Tile(item, Modifier, onOpen, showProgress = false) }
             }
         }
+    }
+}
+
+/** Two menus as on movies-cast's phone page: the order, and which items show (the genres come from the library). */
+@Composable
+private fun SortAndFilter(state: UiState, onSort: (LibrarySort) -> Unit, onFilter: (LibraryFilter) -> Unit) {
+    val sorts = listOf(
+        LibrarySort.NAME to R.string.sort_name,
+        LibrarySort.ADDED to R.string.sort_added,
+        LibrarySort.YEAR to R.string.sort_year,
+        LibrarySort.SCORE to R.string.sort_score,
+    )
+    val kinds = listOf(
+        LibraryFilter.Kind.ALL to R.string.filter_all,
+        LibraryFilter.Kind.UNWATCHED to R.string.filter_unwatched,
+        LibraryFilter.Kind.STARTED to R.string.filter_started,
+        LibraryFilter.Kind.FAVOURITES to R.string.filter_favourites,
+    )
+    val genres = remember(state.library) { state.library.genres() }
+    val filterName = if (state.filter.kind == LibraryFilter.Kind.GENRE) stringResource(R.string.filter_genre, state.filter.genre)
+    else stringResource(kinds.first { it.first == state.filter.kind }.second)
+    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+        Choice("sort", stringResource(R.string.sort_label), stringResource(sorts.first { it.first == state.sort }.second)) { close ->
+            for ((sort, name) in sorts) {
+                DropdownMenuItem(text = { Text(stringResource(name)) }, onClick = { close(); onSort(sort) }, modifier = Modifier.testTag("sort_${sort.name}"))
+            }
+        }
+        Choice("filter", stringResource(R.string.filter_label), filterName) { close ->
+            for ((kind, name) in kinds) {
+                DropdownMenuItem(text = { Text(stringResource(name)) }, onClick = { close(); onFilter(LibraryFilter(kind)) }, modifier = Modifier.testTag("filter_${kind.name}"))
+            }
+            for (genre in genres) {
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.filter_genre, genre)) },
+                    onClick = { close(); onFilter(LibraryFilter(LibraryFilter.Kind.GENRE, genre)) },
+                    modifier = Modifier.testTag("filter_genre"),
+                )
+            }
+        }
+    }
+}
+
+/** A button "label: value" that opens a menu; [items] gets a function that closes it. */
+@Composable
+private fun Choice(tag: String, label: String, value: String, items: @Composable (close: () -> Unit) -> Unit) {
+    var open by rememberSaveable { mutableStateOf(false) }
+    Box {
+        TextButton(onClick = { open = true }, modifier = Modifier.testTag(tag)) { Text("$label: $value ▾", maxLines = 1, overflow = TextOverflow.Ellipsis) }
+        DropdownMenu(expanded = open, onDismissRequest = { open = false }) { items { open = false } }
     }
 }
 

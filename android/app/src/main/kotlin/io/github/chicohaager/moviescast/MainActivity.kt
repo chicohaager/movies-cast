@@ -32,6 +32,7 @@ import io.github.chicohaager.moviescast.ui.LibraryScreen
 import io.github.chicohaager.moviescast.ui.LoginScreen
 import io.github.chicohaager.moviescast.ui.MoviesCastTheme
 import io.github.chicohaager.moviescast.core.MediaItem
+import io.github.chicohaager.moviescast.core.episodeLine
 
 @OptIn(UnstableApi::class)
 class MainActivity : AppCompatActivity() {
@@ -56,8 +57,8 @@ class MainActivity : AppCompatActivity() {
                 BackHandler(enabled = state.stack.size > 1) { model.back() }
                 when (val screen = state.screen) {
                     Screen.Login -> LoginScreen(state, model.lastServer, model.lastUser, ::login, ::openAppSettings) { model.show(Screen.About) }
-                    Screen.Library -> LibraryScreen(state, model::search, model::open, ::refresh, model::logout, ::openAppSettings) { model.show(Screen.About) }
-                    is Screen.Detail -> DetailScreen(state, { model.back() }, model::open, ::play, model::setPlayed)
+                    Screen.Library -> LibraryScreen(state, model::search, model::sort, model::filter, model::open, ::refresh, model::logout, ::openAppSettings) { model.show(Screen.About) }
+                    is Screen.Detail -> DetailScreen(state, { model.back() }, model::open, ::play, model::setPlayed, model::setFavorite)
                     Screen.About -> AboutScreen({ model.back() }, { model.show(Screen.Licences) }, { model.show(Screen.Privacy) }, ::openWeb, ::diagnostics, ::share)
                     Screen.Licences -> LicencesScreen({ model.back() }) { model.show(Screen.Licence(it)) }
                     is Screen.Licence -> LicenceScreen(screen.id) { model.back() }
@@ -150,7 +151,7 @@ class MainActivity : AppCompatActivity() {
         val queue = queueFor(
             item,
             model.state.value.following,
-            { if (it.type == "Episode") getString(R.string.episode_label, it.season, it.episode, it.name) else it.name },
+            { if (it.type == "Episode") episodeLine(getString(R.string.episode_label, it.season, it.episode, it.name), it.name, it.seriesName) else it.name },
             { app.client.subtitleFiles(session, it) },
         )
         leftForPlayer = true

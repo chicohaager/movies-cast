@@ -36,6 +36,7 @@ import io.github.chicohaager.moviescast.R
 import io.github.chicohaager.moviescast.UiState
 import io.github.chicohaager.moviescast.core.MediaItem
 import io.github.chicohaager.moviescast.core.Track
+import io.github.chicohaager.moviescast.core.episodeLine
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -45,6 +46,7 @@ fun DetailScreen(
     onOpen: (MediaItem) -> Unit,
     onPlay: (MediaItem, Long) -> Unit,
     onPlayed: (MediaItem, Boolean) -> Unit,
+    onFavorite: (MediaItem, Boolean) -> Unit,
 ) {
     val item = state.detail ?: return
     Scaffold(
@@ -61,7 +63,7 @@ fun DetailScreen(
                 Row(Modifier.fillMaxSize().padding(horizontal = 24.dp), horizontalArrangement = Arrangement.spacedBy(24.dp)) {
                     Poster(item, Modifier.width(260.dp).padding(top = 8.dp), widthPx = 600)
                     Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(bottom = 24.dp)) {
-                        Facts(state, item, onOpen, onPlay, onPlayed)
+                        Facts(state, item, onOpen, onPlay, onPlayed, onFavorite)
                     }
                 }
             } else {
@@ -70,7 +72,7 @@ fun DetailScreen(
                     verticalArrangement = Arrangement.spacedBy(16.dp),
                 ) {
                     Poster(item, Modifier.width(180.dp), widthPx = 600)
-                    Facts(state, item, onOpen, onPlay, onPlayed)
+                    Facts(state, item, onOpen, onPlay, onPlayed, onFavorite)
                 }
             }
         }
@@ -79,7 +81,7 @@ fun DetailScreen(
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun Facts(state: UiState, item: MediaItem, onOpen: (MediaItem) -> Unit, onPlay: (MediaItem, Long) -> Unit, onPlayed: (MediaItem, Boolean) -> Unit) {
+private fun Facts(state: UiState, item: MediaItem, onOpen: (MediaItem) -> Unit, onPlay: (MediaItem, Long) -> Unit, onPlayed: (MediaItem, Boolean) -> Unit, onFavorite: (MediaItem, Boolean) -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
         Text(item.name, style = MaterialTheme.typography.headlineSmall)
         val line = listOfNotNull(
@@ -112,6 +114,10 @@ private fun Facts(state: UiState, item: MediaItem, onOpen: (MediaItem) -> Unit, 
                 }
             }
         }
+        // A series can be a favourite too, so this button does not depend on "playable".
+        OutlinedButton(onClick = { onFavorite(item, !item.favorite) }, modifier = Modifier.testTag("favourite")) {
+            Text(if (item.favorite) "♥  " + stringResource(R.string.favourite_remove) else "♡  " + stringResource(R.string.favourite_add))
+        }
 
         if (item.overview.isNotEmpty()) Text(item.overview, style = MaterialTheme.typography.bodyLarge)
 
@@ -143,7 +149,8 @@ private fun Facts(state: UiState, item: MediaItem, onOpen: (MediaItem) -> Unit, 
                     }
                     HorizontalDivider()
                     Text(
-                        (if (episode.played) "✓  " else "") + stringResource(R.string.episode_label, episode.season, episode.episode, episode.name),
+                        (if (episode.played) "✓  " else "") +
+                            episodeLine(stringResource(R.string.episode_label, episode.season, episode.episode, episode.name), episode.name, episode.seriesName),
                         modifier = Modifier.fillMaxWidth().clickable { onOpen(episode) }.padding(vertical = 14.dp).testTag("episode"),
                     )
                 }

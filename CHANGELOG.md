@@ -11,6 +11,7 @@ What changed in each version; the "why" with its measurements is in
 - Android app: an episode brings the episodes after it; the next one starts by itself and the player's next/previous buttons step through them; each episode that ran to its end is reported to the server at its end.
 - Android app: a series page lists its episodes by season, with a mark on those watched; "Mark as watched" / "Mark as unwatched" on every film, series and episode; a mark on watched posters.
 - Android app: subtitle files lying next to the film (SRT, WebVTT, ASS/SSA) are offered by the player's subtitle button.
+- Android app: the library can be ordered (name, recently added, year, rating; kept) and filtered (unwatched, started, favourites, a genre), with the words of the phone page; "Add to favourites" / "Remove from favourites"; an episode without a title of its own is listed as "S1 E2".
 - Android app: the privacy policy is a page of the app (the build copies PRIVACY.md into the APK), readable on a TV without a browser.
 - `deploy/tools/movies-probe.py`: a list on the way of a field name is walked (`MediaStreams.Codec`), and `--digest` prints status, type, length and SHA-256 of an answer that is no JSON.
 - PRIVACY.md: what the Android app, the server and the TV apps store and talk to.

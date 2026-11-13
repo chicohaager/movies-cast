@@ -56,4 +56,18 @@
     <string name="mark_watched">標記為已觀看</string>
     <string name="mark_unwatched">標記為未觀看</string>
     <string name="watched">已觀看</string>
+    <string name="sort_label">排序</string>
+    <string name="sort_name">名稱</string>
+    <string name="sort_added">最近新增</string>
+    <string name="sort_year">年份</string>
+    <string name="sort_score">評分</string>
+    <string name="filter_label">篩選</string>
+    <string name="filter_all">全部</string>
+    <string name="filter_unwatched">未觀看</string>
+    <string name="filter_started">看到一半</string>
+    <string name="filter_genre">類型：%1$s</string>
+    <string name="library_none">沒有符合搜尋或篩選條件的內容。</string>
+    <string name="filter_favourites">收藏</string>
+    <string name="favourite_add">加入收藏</string>
+    <string name="favourite_remove">取消收藏</string>
 </resources>

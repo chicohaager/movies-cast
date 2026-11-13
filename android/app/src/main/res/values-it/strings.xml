@@ -56,4 +56,18 @@
     <string name="mark_watched">Segna come visto</string>
     <string name="mark_unwatched">Segna come non visto</string>
     <string name="watched">Visto</string>
+    <string name="sort_label">Ordina</string>
+    <string name="sort_name">Nome</string>
+    <string name="sort_added">Aggiunti di recente</string>
+    <string name="sort_year">Anno</string>
+    <string name="sort_score">Valutazione</string>
+    <string name="filter_label">Filtro</string>
+    <string name="filter_all">Tutti</string>
+    <string name="filter_unwatched">Non visti</string>
+    <string name="filter_started">Iniziati</string>
+    <string name="filter_genre">Genere: %1$s</string>
+    <string name="library_none">Nessun risultato per la ricerca o il filtro.</string>
+    <string name="filter_favourites">Preferiti</string>
+    <string name="favourite_add">Aggiungi ai preferiti</string>
+    <string name="favourite_remove">Rimuovi dai preferiti</string>
 </resources>

@@ -152,6 +152,11 @@ class MoviesClient(http: OkHttpClient, private val device: Device) {
         call(s.baseUrl, s.token, if (played) "POST" else "DELETE", "/Users/${seg(s.userId)}/PlayedItems/${seg(id)}", if (played) "" else null)
     }
 
+    /** Puts an item among the user's favourites or takes it out. */
+    suspend fun setFavorite(s: Session, id: String, favorite: Boolean) {
+        call(s.baseUrl, s.token, if (favorite) "POST" else "DELETE", "/Users/${seg(s.userId)}/FavoriteItems/${seg(id)}", if (favorite) "" else null)
+    }
+
     fun posterUrl(s: Session, id: String, maxWidth: Int): String =
         url(s.baseUrl, "/Items/${seg(id)}/Images/Primary") { addQueryParameter("maxWidth", maxWidth.toString()) }.toString()
 
