@@ -57,22 +57,10 @@ if ! ss -ltn | grep -q ":$port "; then echo "the fake server did not start:" >&2
 adb reverse "tcp:$port" "tcp:$port" >/dev/null
 adb install -r "$apk" >/dev/null
 
-dump() { # the screen as uiautomator sees it; while a window opens it answers "null root node", so it is asked again
-  local _
-  for _ in $(seq 1 10); do
-    adb shell rm -f /sdcard/mc-ui.xml
-    if adb shell uiautomator dump /sdcard/mc-ui.xml 2>&1 | grep -q 'dumped to'; then
-      adb shell cat /sdcard/mc-ui.xml
-      return 0
-    fi
-    sleep 0.5
-  done
-  echo "uiautomator gave no screen after 10 tries" >&2
-  return 1
-}
+screen() { python3 "$repo/deploy/tools/android-screen.py" "$@"; }
 type_into() { # type_into <n> <text>: the n-th text field from the top (0 = top) gets <text>
   # shellcheck disable=SC2046 # "x y" are two arguments
-  adb shell input tap $(dump | python3 "$here/screen.py" field "$1")
+  adb shell input tap $(screen field "$1")
   sleep 0.5
   adb shell input text "$2"
   adb shell input keyevent KEYCODE_BACK
@@ -83,7 +71,7 @@ login() { # a fresh app, the fake server's address and an account; leaves the sc
   adb shell am start -n "$app/io.github.chicohaager.moviescast.MainActivity" >/dev/null
   out=""
   for _ in $(seq 1 20); do
-    out="$(dump | python3 "$here/screen.py" texts)"
+    out="$(screen texts)"
     if grep -qx 'Log in' <<<"$out"; then break; fi
     sleep 0.5
   done
@@ -93,10 +81,10 @@ login() { # a fresh app, the fake server's address and an account; leaves the sc
   type_into 1 demo
   type_into 2 right
   # shellcheck disable=SC2046 # "x y" are two arguments
-  adb shell input tap $(dump | python3 "$here/screen.py" tap 'Log in')
+  adb shell input tap $(screen tap 'Log in')
   for _ in $(seq 1 20); do
     sleep 0.5
-    out="$(dump | python3 "$here/screen.py" texts)"
+    out="$(screen texts)"
     if grep -qx 'Film Behind TLS' <<<"$out" || grep -q 'does not trust the server' <<<"$out"; then break; fi
   done
 }

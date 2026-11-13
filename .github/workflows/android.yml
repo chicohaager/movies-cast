@@ -38,6 +38,19 @@ jobs:
         run: android/ffmpeg/build-ffmpeg.sh
       - name: check-android.sh
         run: deploy/tools/check-android.sh
+      # The log names a failed test with the first line of its message; the reports hold the rest.
+      - name: Upload the test reports (only when a step failed)
+        if: failure()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: movies-cast-android-test-reports
+          retention-days: 14
+          if-no-files-found: warn
+          path: |
+            android/core/build/reports/tests
+            android/core/build/test-results
+            android/app/build/reports/tests
+            android/app/build/test-results
       - name: Upload the debug APK
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:

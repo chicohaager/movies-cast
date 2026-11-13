@@ -2,14 +2,17 @@ package io.github.chicohaager.moviescast.core
 
 import java.io.IOException
 import java.net.ConnectException
+import java.net.InetAddress
 import kotlinx.coroutines.runBlocking
 import mockwebserver3.MockResponse
 import mockwebserver3.MockWebServer
+import okhttp3.Dns
 import okhttp3.OkHttpClient
 import okhttp3.tls.HandshakeCertificates
 import okhttp3.tls.HeldCertificate
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
@@ -33,13 +36,24 @@ class CertificateTest {
         server.useHttps(HandshakeCertificates.Builder().heldCertificate(own).build().sslSocketFactory())
         server.enqueue(info)
         server.enqueue(info)
-        server.start()
+        // on the loopback's IPv4 address only: "localhost" resolves to ::1 first on GitHub's runners (2026-11-13)
+        server.start(InetAddress.getByName("127.0.0.1"), 0)
         return own
     }
 
+    /**
+     * "localhost" as GitHub's runners resolve it: ::1 first, where nothing listens, then 127.0.0.1.
+     * OkHttp tries the second address after the first refused; what it throws is the first error.
+     */
+    private val bothAddresses = Dns { host ->
+        if (host == "localhost") listOf(InetAddress.getByName("::1"), InetAddress.getByName("127.0.0.1")) else Dns.SYSTEM.lookup(host)
+    }
+
+    private fun plain(): OkHttpClient = OkHttpClient.Builder().dns(bothAddresses).build()
+
     private fun trusting(own: HeldCertificate): OkHttpClient {
         val trust = HandshakeCertificates.Builder().addTrustedCertificate(own.certificate).build()
-        return OkHttpClient.Builder().sslSocketFactory(trust.sslSocketFactory(), trust.trustManager).build()
+        return OkHttpClient.Builder().dns(bothAddresses).sslSocketFactory(trust.sslSocketFactory(), trust.trustManager).build()
     }
 
     @After
@@ -48,7 +62,7 @@ class CertificateTest {
     @Test
     fun aSelfSignedCertificateTheDeviceDoesNotKnowIsNamedAsTheReason() = runBlocking {
         serve("localhost")
-        val client = MoviesClient(OkHttpClient(), device)
+        val client = MoviesClient(plain(), device)
         try {
             client.publicInfo("$root/movies")
             fail("expected UntrustedCertificateException")
@@ -89,5 +103,16 @@ class CertificateTest {
         assertSame(untrusted, MoviesClient.reason(listOf(none, untrusted, refused)))
         assertSame(refused, MoviesClient.reason(listOf(none, refused)))
         assertEquals("no address", MoviesClient.reason(emptyList()).message)
+    }
+
+    @Test
+    fun aRefusedCertificateIsFoundInTheCauseAndInTheErrorsAttachedButAnotherHandshakeErrorIsNot() {
+        val refused = javax.net.ssl.SSLHandshakeException("PKIX path building failed").apply { initCause(java.security.cert.CertificateException("unknown issuer")) }
+        assertTrue(MoviesClient.certificateRefused(refused))
+        assertTrue(MoviesClient.certificateRefused(ConnectException("::1 refused").apply { addSuppressed(refused) }))
+        assertTrue(MoviesClient.certificateRefused(javax.net.ssl.SSLPeerUnverifiedException("Hostname localhost not verified")))
+        // no protocol both sides speak: a handshake error, but no certificate refused
+        assertFalse(MoviesClient.certificateRefused(javax.net.ssl.SSLHandshakeException("No appropriate protocol")))
+        assertFalse(MoviesClient.certificateRefused(ConnectException("::1 refused").apply { addSuppressed(ConnectException("127.0.0.1 refused")) }))
     }
 }

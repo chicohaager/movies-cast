@@ -3,7 +3,6 @@ package io.github.chicohaager.moviescast.core
 import java.io.IOException
 import java.security.cert.CertificateException
 import java.util.concurrent.TimeUnit
-import javax.net.ssl.SSLHandshakeException
 import javax.net.ssl.SSLPeerUnverifiedException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -318,12 +317,8 @@ class MoviesClient(http: OkHttpClient, private val device: Device) {
                         else -> response.body.string()
                     }
                 }
-            } catch (_: SSLPeerUnverifiedException) {
-                // the certificate is made out for another name
-                throw UntrustedCertificateException()
-            } catch (e: SSLHandshakeException) {
-                // a handshake fails for other reasons too (no common protocol); only a refused certificate is named
-                if (generateSequence<Throwable>(e) { it.cause }.take(8).any { it is CertificateException }) throw UntrustedCertificateException()
+            } catch (e: IOException) {
+                if (e !is UnauthorizedException && e !is ServerException && certificateRefused(e)) throw UntrustedCertificateException()
                 throw e
             }
         }
@@ -369,6 +364,26 @@ class MoviesClient(http: OkHttpClient, private val device: Device) {
          * device does not trust is the reason to tell, even when a later candidate (another port)
          * failed in another way; else the last error.
          */
+        /**
+         * Was a certificate refused somewhere in [e]? A name with two addresses (IPv6 and IPv4)
+         * shows why the errors attached to it count too: OkHttp tries the second address after the
+         * first refused the connection and throws the first error, with the second attached
+         * (`localhost` as ::1 and 127.0.0.1 on GitHub's runners, 2026-11-13). A handshake that fails
+         * for another reason (no common protocol) is not a refused certificate.
+         */
+        internal fun certificateRefused(e: Throwable): Boolean {
+            val seen = HashSet<Throwable>()
+            val todo = ArrayDeque(listOf(e))
+            while (todo.isNotEmpty() && seen.size < 32) {
+                val t = todo.removeFirst()
+                if (!seen.add(t)) continue
+                if (t is SSLPeerUnverifiedException || t is CertificateException) return true
+                t.cause?.let(todo::add)
+                todo.addAll(t.suppressed)
+            }
+            return false
+        }
+
         internal fun reason(errors: List<IOException>): IOException =
             errors.firstOrNull { it is UntrustedCertificateException } ?: errors.lastOrNull() ?: IOException("no address")
 
