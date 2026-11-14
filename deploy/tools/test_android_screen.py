@@ -9,7 +9,7 @@ leaves the dump, as the login page did; ESCAPE leaves the keyboard open, BACK cl
 leaves the page. `input text` reaches the focused field only while the keyboard is shown, and its argument is read
 once more by a shell, as on the device.
 
-Cases: a filled field (also a password field) gets the new value in place of the old; TV needs OK and the value arrives; phone gets no OK; the last field is found by its label while the first
+Cases: a keyboard that comes up late is waited for; a first typing that is lost is typed once more, a slow one is not doubled; a filled field (also a password field) gets the new value in place of the old; TV needs OK and the value arrives; phone gets no OK; the last field is found by its label while the first
 has scrolled away, and only that field gets the value; the keyboard is closed and the page not left; spaces and
 shell signs arrive as typed; a password field is checked by its length and the value is in no output; no keyboard
 is a failure; a value that does not arrive is a failure without the value in the message; an unknown label is a
@@ -38,10 +38,15 @@ def esc(t):
     return t.replace("&", "&amp;").replace('"', "&quot;").replace("'", "&apos;").replace("<", "&lt;")
 def xml():
     out = []
+    st["dumps"] = st.get("dumps", 0) + 1
+    save()
     for i, f in enumerate(st["fields"]):
         if st["keyboard"] and i == 0 and len(st["fields"]) > 1:
             continue  # scrolled out of the dump while the keyboard is open
-        text = "•" * len(f["text"]) if f["password"] else f["text"]
+        shown = f["text"]
+        if st.get("shows_after") and st["dumps"] - st.get("typed_at", 0) < st["shows_after"]:
+            shown = f.get("before", "")  # the dump still shows the field as it was before the typing
+        text = "•" * len(shown) if f["password"] else shown
         y = 100 + i * 100
         out.append('<node index="%d" text="%s" resource-id="" class="android.widget.EditText" package="x" '
                    'content-desc="" focused="%s" password="%s" selected="false" bounds="[0,%d][200,%d]">'
@@ -52,12 +57,18 @@ def xml():
     return '<?xml version="1.0" encoding="UTF-8"?><hierarchy rotation="0">' + "".join(out) + "</hierarchy>"
 if args[:2] == ["shell", "rm"]:
     pass
+elif args[:3] == ["shell", "pm", "has-feature"]:
+    print("true" if st["device"] == "tv" else "false")
 elif args[:2] == ["shell", "uiautomator"]:
     print("UI hierchary dumped to: /sdcard/mc-ui.xml")
 elif args[:2] == ["shell", "cat"]:
     print(xml())
 elif args[:3] == ["shell", "dumpsys", "input_method"]:
-    print("  mInputShown=%s" % str(st["keyboard"]).lower())
+    # a keyboard that comes up late: shown only from the n-th question on
+    st["asked"] = st.get("asked", 0) + 1
+    late = st["keyboard"] and st["asked"] < st.get("keyboard_after", 0)
+    print("  mInputShown=%s" % str(st["keyboard"] and not late).lower())
+    save()
 elif args[:3] == ["shell", "input", "tap"]:
     y = int(args[4])
     st["focus"] = (y - 100) // 100
@@ -73,7 +84,10 @@ elif args[:3] == ["shell", "input", "keyevent"]:
             if st["keyboard"] and st["focus"] is not None:
                 st["fields"][st["focus"]]["text"] = st["fields"][st["focus"]]["text"][:-1]
     elif args[3] == "BACK":
-        if st["keyboard"]:
+        if st.get("back_clears"):
+            # an app that takes BACK for itself: the field is emptied, the keyboard stays
+            st["fields"][st["focus"]]["text"] = ""
+        elif st["keyboard"]:
             st["keyboard"] = False
         else:
             st["left_page"] = True
@@ -81,7 +95,13 @@ elif args[:3] == ["shell", "input", "keyevent"]:
 elif args[:3] == ["shell", "input", "text"]:
     words = shlex.split(args[3])  # the device's shell
     assert len(words) == 1, words
-    if st["keyboard"] and st["focus"] is not None and not st.get("drop"):
+    late = st.get("asked", 0) < st.get("keyboard_after", 0)
+    st["typed"] = st.get("typed", 0) + 1
+    lost = st.get("lose_first") and st["typed"] == 1
+    if st["focus"] is not None:
+        st["fields"][st["focus"]]["before"] = st["fields"][st["focus"]]["text"]
+        st["typed_at"] = st.get("dumps", 0)
+    if st["keyboard"] and not late and not lost and st["focus"] is not None and not st.get("drop"):
         st["fields"][st["focus"]]["text"] += words[0].replace("%s", " ")
     save()
 else:
@@ -134,6 +154,21 @@ p, st, log = run({"device": "phone", "fields": [field()]}, "abc")
 check("phone: value arrives", p.returncode == 0 and st["fields"][0]["text"] == "abc", p.stderr)
 check("phone: no OK pressed", "DPAD_CENTER" not in log, log)
 
+# the keyboard is tied to the field only a while after the tap: text sent before that is lost
+p, st, log = run({"device": "phone", "keyboard_after": 6, "fields": [field()]}, "abc")
+check("phone, keyboard late: waits and the value arrives", p.returncode == 0 and st["fields"][0]["text"] == "abc", p.stderr)
+check("phone, keyboard late: no OK pressed (it could send the form)", "DPAD_CENTER" not in log, log)
+
+# the first typing is lost although field and keyboard look ready: typed once more, the value arrives once
+p, st, log = run({"device": "phone", "lose_first": True, "fields": [field()]}, "abc")
+check("first typing lost: typed again, arrives once", p.returncode == 0 and st["fields"][0]["text"] == "abc", f"{p.stderr} got {st['fields'][0]['text']!r}")
+check("first typing lost: two typings", log.count("input text") == 2, log)
+
+# the text arrives but the dump shows it only a moment later: not typed twice
+p, st, log = run({"device": "phone", "shows_after": 3, "fields": [field()]}, "abc")
+check("slow to show: typed once, not doubled", p.returncode == 0 and st["fields"][0]["text"] == "abc" and log.count("input text") == 1,
+      f"{p.stderr} got {st['fields'][0]['text']!r}, {log.count('input text')} typings")
+
 p, st, _ = run({"device": "tv", "fields": login_page()}, SECRET, label="Password")
 check("login page: password arrives while the first field scrolled away",
       p.returncode == 0 and st["fields"][2]["text"] == SECRET, p.stderr)
@@ -163,6 +198,9 @@ check("value lost: value not in the message", "visible-value" not in p.stdout + 
 
 p, _, _ = run({"device": "tv", "drop": True, "fields": login_page()}, SECRET, label="Password")
 check("password lost: fails without the value", p.returncode != 0 and SECRET not in p.stdout + p.stderr, p.stderr)
+
+p, _, _ = run({"device": "phone", "back_clears": True, "fields": [field("Search")]}, "Rocky", label="Search")
+check("BACK that changes the field: fails and says so", p.returncode != 0 and "BACK" in p.stderr, p.stderr)
 
 p, _, _ = run({"device": "tv", "fields": [field()]}, "abc", label="Nickname")
 check("unknown label: fails", p.returncode != 0 and "no text field labelled 'Nickname'" in p.stderr, p.stderr)

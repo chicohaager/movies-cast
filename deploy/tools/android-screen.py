@@ -80,28 +80,47 @@ def type_into(label: str, value: str) -> None:
         sys.exit(f"no text field labelled '{label}' on the screen")
     x1, y1, x2, y2 = map(int, re.findall(r"\d+", field.get("bounds")))
     adb("shell", "input", "tap", str((x1 + x2) // 2), str((y1 + y2) // 2))
-    time.sleep(0.5)
-    if not keyboard_shown():
-        adb("shell", "input", "keyevent", "DPAD_CENTER")
-        for _ in range(20):
-            if keyboard_shown():
-                break
-            time.sleep(0.25)
-        else:
-            sys.exit(f"text field '{label}': no keyboard came up after the tap and OK")
+    # Typed before the field is tied to the keyboard, the text goes nowhere (phone emulator, 2026-11-14: right after
+    # the app's start, 0.5 s after the tap). So wait until the field has the focus and the keyboard is shown; on a TV
+    # the keyboard comes only with OK.
+    def ready() -> bool:
+        node = labelled_field(dump(), label)
+        return node is not None and node.get("focused") == "true" and keyboard_shown()
+    # OK only on a TV: on a phone OK in a text field can act as Enter (send a search, a login)
+    tv = adb("shell", "pm", "has-feature", "android.software.leanback").stdout.strip() == "true"
+    pressed_ok = False
+    for attempt in range(24):
+        if ready():
+            break
+        if tv and attempt == 4 and not pressed_ok:
+            adb("shell", "input", "keyevent", "DPAD_CENTER")
+            pressed_ok = True
+        time.sleep(0.25)
+    else:
+        sys.exit(f"text field '{label}': no keyboard came up after the tap and OK")
+    time.sleep(0.3)
     # The value replaces what the field holds (a login page keeps the last address and name): to its end, then one
     # delete per character the dump shows (a password field shows one dot per character).
     old = len(field.get("text", ""))
     if old:
         adb("shell", "input", "keyevent", "MOVE_END", *(["DEL"] * old))
         time.sleep(0.3)
-    adb("shell", "input", "text", for_input_text(value))
-    time.sleep(0.5)
-    # BACK closes the keyboard; only while it is open, else BACK would leave the page. (ESCAPE left it open.)
-    if keyboard_shown():
-        adb("shell", "input", "keyevent", "BACK")
-        time.sleep(0.5)
-    field = labelled_field(dump(), label)
+    # Even with the field focused and the keyboard shown, text sent at once can be lost while the keyboard is still
+    # being tied to the field (phone emulator, 2026-11-14). So the arrival is what counts: read the field back for up to
+    # 2 s; only when nothing at all arrived is it typed once more (never after part of it arrived: no doubled text).
+    def arrived():
+        node = labelled_field(dump(), label)
+        return node, (len(node.get("text", "")) if node is not None else -1)
+    field = None
+    for typing in range(2):
+        adb("shell", "input", "text", for_input_text(value))
+        for _ in range(8):
+            time.sleep(0.25)
+            field, count = arrived()
+            if count != 0:
+                break
+        if field is None or len(field.get("text", "")) != 0:
+            break
     if field is None:
         sys.exit(f"text field '{label}' is gone from the screen after typing")
     got = field.get("text", "")
@@ -111,6 +130,14 @@ def type_into(label: str, value: str) -> None:
     elif got != value:
         # no value in the message: a password field the dump does not mark as one would print the secret
         sys.exit(f"text field '{label}': it shows {len(got)} characters that differ from the {len(value)} typed")
+    # BACK closes the keyboard, so the next field and the buttons below are free; only while it is open, else BACK
+    # would leave the page (ESCAPE left it open). An app that takes this BACK for itself shows here: the field changed.
+    if keyboard_shown():
+        adb("shell", "input", "keyevent", "BACK")
+        time.sleep(0.5)
+        after = labelled_field(dump(), label)
+        if after is None or after.get("text", "") != got:
+            sys.exit(f"text field '{label}': typed and read back, but BACK (to close the keyboard) changed it or the page")
     print(f"text field '{label}': {len(value)} characters typed and read back")
 
 
