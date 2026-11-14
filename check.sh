@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Everything that must pass before a build leaves this machine:
 #
-#   ./check.sh               go vet, go tests (+ switch-image.sh), browser tests (e2e/), Android app, public-data scan
+#   ./check.sh               go vet, go tests (+ switch-image.sh, the device and Movies tools), browser tests (e2e/), Android app, public-data scan
 #   ./check.sh --no-e2e      without the browser tests (no Node/Chromium at hand)
 #   ./check.sh --no-android  without the Android app (no Android SDK at hand)
 #
@@ -34,6 +34,9 @@ echo "== check 2/5: go test"
 go test -count=1 ./...
 deploy/zimaos/test-switch-image.sh
 deploy/tools/test-pick-device.sh
+# the tools for devices and for Movies, each against a fake (adb, server) with made-up values
+python3 deploy/tools/test_android_screen.py >/dev/null || { python3 deploy/tools/test_android_screen.py | grep -v "^ok"; exit 1; }
+python3 deploy/tools/test_movies_probe.py >/dev/null || { python3 deploy/tools/test_movies_probe.py | grep -v "^ok"; exit 1; }
 
 echo "== check 3/5: browser tests"
 if [[ "$e2e" == 1 ]]; then
