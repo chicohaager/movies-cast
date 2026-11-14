@@ -12,6 +12,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -225,14 +227,20 @@ fun Wordmark(name: String, modifier: Modifier = Modifier, markSize: Dp = 44.dp, 
 /** How much a button in focus grows: as the library's tiles, so the remote's place is seen from the sofa. */
 private const val FOCUS_SCALE = 1.08f
 
+/** A wide element (a row of the "Home screen" page) grows by no more than this, so it does not cover its neighbours. */
+private val FOCUS_GROWTH_MAX = 16.dp
+
 /**
  * Grows the element in focus and lifts it with a shadow, as Infuse and the Leanback cards of Android TV do: a change of
  * colour alone was hard to tell from the sofa (film page, Android TV emulator, 2026-11-14).
  */
 @Composable
 private fun Modifier.lifted(focused: Boolean, shape: Shape): Modifier {
-    val scale by animateFloatAsState(if (focused) FOCUS_SCALE else 1f, label = "focus")
-    return graphicsLayer {
+    var width by remember { mutableStateOf(0) }
+    val most = with(LocalDensity.current) { FOCUS_GROWTH_MAX.toPx() }
+    val target = if (width > 0) minOf(FOCUS_SCALE, 1f + most / width) else FOCUS_SCALE
+    val scale by animateFloatAsState(if (focused) target else 1f, label = "focus")
+    return onSizeChanged { width = it.width }.graphicsLayer {
         scaleX = scale
         scaleY = scale
         shadowElevation = if (focused) 12.dp.toPx() else 0f

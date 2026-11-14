@@ -79,6 +79,12 @@
     <string name="error_certificate_changed">A szerver tanúsítványa nem az, amelyik a bejelentkezéskor volt. Ha ön cserélte le, jelentkezzen be újra; ha nem, valaki lehet ön és a szerver között.</string>
     <string name="error_certificate_login_again">Ez a bejelentkezés még azelőtt történt, hogy az alkalmazás megjegyezte volna a szerver tanúsítványát. Jelentkezz be újra egyszer, hogy csak ennek a szervernek a tanúsítványa érvényes legyen.</string>
     <string name="sound">Hang</string>
+    <string name="home_screen">Kezdőképernyő</string>
+    <string name="home_genres">Műfajok</string>
+    <string name="home_top_rated">Legjobbra értékelt</string>
+    <string name="home_move_up">Feljebb</string>
+    <string name="home_move_down">Lejjebb</string>
+    <string name="home_reset">Sorrend visszaállítása</string>
     <string name="sound_intro">Az ilyen formátumú hangot maga az alkalmazás dekódolja, így minden tévé lejátssza. Ha a tévéd vagy AV-erősítőd változatlanul fogad egy formátumot (például Dolby Atmos vagy DTS:X miatt), állítsd „Továbbítás HDMI-n” értékre: akkor változatlanul megy ki, amikor az eszköz jelzi, hogy képes rá.</string>
     <string name="sound_pass_on">Továbbítás HDMI-n (automatikus)</string>
     <string name="sound_decode">Dekódolás az alkalmazásban</string>

@@ -79,6 +79,12 @@
     <string name="error_certificate_changed">El certificado del servidor no es el que tenía cuando iniciaste sesión. Si lo cambiaste tú, vuelve a iniciar sesión; si no, puede que alguien esté entre tú y el servidor.</string>
     <string name="error_certificate_login_again">Este inicio de sesión es de antes de que la aplicación recordara el certificado de un servidor. Vuelve a iniciar sesión una vez para que solo cuente el certificado de este servidor.</string>
     <string name="sound">Sonido</string>
+    <string name="home_screen">Pantalla de inicio</string>
+    <string name="home_genres">Géneros</string>
+    <string name="home_top_rated">Mejor valoradas</string>
+    <string name="home_move_up">Subir</string>
+    <string name="home_move_down">Bajar</string>
+    <string name="home_reset">Restablecer orden</string>
     <string name="sound_intro">La app decodifica ella misma el sonido en estos formatos, así lo reproduce cualquier televisor. Si tu televisor o receptor AV admite un formato sin cambios (por ejemplo para Dolby Atmos o DTS:X), ponlo en «Pasar por HDMI»: saldrá sin cambios siempre que el dispositivo indique que puede.</string>
     <string name="sound_pass_on">Pasar por HDMI (automático)</string>
     <string name="sound_decode">Decodificar en la app</string>

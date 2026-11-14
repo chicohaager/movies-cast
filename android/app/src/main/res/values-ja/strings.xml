@@ -79,6 +79,12 @@
     <string name="error_certificate_changed">サーバーの証明書がログイン時のものと異なります。ご自身で変更した場合は再度ログインしてください。そうでない場合、誰かがあなたとサーバーの間にいる可能性があります。</string>
     <string name="error_certificate_login_again">このログインは、アプリがサーバーの証明書を記憶するようになる前のものです。このサーバーの証明書だけが有効になるよう、一度ログインし直してください。</string>
     <string name="sound">音声</string>
+    <string name="home_screen">ホーム画面</string>
+    <string name="home_genres">ジャンル</string>
+    <string name="home_top_rated">評価の高い作品</string>
+    <string name="home_move_up">上へ移動</string>
+    <string name="home_move_down">下へ移動</string>
+    <string name="home_reset">順序をリセット</string>
     <string name="sound_intro">これらの形式の音声はアプリ自身がデコードするため、どのテレビでも再生できます。テレビや AV アンプがその形式をそのまま受け取れる場合（Dolby Atmos や DTS:X など）は「HDMI でパススルー」にしてください。デバイスが対応を報告するたびに、そのまま出力されます。</string>
     <string name="sound_pass_on">HDMI でパススルー（自動）</string>
     <string name="sound_decode">アプリでデコード</string>

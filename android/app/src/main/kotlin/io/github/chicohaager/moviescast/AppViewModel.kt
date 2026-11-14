@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
+import io.github.chicohaager.moviescast.core.HomeLayout
 import io.github.chicohaager.moviescast.core.LibraryFilter
 import io.github.chicohaager.moviescast.core.LibrarySort
 import io.github.chicohaager.moviescast.core.FoundServer
@@ -58,6 +59,7 @@ sealed interface Screen {
     data class Licence(val id: String) : Screen
     data object Privacy : Screen
     data object Sound : Screen
+    data object Home : Screen
 }
 
 data class UiState(
@@ -79,6 +81,8 @@ data class UiState(
     val query: String = "",
     val sort: LibrarySort = LibrarySort.NAME,
     val filter: LibraryFilter = LibraryFilter(),
+    /** The rows above the library, as the person set them ("Home screen" in the menu). */
+    val home: HomeLayout = HomeLayout(),
     val detail: MediaItem? = null,
     val episodes: List<MediaItem> = emptyList(),
     /** For an episode: the episodes of its series that come after it; they play one after the other. */
@@ -109,7 +113,7 @@ class AppViewModel(private val app: MoviesCastApp) : ViewModel() {
             kept.logins.isEmpty() -> listOf(Screen.Login)
             else -> listOf(Screen.Accounts)
         }
-        return UiState(stack = stack, userName = session?.userName.orEmpty(), logins = kept.logins, current = kept.current, error = error, sort = storedSort())
+        return UiState(stack = stack, userName = session?.userName.orEmpty(), logins = kept.logins, current = kept.current, error = error, sort = storedSort(), home = HomeLayout.decode(app.store.homeRows))
     }
 
     private val _state = MutableStateFlow(start())
@@ -211,6 +215,15 @@ class AppViewModel(private val app: MoviesCastApp) : ViewModel() {
     }
 
     fun filter(filter: LibraryFilter) = _state.update { it.copy(filter = filter) }
+
+    /** The whole library again: no search, no filter. */
+    fun showAll() = _state.update { it.copy(query = "", filter = LibraryFilter()) }
+
+    /** The home page's rows as the person set them; kept for the next start. */
+    fun setHome(layout: HomeLayout) {
+        app.store.homeRows = layout.encode()
+        _state.update { it.copy(home = layout) }
+    }
 
     fun open(item: MediaItem) {
         val session = app.session ?: return

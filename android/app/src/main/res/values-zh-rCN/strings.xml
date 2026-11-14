@@ -79,6 +79,12 @@
     <string name="error_certificate_changed">服务器的证书与登录时的不同。如果是您自己更换的，请重新登录；否则可能有人位于您和服务器之间。</string>
     <string name="error_certificate_login_again">此登录早于应用记住服务器证书的版本。请重新登录一次，以便只有此服务器的证书有效。</string>
     <string name="sound">声音</string>
+    <string name="home_screen">主屏幕</string>
+    <string name="home_genres">类型</string>
+    <string name="home_top_rated">评分最高</string>
+    <string name="home_move_up">上移</string>
+    <string name="home_move_down">下移</string>
+    <string name="home_reset">恢复默认顺序</string>
     <string name="sound_intro">这些格式的声音由应用自己解码，因此任何电视都能播放。如果你的电视或功放能原样接收某种格式（例如为了 Dolby Atmos 或 DTS:X），请把它设为“通过 HDMI 直通”：只要设备报告支持，就会原样输出。</string>
     <string name="sound_pass_on">通过 HDMI 直通（自动）</string>
     <string name="sound_decode">在应用中解码</string>

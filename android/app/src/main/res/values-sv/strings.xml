@@ -79,6 +79,12 @@
     <string name="error_certificate_changed">Serverns certifikat är inte det som gällde vid inloggningen. Har du bytt det själv, logga in igen; annars kan någon finnas mellan dig och servern.</string>
     <string name="error_certificate_login_again">Den här inloggningen gjordes innan appen kom ihåg en servers certifikat. Logga in igen en gång så att bara den här serverns certifikat gäller.</string>
     <string name="sound">Ljud</string>
+    <string name="home_screen">Startskärm</string>
+    <string name="home_genres">Genrer</string>
+    <string name="home_top_rated">Högst betyg</string>
+    <string name="home_move_up">Flytta upp</string>
+    <string name="home_move_down">Flytta ned</string>
+    <string name="home_reset">Återställ ordning</string>
     <string name="sound_intro">Ljud i de här formaten avkodar appen själv, så spelar alla tv-apparater det. Tar din tv eller AV-receiver emot ett format oförändrat (till exempel för Dolby Atmos eller DTS:X), ställ det på ”Skicka vidare via HDMI”: då går det ut oförändrat när enheten anger att den kan.</string>
     <string name="sound_pass_on">Skicka vidare via HDMI (automatiskt)</string>
     <string name="sound_decode">Avkoda i appen</string>

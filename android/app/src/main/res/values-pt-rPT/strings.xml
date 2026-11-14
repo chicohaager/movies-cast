@@ -79,6 +79,12 @@
     <string name="error_certificate_changed">O certificado do servidor não é o do início de sessão. Se o trocou, inicie sessão novamente; caso contrário, alguém pode estar entre si e o servidor.</string>
     <string name="error_certificate_login_again">Esta sessão é de antes de a aplicação guardar o certificado de um servidor. Inicie sessão novamente uma vez para que só o certificado deste servidor conte.</string>
     <string name="sound">Som</string>
+    <string name="home_screen">Ecrã inicial</string>
+    <string name="home_genres">Géneros</string>
+    <string name="home_top_rated">Mais bem classificados</string>
+    <string name="home_move_up">Mover para cima</string>
+    <string name="home_move_down">Mover para baixo</string>
+    <string name="home_reset">Repor ordem</string>
     <string name="sound_intro">A aplicação descodifica ela própria o som nestes formatos, assim qualquer televisor o reproduz. Se o seu televisor ou amplificador AV aceita um formato inalterado (por exemplo para Dolby Atmos ou DTS:X), altere-o para «Passar pelo HDMI»: sai inalterado sempre que o dispositivo indicar que consegue.</string>
     <string name="sound_pass_on">Passar pelo HDMI (automático)</string>
     <string name="sound_decode">Descodificar na aplicação</string>

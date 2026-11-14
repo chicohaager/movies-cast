@@ -9,11 +9,14 @@ import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createEmptyComposeRule
 import androidx.compose.ui.test.onFirst
+import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.onLast
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTextReplacement
 import androidx.compose.ui.input.key.Key
@@ -109,6 +112,9 @@ class AppUiTest {
         instrumentation.runOnMainSync {
             app.forgetAll()
             app.store.sort = ""
+            // the home page as before its rows: only "continue watching" above the library, so the tests that take the
+            // first tile get the library's; the tests of the rows set the default
+            app.store.homeRows = "CONTINUE+,FAVOURITES-,RECENT-,GENRES-,TOP_RATED-"
             // as on a device where the sound page was never touched
             app.store.forgetPassthrough()
             (app as TestApp).announcedByTest = emptyList()
@@ -207,6 +213,58 @@ class AppUiTest {
         assertTrue(seen.toString(), seen.contains("GET /movies/Users/u1/Items/f1"))
         // without a backdrop the page stays as it was: poster and title in text
         assertEquals(0, compose.onAllNodesWithTag("backdrop").fetchSemanticsNodes().size)
+    }
+
+    @Test
+    fun theHomePageShowsItsRowsAndAGenreTileFiltersTheLibrary() {
+        app.store.homeRows = ""
+        login("right")
+        compose.waitUntilAtLeastOneExists(hasTestTag("row_RECENT"), 10_000)
+        compose.onNodeWithTag("row_GENRES").assertExists()
+        // nothing is a favourite and nothing has a rating: those rows stay away
+        assertEquals(0, compose.onAllNodesWithTag("row_FAVOURITES").fetchSemanticsNodes().size)
+        assertEquals(0, compose.onAllNodesWithTag("row_TOP_RATED").fetchSemanticsNodes().size)
+        // the series was added after the film: it leads "recently added"
+        compose.onAllNodesWithTag("tile").onFirst().assertTextContains("Invented Show")
+        // on a TV's page the genre row lies below the fold; the lazy list composes it once scrolled to
+        compose.onNodeWithTag("library").performScrollToNode(hasTestTag("genre"))
+        compose.onAllNodesWithTag("genre").assertCountEquals(2)
+        compose.onAllNodesWithTag("genre").onLast().performClick()
+        compose.waitUntilAtLeastOneExists(hasText(app.getString(R.string.filter_genre, "Drama"), substring = true), 10_000)
+        // filtered: no rows, the film alone
+        assertEquals(0, compose.onAllNodesWithTag("row_RECENT").fetchSemanticsNodes().size)
+        compose.onAllNodesWithTag("tile").assertCountEquals(1)
+        compose.onAllNodesWithTag("tile").onFirst().assertTextContains("Invented Film")
+        // back leaves the genre, not the app: the whole library and its rows again
+        scenario!!.onActivity { it.onBackPressedDispatcher.onBackPressed() }
+        compose.waitUntilAtLeastOneExists(hasTestTag("row_RECENT"), 10_000)
+        compose.onNodeWithText(app.getString(R.string.filter_label) + ": " + app.getString(R.string.filter_all), substring = true).assertExists()
+        scenario!!.onActivity { assertFalse("back on the plain library leaves it to the system", it.isFinishing) }
+    }
+
+    @Test
+    fun theHomeScreenPageHidesAndMovesRowsAndKeepsThem() {
+        app.store.homeRows = ""
+        login("right")
+        compose.waitUntilAtLeastOneExists(hasTestTag("row_RECENT"), 10_000)
+        compose.onNodeWithTag("menu").performClick()
+        compose.onNodeWithTag("home").performClick()
+        compose.waitUntilAtLeastOneExists(hasTestTag("home_row_RECENT"), 10_000)
+        compose.onNodeWithTag("home_row_RECENT").performClick()
+        compose.onNodeWithTag("home_up_GENRES").performClick()
+        compose.onNodeWithTag("home_up_GENRES").performClick()
+        compose.onNodeWithTag("back").performClick()
+        compose.waitUntilAtLeastOneExists(hasTestTag("row_GENRES"), 10_000)
+        assertEquals(0, compose.onAllNodesWithTag("row_RECENT").fetchSemanticsNodes().size)
+        assertEquals("CONTINUE+,GENRES+,FAVOURITES+,RECENT-,TOP_RATED+", app.store.homeRows)
+        // "reset order" brings the default back
+        compose.onNodeWithTag("menu").performClick()
+        compose.onNodeWithTag("home").performClick()
+        compose.waitUntilAtLeastOneExists(hasTestTag("home_reset"), 10_000)
+        compose.onNodeWithTag("home_reset").performClick()
+        compose.onNodeWithTag("back").performClick()
+        compose.waitUntilAtLeastOneExists(hasTestTag("row_RECENT"), 10_000)
+        assertEquals("CONTINUE+,FAVOURITES+,RECENT+,GENRES+,TOP_RATED+", app.store.homeRows)
     }
 
     @Test

@@ -39,6 +39,11 @@ class SessionStore(context: Context, name: String = "session") {
         get() = prefs.getString(KEY_SORT, "").orEmpty()
         set(value) = prefs.edit().putString(KEY_SORT, value).apply()
 
+    /** The rows of the home page, their order and which show ([io.github.chicohaager.moviescast.core.HomeLayout.encode]), or "". */
+    var homeRows: String
+        get() = prefs.getString(KEY_HOME_ROWS, "").orEmpty()
+        set(value) = prefs.edit().putString(KEY_HOME_ROWS, value).apply()
+
     /** The sound formats the person does not want handed on over HDMI ([Passthrough]); the app decodes them. */
     var passthroughOff: Set<Passthrough.Format>
         get() = Passthrough.decode(prefs.getString(KEY_PASSTHROUGH_OFF, null))
@@ -167,6 +172,7 @@ class SessionStore(context: Context, name: String = "session") {
         const val KEY_USER_NAME = "user_name"
         const val KEY_TOKEN = "token_sealed"
         const val KEY_SORT = "sort"
+        const val KEY_HOME_ROWS = "home_rows"
         const val KEY_PASSTHROUGH_OFF = "passthrough_off"
         const val KEY_LOGINS = "logins"
     }

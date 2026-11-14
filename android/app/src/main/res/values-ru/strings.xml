@@ -79,6 +79,12 @@
     <string name="error_certificate_changed">Сертификат сервера не тот, что был при входе. Если вы заменили его сами, войдите снова; иначе между вами и сервером может находиться кто-то ещё.</string>
     <string name="error_certificate_login_again">Этот вход был выполнен до того, как приложение стало запоминать сертификат сервера. Войдите ещё раз, чтобы действовал только сертификат этого сервера.</string>
     <string name="sound">Звук</string>
+    <string name="home_screen">Главный экран</string>
+    <string name="home_genres">Жанры</string>
+    <string name="home_top_rated">С высоким рейтингом</string>
+    <string name="home_move_up">Выше</string>
+    <string name="home_move_down">Ниже</string>
+    <string name="home_reset">Сбросить порядок</string>
     <string name="sound_intro">Звук в этих форматах приложение декодирует само, поэтому его воспроизводит любой телевизор. Если ваш телевизор или AV-ресивер принимает формат без изменений (например, ради Dolby Atmos или DTS:X), выберите «Передавать по HDMI»: тогда он выходит без изменений, когда устройство сообщает, что может это.</string>
     <string name="sound_pass_on">Передавать по HDMI (автоматически)</string>
     <string name="sound_decode">Декодировать в приложении</string>

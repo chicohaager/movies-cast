@@ -79,6 +79,12 @@
     <string name="error_certificate_changed">서버의 인증서가 로그인할 때의 인증서와 다릅니다. 직접 바꾸었다면 다시 로그인하세요. 그렇지 않다면 누군가 사용자와 서버 사이에 있을 수 있습니다.</string>
     <string name="error_certificate_login_again">이 로그인은 앱이 서버의 인증서를 기억하기 전에 만들어졌습니다. 이 서버의 인증서만 인정되도록 한 번 다시 로그인하세요.</string>
     <string name="sound">소리</string>
+    <string name="home_screen">홈 화면</string>
+    <string name="home_genres">장르</string>
+    <string name="home_top_rated">평점 높은 작품</string>
+    <string name="home_move_up">위로 이동</string>
+    <string name="home_move_down">아래로 이동</string>
+    <string name="home_reset">순서 초기화</string>
     <string name="sound_intro">이 형식의 소리는 앱이 직접 디코딩하므로 모든 TV에서 재생됩니다. TV나 AV 리시버가 그 형식을 그대로 받는다면(예: Dolby Atmos나 DTS:X) “HDMI로 그대로 전달”로 바꾸세요. 그러면 기기가 가능하다고 알릴 때마다 그대로 나갑니다.</string>
     <string name="sound_pass_on">HDMI로 그대로 전달(자동)</string>
     <string name="sound_decode">앱에서 디코딩</string>

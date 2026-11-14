@@ -79,6 +79,12 @@
     <string name="error_certificate_changed">Il certificato del server non è quello dell’accesso. Se l’hai cambiato tu, accedi di nuovo; altrimenti qualcuno potrebbe trovarsi tra te e il server.</string>
     <string name="error_certificate_login_again">Questo accesso risale a prima che l\'app memorizzasse il certificato di un server. Accedi di nuovo una volta, così vale solo il certificato di questo server.</string>
     <string name="sound">Audio</string>
+    <string name="home_screen">Schermata iniziale</string>
+    <string name="home_genres">Generi</string>
+    <string name="home_top_rated">Più votati</string>
+    <string name="home_move_up">Sposta su</string>
+    <string name="home_move_down">Sposta giù</string>
+    <string name="home_reset">Ripristina ordine</string>
     <string name="sound_intro">L\'app decodifica da sé l\'audio in questi formati, così ogni televisore lo riproduce. Se il tuo televisore o amplificatore AV accetta un formato invariato (ad esempio per Dolby Atmos o DTS:X), impostalo su «Passa via HDMI»: uscirà invariato ogni volta che il dispositivo indica di poterlo fare.</string>
     <string name="sound_pass_on">Passa via HDMI (automatico)</string>
     <string name="sound_decode">Decodifica nell\'app</string>

@@ -79,6 +79,12 @@
     <string name="error_certificate_changed">伺服器的憑證與登入時的不同。如果是您自己更換的，請重新登入；否則可能有人位於您與伺服器之間。</string>
     <string name="error_certificate_login_again">此登入早於應用程式記住伺服器憑證的版本。請重新登入一次，讓只有此伺服器的憑證有效。</string>
     <string name="sound">聲音</string>
+    <string name="home_screen">主畫面</string>
+    <string name="home_genres">類型</string>
+    <string name="home_top_rated">評分最高</string>
+    <string name="home_move_up">上移</string>
+    <string name="home_move_down">下移</string>
+    <string name="home_reset">恢復預設順序</string>
     <string name="sound_intro">這些格式的聲音由應用程式自行解碼，因此任何電視都能播放。如果你的電視或擴大機能原樣接收某種格式（例如為了 Dolby Atmos 或 DTS:X），請把它設為「透過 HDMI 直通」：只要裝置回報支援，就會原樣輸出。</string>
     <string name="sound_pass_on">透過 HDMI 直通（自動）</string>
     <string name="sound_decode">在應用程式中解碼</string>

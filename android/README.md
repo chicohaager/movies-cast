@@ -45,7 +45,7 @@ and plays with the device's own decoders only.
 
 | Module | What |
 |---|---|
-| `core` | plain Kotlin: the client for the Jellyfin-compatible API (`MoviesClient`, 24 tests against a local fake server, 5 against one with a self-signed certificate) and what the library screen shows (`LibraryView.kt`, 8 tests), the search for servers (`ServerSearch.kt`, 8 tests), the list of logins kept (`SavedLogins.kt`, 14 tests), which certificate counts for which server (`ScopedTrust.kt`, 15 tests), which sound format may be passed on (`Passthrough.kt`, 6 tests) |
+| `core` | plain Kotlin: the client for the Jellyfin-compatible API (`MoviesClient`, 24 tests against a local fake server, 5 against one with a self-signed certificate) and what the library screen shows (`LibraryView.kt`, 8 tests) and its rows (`HomeRows.kt`, 7 tests), the search for servers (`ServerSearch.kt`, 8 tests), the list of logins kept (`SavedLogins.kt`, 14 tests), which certificate counts for which server (`ScopedTrust.kt`, 15 tests), which sound format may be passed on (`Passthrough.kt`, 6 tests) |
 | `app` | the Android app: login, library with search and "continue watching", film page with seasons and "mark as watched", player with a queue, the list of servers and accounts, "Sound", About; 22 tests (Dolby Vision base layer, shape of the small window, language list, the diagnostics text, the queue, the privacy text, the audio sink) and 19 on a device (`src/androidTest`) |
 | `art` | the masters of logo, launcher icon and TV banner (`icon-*.svg`, `banner.html`); `render.sh` writes the app's PNGs and, with `svg2vd.py`, the icon's vector layers (`check-android.sh` fails when they differ from the masters); `make-logo.py` builds the 512 logo for webOS, the web pages, the TV starter app and the ZimaOS tile |
 | `config` | what the licences page needs besides the Gradle dependencies: FFmpeg and the copied Media3 module as libraries, the LGPL's text as FFmpeg ships it |
@@ -135,6 +135,24 @@ over into the list at the first start.
 
 An answer that comes after the change of login does not touch the new one: a request that fails
 with 401 logs out only the login it was made with.
+
+## Home page: rows
+
+Since 2026-11-14 (ROADMAP A15, gap 1): above the whole library stand rows, as Infuse's home screen and as Jellyfin's
+apps keep them (an ordered list the viewer sets; jellyfin-androidtv `homesection0…9`): continue watching, favourites,
+recently added (by the moment, not the text: Movies writes local time with its offset), genres as picture tiles (the
+backdrop of the best rated film of the genre, a film used once while another is at hand), best rated
+(`CommunityRating`); at most 20 items a row, a row with nothing in it left out (`core/HomeRows.kt`, 7 tests). "Home
+screen" in the menu turns each row on or off and moves it up or down; the choice is kept (`home_rows`). A search or a
+filter shows its result alone. OK on a genre tile filters the library by the genre and puts the focus on the first
+film found (else it fell to the top bar); Back on a searched or filtered library shows the whole library again
+(before, it left the app: the TV launcher came to the front). A wide element in focus grows by 16 dp at most, so a row
+of the "Home screen" page does not cover the buttons beside it.
+
+Measured against Movies in the Android TV emulator (API 30, remote keys only) and the phone emulator (Android 16,
+light mode). Device tests: `theHomePageShowsItsRowsAndAGenreTileFiltersTheLibrary`,
+`theHomeScreenPageHidesAndMovesRowsAndKeepsThem`; the other tests run with only "continue watching" shown, as before
+the rows (24 tests on each emulator).
 
 ## The film's page over its backdrop, focus
 

@@ -19,6 +19,12 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.itemsIndexed
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.withFrameNanos
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
@@ -63,6 +69,19 @@ import io.github.chicohaager.moviescast.core.LibraryFilter
 import io.github.chicohaager.moviescast.core.LibrarySort
 import io.github.chicohaager.moviescast.core.MediaItem
 import io.github.chicohaager.moviescast.core.genres
+import io.github.chicohaager.moviescast.core.GenreTile
+import io.github.chicohaager.moviescast.core.HomeRow
+import io.github.chicohaager.moviescast.core.favourites
+import io.github.chicohaager.moviescast.core.genreTiles
+import io.github.chicohaager.moviescast.core.recentlyAdded
+import io.github.chicohaager.moviescast.core.topRated
+import io.github.chicohaager.moviescast.MoviesCastApp
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.lazy.grid.LazyGridScope
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import coil3.compose.AsyncImage
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -77,9 +96,23 @@ fun LibraryScreen(
     onOpenSettings: () -> Unit,
     onAccounts: () -> Unit,
     onSound: () -> Unit = {},
+    onHome: () -> Unit = {},
     onAbout: () -> Unit,
 ) {
     val searchField = rememberRemoteField()
+    val grid = rememberLazyGridState()
+    // OK on a genre tile filters the library and the tile is gone: the focus goes to the first film found, not to
+    // the top bar where the focus search put it (Android TV emulator, 2026-11-14).
+    val firstFound = remember { FocusRequester() }
+    var focusFound by remember { mutableStateOf(false) }
+    LaunchedEffect(focusFound, state.shown) {
+        if (focusFound && state.shown.isNotEmpty()) {
+            grid.scrollToItem(0)
+            withFrameNanos { }
+            runCatching { firstFound.requestFocus() }
+            focusFound = false
+        }
+    }
     Scaffold(
         topBar = {
             TopAppBar(
@@ -122,6 +155,11 @@ fun LibraryScreen(
                             modifier = Modifier.testTag("accounts"),
                         )
                         DropdownMenuItem(
+                            text = { Text(stringResource(R.string.home_screen)) },
+                            onClick = { menu = false; onHome() },
+                            modifier = Modifier.testTag("home"),
+                        )
+                        DropdownMenuItem(
                             text = { Text(stringResource(R.string.sound)) },
                             onClick = { menu = false; onSound() },
                             modifier = Modifier.testTag("sound"),
@@ -148,6 +186,7 @@ fun LibraryScreen(
                 contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 24.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
+                state = grid,
                 modifier = Modifier.fillMaxSize().testTag("library"),
             ) {
                 item(span = { GridItemSpan(maxLineSpan) }) {
@@ -180,12 +219,30 @@ fun LibraryScreen(
                         }
                     }
                 }
-                if (state.plain && state.resume.isNotEmpty()) {
-                    item(span = { GridItemSpan(maxLineSpan) }) { Heading(stringResource(R.string.library_continue)) }
-                    item(span = { GridItemSpan(maxLineSpan) }) {
-                        LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                            items(state.resume, key = { it.id }) { item ->
-                                Tile(item, Modifier.width(132.dp), onOpen, showProgress = true)
+                // The rows above the library, as the person set them (menu "Home screen"); only on the plain list,
+                // a search or a filter shows its result alone. A row with nothing in it is left out.
+                if (state.plain) {
+                    for (row in state.home.shown) {
+                        when (row) {
+                            HomeRow.CONTINUE -> posterRow(row, state.resume, onOpen, showProgress = true)
+                            HomeRow.FAVOURITES -> posterRow(row, state.library.favourites(), onOpen)
+                            HomeRow.RECENT -> posterRow(row, state.library.recentlyAdded(), onOpen)
+                            HomeRow.TOP_RATED -> posterRow(row, state.library.topRated(), onOpen)
+                            HomeRow.GENRES -> {
+                                val tiles = state.library.genreTiles()
+                                if (tiles.isNotEmpty()) {
+                                    item(span = { GridItemSpan(maxLineSpan) }) { Heading(homeRowName(row), Modifier.testTag("row_${row.name}")) }
+                                    item(span = { GridItemSpan(maxLineSpan) }) {
+                                        LazyRow(horizontalArrangement = Arrangement.spacedBy(14.dp), contentPadding = PaddingValues(vertical = 8.dp)) {
+                                            items(tiles, key = { it.genre }) { tile ->
+                                                GenreCard(tile) {
+                                                    focusFound = true
+                                                    onFilter(LibraryFilter(LibraryFilter.Kind.GENRE, tile.genre))
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
@@ -203,7 +260,9 @@ fun LibraryScreen(
                         }
                     }
                 }
-                items(state.shown, key = { it.id }) { item -> Tile(item, Modifier, onOpen, showProgress = false) }
+                itemsIndexed(state.shown, key = { _, it -> it.id }) { index, item ->
+                    Tile(item, if (index == 0) Modifier.focusRequester(firstFound) else Modifier, onOpen, showProgress = false)
+                }
             }
         }
     }
@@ -258,10 +317,62 @@ private fun Choice(tag: String, label: String, value: String, items: @Composable
     }
 }
 
+/** A row of posters under its heading; nothing when [items] is empty. */
+private fun LazyGridScope.posterRow(row: HomeRow, items: List<MediaItem>, onOpen: (MediaItem) -> Unit, showProgress: Boolean = false) {
+    if (items.isEmpty()) return
+    item(span = { GridItemSpan(maxLineSpan) }) { Heading(homeRowName(row), Modifier.testTag("row_${row.name}")) }
+    item(span = { GridItemSpan(maxLineSpan) }) {
+        LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp), contentPadding = PaddingValues(vertical = 8.dp)) {
+            items(items, key = { it.id }) { item -> Tile(item, Modifier.width(132.dp), onOpen, showProgress = showProgress) }
+        }
+    }
+}
+
+/**
+ * A genre as a picture tile, as Infuse's "Film genres": the backdrop (else the poster) of a film of the genre under a
+ * veil, the genre's name over it. OK on it shows the library filtered by the genre.
+ */
+@Composable
+private fun GenreCard(tile: GenreTile, onClick: () -> Unit) {
+    val app = LocalContext.current.applicationContext as MoviesCastApp
+    val session = app.session
+    val picture = tile.picture
+    val url = if (session == null || picture == null) null
+    else app.client.backdropUrl(session, picture, 640) ?: app.client.posterUrl(session, picture.id, 400)
+    var focused by remember { mutableStateOf(false) }
+    val scale by animateFloatAsState(if (focused) 1.06f else 1f, label = "genre")
+    Box(
+        Modifier.width(240.dp).aspectRatio(16f / 9f)
+            .onFocusChanged { focused = it.isFocused }
+            .graphicsLayer { scaleX = scale; scaleY = scale }
+            .border(3.dp, if (focused) Brand.Planet else SolidColor(Color.Transparent), RoundedCornerShape(16.dp))
+            .padding(3.dp)
+            .clip(RoundedCornerShape(13.dp))
+            .background(Brush.linearGradient(listOf(MaterialTheme.colorScheme.surfaceContainerHigh, MaterialTheme.colorScheme.surfaceVariant)))
+            .clickable(onClick = onClick)
+            .testTag("genre"),
+        contentAlignment = Alignment.Center,
+    ) {
+        if (url != null) {
+            AsyncImage(model = url, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
+            Box(Modifier.fillMaxSize().background(Brand.Night.copy(alpha = 0.45f)))
+        }
+        Text(
+            tile.genre,
+            color = Color.White,
+            style = MaterialTheme.typography.titleLarge,
+            fontWeight = FontWeight.Bold,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.padding(8.dp),
+        )
+    }
+}
+
 /** A section title with a short bar in the planet's orange before it. */
 @Composable
-private fun Heading(text: String) {
-    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(top = 12.dp)) {
+private fun Heading(text: String, modifier: Modifier = Modifier) {
+    Row(verticalAlignment = Alignment.CenterVertically, modifier = modifier.padding(top = 12.dp)) {
         Box(Modifier.width(4.dp).height(22.dp).background(Brand.Planet, RoundedCornerShape(50)))
         Text(text, style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(start = 10.dp))
     }

@@ -81,6 +81,12 @@
     <string name="error_certificate_changed">The server\'s certificate is not the one it had when you logged in. If you changed it yourself, log in again; otherwise someone may be between you and the server.</string>
     <string name="error_certificate_login_again">This login was made before the app remembered a server\'s certificate. Log in again once, so that only this server\'s certificate counts.</string>
     <string name="sound">Sound</string>
+    <string name="home_screen">Home screen</string>
+    <string name="home_genres">Genres</string>
+    <string name="home_top_rated">Best rated</string>
+    <string name="home_move_up">Move up</string>
+    <string name="home_move_down">Move down</string>
+    <string name="home_reset">Reset order</string>
     <string name="sound_intro">The app decodes sound in these formats itself, so every TV plays it. If your TV or AV receiver takes a format unchanged (for Dolby Atmos or DTS:X, say), set it to “Pass on over HDMI”: it then goes out unchanged whenever the device reports that it can.</string>
     <string name="sound_pass_on">Pass on over HDMI (automatic)</string>
     <string name="sound_decode">Decode in the app</string>
