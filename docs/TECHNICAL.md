@@ -348,7 +348,8 @@ the first SETUP's session UUID as `X-Apple-Session-ID`, body `{params: {data: <b
 `insertPlayQueueItem` with the `Content-Location`, two `setProperty` and `setRate`. The Apple TV fetched the MP4
 (`AppleCoreMedia/1.0.0.23L781`, one range request over the whole file), and the event channel reported
 `loading`, `readyToPlay`, `playing` with position and duration, and after 30.2 s `itemPlayedToEnd` and `stopped`.
-Measured with the pairing tool outside this repository; movies-cast itself has no AirPlay code yet.
+Measured with the pairing tool outside this repository; movies-cast itself has no AirPlay code. AirPlay was dropped on
+2026-11-14 by the owner's decision: Infuse Pro on the Apple TV plays Movies as a Jellyfin share.
 
 ## Jellyfin and Emby as the source (0.27)
 

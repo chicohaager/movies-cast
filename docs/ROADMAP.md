@@ -53,6 +53,7 @@ State 2026-11-13: 0.2.0, the first build for testers (signed APK, [android/TESTE
 | A12 | Google Cast from the app, downloads | open | |
 | A13 | icons in place of text signs (⋮ ‹ ▶), screen reader pass | open | 3 `contentDescription` in the screens |
 | A14 | a look of its own: logo, icon, banner, colours, font | done 2026-11-13 | deep-sea blue and sun orange (proposal A of three, the owners' pick), Space Grotesk, logo everywhere (app, TV starter, webOS, web icons, ZimaOS tile); Fire TV Stick 4K and Android 16 emulator: 19 screen tests OK each. The phone and TV pages have the same colours since 2026-11-13 |
+| A15 | look and feel on a par with Infuse | open | the owner's yardstick since 2026-11-14 (Infuse Pro on the Apple TV against Movies); a screen-by-screen comparison of the app with Infuse is not made yet |
 
 ## Next
 
@@ -105,7 +106,7 @@ the TV and a presentation video are not.
 | 14 | paging of the library | one request for the whole library, no `Limit`/`StartIndex` (`movies.go:199-215`) | small | how it feels with 2000 films is not measured |
 | 15 | queue and autoplay of the next film | no `Queue`/`autoplay`/`Next` in the code | medium | matters most once 12 exists |
 | 16 | subtitles over DLNA | subtitles only in the TV app; Samsung's extension parked (7 below) | medium | ways: `sec:CaptionInfoEx` (Samsung), an SRT `res`, or burned in by Movies' transcode on request like "No sound?" |
-| 17 | Chromecast as a target, AirPlay later | no `Chromecast`/`AirPlay` in the code | large | would reach Google TV, Shield and Fire TV without an own app; the Shield needs Kodi today; Apple TV needs no AirPlay for Movies: Infuse Pro plays it as a Jellyfin share (owner's report, 2026-11-14) |
+| 17 | Chromecast as a target; AirPlay dropped | no `Chromecast`/`AirPlay` in the code | large | would reach Google TV, Shield and Fire TV without an own app; the Shield needs Kodi today. AirPlay dropped by the owner's decision of 2026-11-14: Infuse Pro on the Apple TV plays Movies as a Jellyfin share with picture and sound (owner's report) |
 | 18 | audio track on Android TV | `audioTracks` missing in Android WebView (README); on a tester's Shield E-AC3 had sound and AAC was silent | open | until then: "Android TV app experimental" |
 | 19 | music and photos | no `Music`/`Photo` in the code | medium | only if Movies serves them |
 
