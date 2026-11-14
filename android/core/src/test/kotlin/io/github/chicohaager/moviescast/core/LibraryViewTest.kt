@@ -73,4 +73,18 @@ class LibraryViewTest {
         )
         assertEquals(listOf("winter", "summer"), two.arranged("", LibrarySort.ADDED, LibraryFilter()).map { it.id })
     }
+
+    @Test
+    fun aLibraryTileShowsWhatIsInThatLibraryOnly() {
+        val all = listOf(
+            MediaItem(id = "a", name = "A", type = "Movie"),
+            MediaItem(id = "b", name = "B", type = "Series"),
+            MediaItem(id = "c", name = "C", type = "Movie"),
+        )
+        val library = MediaLibrary("v1", "Urlaub", "homevideos", setOf("c", "a"))
+        val shown = all.arranged("", LibrarySort.NAME, LibraryFilter(LibraryFilter.Kind.LIBRARY, library = library))
+        assertEquals(listOf("a", "c"), shown.map { it.id })
+        // the tile of the whole library: everything
+        assertEquals(listOf("a", "b", "c"), all.arranged("", LibrarySort.NAME, LibraryFilter(LibraryFilter.Kind.LIBRARY)).map { it.id })
+    }
 }

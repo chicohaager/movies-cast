@@ -82,6 +82,7 @@
     <string name="sound">音声</string>
     <string name="home_screen">ホーム画面</string>
     <string name="home_genres">ジャンル</string>
+    <string name="home_libraries">マイメディア</string>
     <string name="home_top_rated">評価の高い作品</string>
     <string name="home_move_up">上へ移動</string>
     <string name="home_move_down">下へ移動</string>

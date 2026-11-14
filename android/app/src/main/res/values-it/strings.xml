@@ -82,6 +82,7 @@
     <string name="sound">Audio</string>
     <string name="home_screen">Schermata iniziale</string>
     <string name="home_genres">Generi</string>
+    <string name="home_libraries">I miei media</string>
     <string name="home_top_rated">Più votati</string>
     <string name="home_move_up">Sposta su</string>
     <string name="home_move_down">Sposta giù</string>

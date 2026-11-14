@@ -82,6 +82,7 @@
     <string name="sound">Ses</string>
     <string name="home_screen">Ana ekran</string>
     <string name="home_genres">Türler</string>
+    <string name="home_libraries">Benim medyam</string>
     <string name="home_top_rated">En yüksek puanlılar</string>
     <string name="home_move_up">Yukarı taşı</string>
     <string name="home_move_down">Aşağı taşı</string>

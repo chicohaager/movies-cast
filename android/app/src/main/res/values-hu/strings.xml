@@ -82,6 +82,7 @@
     <string name="sound">Hang</string>
     <string name="home_screen">Kezdőképernyő</string>
     <string name="home_genres">Műfajok</string>
+    <string name="home_libraries">Saját média</string>
     <string name="home_top_rated">Legjobbra értékelt</string>
     <string name="home_move_up">Feljebb</string>
     <string name="home_move_down">Lejjebb</string>

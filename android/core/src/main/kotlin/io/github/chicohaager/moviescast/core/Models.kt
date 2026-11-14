@@ -102,6 +102,23 @@ data class PlayState(
 
 const val TICKS_PER_SECOND = 10_000_000L
 
+/**
+ * One of the server's libraries (Jellyfin's user views, as `/Users/{id}/Views` lists them): "Filme", "Serien" …
+ * [kind] is its `CollectionType` (`movies`, `tvshows`, `homevideos`, empty for a mixed one); [members] are the ids of
+ * the films and series in it.
+ */
+data class MediaLibrary(val id: String, val name: String, val kind: String, val members: Set<String> = emptySet())
+
+@Serializable
+internal data class ViewsDto(@SerialName("Items") val items: List<ViewDto> = emptyList())
+
+@Serializable
+internal data class ViewDto(
+    @SerialName("Id") val id: String = "",
+    @SerialName("Name") val name: String = "",
+    @SerialName("CollectionType") val collectionType: String = "",
+)
+
 @Serializable
 internal data class PublicInfoDto(
     @SerialName("ProductName") val productName: String = "",

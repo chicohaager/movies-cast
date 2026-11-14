@@ -405,4 +405,34 @@ class MoviesClientTest {
         assertTrue(item.favorite)
         assertEquals("2026-03-01T10:00:00Z", item.added)
     }
+
+    @Test
+    fun theLibrariesAreTheServersViewsEachWithItsFilmsAndSeries() = runBlocking {
+        // Shapes as Movies answered on 2026-11-14 (/Views: CollectionType movies and tvshows; ParentId kept), plus the
+        // kinds Jellyfin's Android TV app leaves out; ids made up.
+        routes = { request ->
+            val body = when {
+                request.url.encodedPath.endsWith("/Views") -> """{"Items":[
+                    {"Id":"v1","Name":"Filme","CollectionType":"movies","Type":"CollectionFolder"},
+                    {"Id":"v2","Name":"Serien","CollectionType":"tvshows","Type":"CollectionFolder"},
+                    {"Id":"v3","Name":"Bücher","CollectionType":"books","Type":"CollectionFolder"},
+                    {"Id":"v4","Name":"Ordner","CollectionType":"folders","Type":"CollectionFolder"},
+                    {"Id":"v5","Name":"Gemischt","Type":"CollectionFolder"}],"TotalRecordCount":5}"""
+                request.url.queryParameter("ParentId") == "v1" -> """{"Items":[{"Id":"a","Name":"A","Type":"Movie"},{"Id":"b","Name":"B","Type":"Movie"}],"TotalRecordCount":2}"""
+                request.url.queryParameter("ParentId") == "v5" -> """{"Items":[{"Id":"s","Name":"S","Type":"Series"}],"TotalRecordCount":1}"""
+                else -> """{"Items":[],"TotalRecordCount":0}"""
+            }
+            json(200, body)
+        }
+        val libraries = client.libraries(session)
+        assertEquals(listOf("Filme", "Serien", "Gemischt"), libraries.map { it.name })
+        assertEquals(listOf("movies", "tvshows", ""), libraries.map { it.kind })
+        assertEquals(listOf(setOf("a", "b"), emptySet(), setOf("s")), libraries.map { it.members })
+        val asked = synchronized(seen) { seen.filter { it.url.queryParameter("ParentId") != null } }
+        assertEquals(listOf("v1", "v2", "v5"), asked.map { it.url.queryParameter("ParentId") })
+        for (request in asked) {
+            assertEquals("true", request.url.queryParameter("Recursive"))
+            assertEquals("Movie,Series", request.url.queryParameter("IncludeItemTypes"))
+        }
+    }
 }

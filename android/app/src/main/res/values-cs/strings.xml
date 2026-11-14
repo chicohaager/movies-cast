@@ -82,6 +82,7 @@
     <string name="sound">Zvuk</string>
     <string name="home_screen">Domovská obrazovka</string>
     <string name="home_genres">Žánry</string>
+    <string name="home_libraries">Moje média</string>
     <string name="home_top_rated">Nejlépe hodnocené</string>
     <string name="home_move_up">Posunout nahoru</string>
     <string name="home_move_down">Posunout dolů</string>

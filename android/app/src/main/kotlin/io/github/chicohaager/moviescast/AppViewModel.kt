@@ -11,6 +11,7 @@ import io.github.chicohaager.moviescast.core.LibraryFilter
 import io.github.chicohaager.moviescast.core.LibrarySort
 import io.github.chicohaager.moviescast.core.FoundServer
 import io.github.chicohaager.moviescast.core.MediaItem
+import io.github.chicohaager.moviescast.core.MediaLibrary
 import io.github.chicohaager.moviescast.core.MoviesClient
 import io.github.chicohaager.moviescast.core.SavedLogin
 import io.github.chicohaager.moviescast.core.ServerException
@@ -77,6 +78,8 @@ data class UiState(
     /** What the last search found; null before the first search. */
     val found: List<FoundServer>? = null,
     val library: List<MediaItem> = emptyList(),
+    /** The server's libraries ("Filme", "Serien" …) for the tiles under "My media". */
+    val libraries: List<MediaLibrary> = emptyList(),
     val resume: List<MediaItem> = emptyList(),
     val loaded: Boolean = false,
     val query: String = "",
@@ -193,12 +196,22 @@ class AppViewModel(private val app: MoviesCastApp) : ViewModel() {
         _state.update { it.copy(busy = true, error = null) }
         loading = viewModelScope.launch {
             try {
-                val (library, resume) = coroutineScope {
+                val (library, resume, libraries) = coroutineScope {
                     val all = async { client.library(session) }
                     val cont = async { client.resume(session) }
-                    all.await() to cont.await()
+                    // The tiles are a way into the library, not the library: a server that cannot list its libraries
+                    // still shows everything, and the row is left out (logged, so it is not lost silently).
+                    val views = async {
+                        try {
+                            client.libraries(session)
+                        } catch (e: IOException) {
+                            AppLog.w("libraries: ${e.javaClass.simpleName}")
+                            emptyList()
+                        }
+                    }
+                    Triple(all.await(), cont.await(), views.await())
                 }
-                _state.update { it.copy(busy = false, library = library, resume = resume, loaded = true) }
+                _state.update { it.copy(busy = false, library = library, resume = resume, libraries = libraries, loaded = true) }
                 (_state.value.screen as? Screen.Detail)?.let { loadDetail(session, it.id) }
             } catch (e: IOException) {
                 fail(e, session)

@@ -33,6 +33,7 @@ import io.github.chicohaager.moviescast.core.HomeRow
 fun homeRowName(row: HomeRow): String = stringResource(
     when (row) {
         HomeRow.CONTINUE -> R.string.library_continue
+        HomeRow.LIBRARIES -> R.string.home_libraries
         HomeRow.FAVOURITES -> R.string.filter_favourites
         HomeRow.RECENT -> R.string.sort_added
         HomeRow.GENRES -> R.string.home_genres

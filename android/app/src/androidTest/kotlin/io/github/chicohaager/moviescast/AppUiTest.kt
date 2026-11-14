@@ -5,6 +5,8 @@ import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsFocused
+import androidx.compose.ui.test.performScrollToIndex
+import androidx.compose.ui.test.assertContentDescriptionEquals
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
@@ -86,6 +88,8 @@ class AppUiTest {
     /** The logo then answers 404, as a server whose logo file went missing. */
     @Volatile
     private var logoMissing = false
+    /** The server cannot list its libraries (an error page at /Views). */
+    @Volatile private var viewsBroken = false
     private val pictures get() = if (filmPictures) ""","BackdropImageTags":["bk1"],"ImageTags":{"Logo":"lg1","Primary":"pr1"}""" else ""
     /** The film names its codecs only, as Movies does for an MKV (2026-11-14); the rest is in its file's header. */
     @Volatile
@@ -134,7 +138,7 @@ class AppUiTest {
             app.store.sort = ""
             // the home page as before its rows: only "continue watching" above the library, so the tests that take the
             // first tile get the library's; the tests of the rows set the default
-            app.store.homeRows = "CONTINUE+,FAVOURITES-,RECENT-,GENRES-,TOP_RATED-"
+            app.store.homeRows = "CONTINUE+,LIBRARIES-,FAVOURITES-,RECENT-,GENRES-,TOP_RATED-"
             // as on a device where the sound page was never touched
             app.store.forgetPassthrough()
             (app as TestApp).announcedByTest = emptyList()
@@ -160,6 +164,15 @@ class AppUiTest {
                         MockResponse.Builder().code(401).headersDelay(3, java.util.concurrent.TimeUnit.SECONDS).body("{}").build()
                     path == "/movies/Users/u2/Items" -> json(200, """{"Items":[$otherFilm],"TotalRecordCount":1}""")
                     path == "/movies/Users/u1/Items/Resume" -> json(200, """{"Items":[],"TotalRecordCount":0}""")
+                    // the libraries as Movies answers them (2026-11-14: CollectionType, ParentId kept), and one with nothing
+                    path == "/movies/Users/u1/Views" && viewsBroken -> json(500, "{}")
+                    path == "/movies/Users/u1/Views" -> json(
+                        200,
+                        """{"Items":[{"Id":"vf","Name":"Filme","CollectionType":"movies"},{"Id":"vs","Name":"Serien","CollectionType":"tvshows"},{"Id":"ve","Name":"Leer","CollectionType":"homevideos"}],"TotalRecordCount":3}""",
+                    )
+                    path == "/movies/Users/u1/Items" && request.url.queryParameter("ParentId") == "vf" -> json(200, """{"Items":[$film],"TotalRecordCount":1}""")
+                    path == "/movies/Users/u1/Items" && request.url.queryParameter("ParentId") == "vs" -> json(200, """{"Items":[$series],"TotalRecordCount":1}""")
+                    path == "/movies/Users/u1/Items" && request.url.queryParameter("ParentId") != null -> json(200, """{"Items":[],"TotalRecordCount":0}""")
                     path == "/movies/Users/u1/Items" -> json(200, """{"Items":[$film,$series],"TotalRecordCount":2}""")
                     path == "/movies/Users/u1/Items/f1" -> json(200, film)
                     path == "/movies/Items/f1/Images/Backdrop/0" -> png(160, 90)
@@ -221,6 +234,70 @@ class AppUiTest {
         compose.onNodeWithTag("login").performScrollTo().performClick()
     }
 
+    private fun shell(command: String) {
+        InstrumentationRegistry.getInstrumentation().uiAutomation.executeShellCommand(command).close()
+    }
+
+    private fun keyboardShown(): Boolean {
+        var shown = false
+        scenario!!.onActivity { activity ->
+            shown = androidx.core.view.ViewCompat.getRootWindowInsets(activity.window.decorView)
+                ?.isVisible(androidx.core.view.WindowInsetsCompat.Type.ime()) == true
+        }
+        return shown
+    }
+
+    /** As android-screen.py types into a field on a TV, with the system's input: a tap, OK, the keyboard. */
+    private fun tapAndOk(tag: String) {
+        val bounds = compose.onNodeWithTag(tag).fetchSemanticsNode().boundsInWindow
+        shell("input tap ${bounds.center.x.toInt()} ${bounds.center.y.toInt()}")
+        compose.waitUntil(5_000) { compose.onNodeWithTag(tag).fetchSemanticsNode().config.getOrNull(SemanticsProperties.Focused) == true }
+        shell("input keyevent DPAD_CENTER")
+        compose.waitUntil(10_000) { keyboardShown() }
+    }
+
+    @Test
+    fun aFieldBeingTypedIntoOnATvStaysAboveTheKeyboard() {
+        val tv = (app.resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_TYPE_MASK) ==
+            android.content.res.Configuration.UI_MODE_TYPE_TELEVISION
+        org.junit.Assume.assumeTrue("a TV only: a phone's text field is scrolled to by the system", tv)
+        // the steps after which the password field lay behind the keyboard (3 of 4 logins, 2026-11-14): address and
+        // name typed, each keyboard closed with Back, then the password field. It depends on the moment, so three times,
+        // each on a freshly started page (one round let the fault pass in 2 of 5 runs)
+        for (round in 1..3) {
+            if (round > 1) {
+                scenario!!.close()
+                scenario = ActivityScenario.launch(MainActivity::class.java)
+            }
+            for ((tag, text) in listOf("server" to "192.0.2.10", "user" to "someone")) {
+                compose.waitUntil(10_000) { compose.onAllNodesWithTag(tag).fetchSemanticsNodes().isNotEmpty() }
+                tapAndOk(tag)
+                fun held() = compose.onNodeWithTag(tag).fetchSemanticsNode().config.getOrNull(SemanticsProperties.EditableText)?.text.orEmpty()
+                // as android-screen.py: what the field holds goes first (the login page keeps the last address: in a
+                // full run the earlier tests' server stood there); text sent while the keyboard is still being tied to
+                // the field can be lost, so when nothing at all arrived in 2 s it is typed once more
+                val old = held().length
+                if (old > 0) {
+                    shell("input keyevent MOVE_END" + " DEL".repeat(old))
+                    compose.waitUntil(5_000) { held().isEmpty() }
+                }
+                shell("input text $text")
+                if (runCatching { compose.waitUntil(2_000) { held().isNotEmpty() } }.isFailure) shell("input text $text")
+                runCatching { compose.waitUntil(5_000) { held() == text } }
+                assertEquals("round $round: $tag", text, held())
+                shell("input keyevent BACK")
+                compose.waitUntil(5_000) { !keyboardShown() }
+            }
+            tapAndOk("password")
+            // the keyboard slides in; then the field must stand on the page above it
+            Thread.sleep(1_000)
+            compose.waitForIdle()
+            assertTrue("round $round: the password field is behind the keyboard", runCatching { compose.onNodeWithTag("password").assertIsDisplayed() }.isSuccess)
+            shell("input keyevent BACK")
+            compose.waitUntil(5_000) { !keyboardShown() }
+        }
+    }
+
     @Test
     fun loginShowsTheLibraryAndTheFilmPage() {
         login("right")
@@ -241,6 +318,8 @@ class AppUiTest {
         app.store.homeRows = ""
         login("right")
         compose.waitUntilAtLeastOneExists(hasTestTag("row_RECENT"), 10_000)
+        // "My media" above them pushes the genres below the fold of a TV's page
+        compose.onNodeWithTag("library").performScrollToNode(hasTestTag("row_GENRES"))
         compose.onNodeWithTag("row_GENRES").assertExists()
         // nothing is a favourite and nothing has a rating: those rows stay away
         assertEquals(0, compose.onAllNodesWithTag("row_FAVOURITES").fetchSemanticsNodes().size)
@@ -264,12 +343,64 @@ class AppUiTest {
     }
 
     @Test
+    fun myMediaHasATileForTheWholeLibraryAndOneForEachLibraryWithSomethingInIt() {
+        app.store.homeRows = ""
+        login("right")
+        compose.waitUntilAtLeastOneExists(hasTestTag("row_LIBRARIES"), 10_000)
+        compose.onNodeWithTag("library_all").assertExists()
+        compose.onNodeWithTag("library_vf").assertContentDescriptionEquals("Filme")
+        // the row is wider than a phone: its last tile is composed once scrolled to
+        compose.onNodeWithTag("library_row").performScrollToNode(hasTestTag("library_vs"))
+        compose.onNodeWithTag("library_vs").assertContentDescriptionEquals("Serien")
+        // a library with nothing in it gets no tile: the row ends with "Serien"
+        compose.onNodeWithTag("library_row").performScrollToIndex(2)
+        assertEquals(0, compose.onAllNodesWithTag("library_ve").fetchSemanticsNodes().size)
+        // OK on "Serien": that library alone, no rows; the focus on what was found (on a TV)
+        compose.onNodeWithTag("library_vs").performClick()
+        compose.waitUntilAtLeastOneExists(hasText(app.getString(R.string.filter_label) + ": Serien", substring = true), 10_000)
+        assertEquals(0, compose.onAllNodesWithTag("row_LIBRARIES").fetchSemanticsNodes().size)
+        compose.onAllNodesWithTag("tile").assertCountEquals(1)
+        compose.onAllNodesWithTag("tile").onFirst().assertTextContains("Invented Show")
+        val tv = (app.resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_TYPE_MASK) ==
+            android.content.res.Configuration.UI_MODE_TYPE_TELEVISION
+        if (tv) {
+            compose.waitForIdle()
+            compose.onAllNodesWithTag("tile").onFirst().assertIsFocused()
+        }
+        // back leads home
+        scenario!!.onActivity { it.onBackPressedDispatcher.onBackPressed() }
+        compose.waitUntilAtLeastOneExists(hasTestTag("row_LIBRARIES"), 10_000)
+        // the whole library: everything, without the rows; back home again (the row kept its place: scrolled to the end)
+        compose.onNodeWithTag("library_row").performScrollToNode(hasTestTag("library_all"))
+        compose.onNodeWithTag("library_all").performClick()
+        compose.waitUntilAtLeastOneExists(hasText(app.getString(R.string.filter_label) + ": " + app.getString(R.string.library_all), substring = true), 10_000)
+        assertEquals(0, compose.onAllNodesWithTag("row_LIBRARIES").fetchSemanticsNodes().size)
+        compose.onAllNodesWithTag("tile").assertCountEquals(2)
+        scenario!!.onActivity { it.onBackPressedDispatcher.onBackPressed() }
+        compose.waitUntilAtLeastOneExists(hasTestTag("row_LIBRARIES"), 10_000)
+        scenario!!.onActivity { assertFalse("back on the plain library leaves it to the system", it.isFinishing) }
+    }
+
+    @Test
+    fun aServerThatCannotListItsLibrariesStillShowsTheWholeLibrary() {
+        viewsBroken = true
+        app.store.homeRows = ""
+        login("right")
+        compose.waitUntilAtLeastOneExists(hasTestTag("row_LIBRARIES"), 10_000)
+        compose.onNodeWithTag("library_all").assertExists()
+        assertEquals(0, compose.onAllNodesWithTag("library_vf").fetchSemanticsNodes().size)
+        // the library itself is there, without an error
+        compose.onNodeWithTag("library").performScrollToNode(hasText("Invented Film"))
+        assertEquals(0, compose.onAllNodesWithText(app.getString(R.string.retry)).fetchSemanticsNodes().size)
+    }
+
+    @Test
     fun aRowKeepsTheFocusAtItsEnd() {
         // a remote's behaviour: on a phone (touch mode) a clickable tile takes no focus at all
         val tv = (app.resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_TYPE_MASK) ==
             android.content.res.Configuration.UI_MODE_TYPE_TELEVISION
         org.junit.Assume.assumeTrue("a TV only", tv)
-        app.store.homeRows = "CONTINUE+,FAVOURITES-,RECENT+,GENRES-,TOP_RATED-"
+        app.store.homeRows = "CONTINUE+,LIBRARIES-,FAVOURITES-,RECENT+,GENRES-,TOP_RATED-"
         login("right")
         compose.waitUntilAtLeastOneExists(hasTestTag("row_RECENT"), 10_000)
         // "recently added": the series, then the film; the film is the row's last tile
@@ -295,7 +426,7 @@ class AppUiTest {
         compose.onNodeWithTag("back").performClick()
         compose.waitUntilAtLeastOneExists(hasTestTag("row_GENRES"), 10_000)
         assertEquals(0, compose.onAllNodesWithTag("row_RECENT").fetchSemanticsNodes().size)
-        assertEquals("CONTINUE+,GENRES+,FAVOURITES+,RECENT-,TOP_RATED+", app.store.homeRows)
+        assertEquals("CONTINUE+,LIBRARIES+,GENRES+,FAVOURITES+,RECENT-,TOP_RATED+", app.store.homeRows)
         // "reset order" brings the default back
         compose.onNodeWithTag("menu").performClick()
         compose.onNodeWithTag("home").performClick()
@@ -303,7 +434,7 @@ class AppUiTest {
         compose.onNodeWithTag("home_reset").performClick()
         compose.onNodeWithTag("back").performClick()
         compose.waitUntilAtLeastOneExists(hasTestTag("row_RECENT"), 10_000)
-        assertEquals("CONTINUE+,FAVOURITES+,RECENT+,GENRES+,TOP_RATED+", app.store.homeRows)
+        assertEquals("CONTINUE+,LIBRARIES+,FAVOURITES+,RECENT+,GENRES+,TOP_RATED+", app.store.homeRows)
     }
 
     @Test

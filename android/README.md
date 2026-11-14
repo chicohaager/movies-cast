@@ -166,7 +166,7 @@ asset: 640×360 marked HDR10, AC3 5.1, served with byte ranges), `theRemoteReach
 Since 2026-11-14 (ROADMAP A15, gap 1): above the whole library stand rows, as Infuse's home screen and as Jellyfin's
 apps keep them (an ordered list the viewer sets; jellyfin-androidtv `homesection0…9`): continue watching, favourites
 (the films marked as favourite; Infuse's "Favoriten" row is something else, shortcut tiles to library, films, TV
-series and other, owner's correction 2026-11-14),
+series and other, owner's correction 2026-11-14; those are "My media" below),
 recently added (by the moment, not the text: Movies writes local time with its offset), genres as picture tiles (the
 backdrop of the best rated film of the genre, a film used once while another is at hand), best rated
 (`CommunityRating`); at most 20 items a row, a row with nothing in it left out (`core/HomeRows.kt`, 7 tests). "Home
@@ -176,10 +176,27 @@ film found (else it fell to the top bar); Back on a searched or filtered library
 (before, it left the app: the TV launcher came to the front). A wide element in focus grows by 16 dp at most, so a row
 of the "Home screen" page does not cover the buttons beside it.
 
+"My media" (after continue watching, as Infuse's shortcut tiles "Bibliothek, Filme, TV-Serien, Andere"): a tile for
+the whole library, then one per library of the server, as Jellyfin's Android TV app lists them (`/Users/{id}/Views`;
+books and plain folders left out, as its UserViewsRepository does); a tile's colour and symbol go by the library's
+`CollectionType` (films blue with a film camera, series pink with a TV set, anything else green with a video file),
+drawn by the app, no icon set. Which films and series a library holds is asked with `ParentId` (Movies keeps it:
+"Filme" 8 items, "Serien" 0, measured 2026-11-14), and a library with nothing the app lists gets no tile, so Movies'
+empty "Serien" stays away. OK on a tile shows that library alone ("Filter: Filme"), the tile of the whole library shows
+everything without the rows; Back leads home. A layout kept by an earlier build gets the row after continue watching.
+If the server cannot list its libraries the rest of the page stays and the row has the whole-library tile only (logged).
+
 Measured against Movies in the Android TV emulator (API 30, remote keys only) and the phone emulator (Android 16,
-light mode). Device tests: `theHomePageShowsItsRowsAndAGenreTileFiltersTheLibrary`,
+light mode). Device tests: `myMediaHasATileForTheWholeLibraryAndOneForEachLibraryWithSomethingInIt`,
+`theHomePageShowsItsRowsAndAGenreTileFiltersTheLibrary`,
 `theHomeScreenPageHidesAndMovesRowsAndKeepsThem`; the other tests run with only "continue watching" shown, as before
-the rows (24 tests on each emulator).
+the rows (29 tests on each emulator since "My media").
+
+On a TV the text field being typed into keeps itself above the keyboard (`rememberRemoteField`): the keyboard comes
+after OK, the page had scrolled to the field before that, and in 3 of 4 fresh logins on the Android TV emulator the
+password field lay behind the keyboard while it was typed into (missing from the screen's dump; seen while testing
+"My media", 2026-11-14). After the fix 6 of 6. `aFieldBeingTypedIntoOnATvStaysAboveTheKeyboard` types as
+`android-screen.py` does (tap, OK, `input text`, Back) on three fresh pages; without the fix 4 of 4 runs red.
 
 ## The film's page over its backdrop, focus
 

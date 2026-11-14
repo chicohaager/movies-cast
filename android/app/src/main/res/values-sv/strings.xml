@@ -82,6 +82,7 @@
     <string name="sound">Ljud</string>
     <string name="home_screen">Startskärm</string>
     <string name="home_genres">Genrer</string>
+    <string name="home_libraries">Min media</string>
     <string name="home_top_rated">Högst betyg</string>
     <string name="home_move_up">Flytta upp</string>
     <string name="home_move_down">Flytta ned</string>

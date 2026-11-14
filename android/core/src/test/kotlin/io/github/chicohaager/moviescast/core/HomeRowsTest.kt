@@ -73,11 +73,11 @@ class HomeRowsTest {
         var layout = HomeLayout()
         assertEquals(HomeRow.entries.toList(), layout.shown)
         layout = layout.moveDown(HomeRow.CONTINUE).toggle(HomeRow.GENRES).moveUp(HomeRow.TOP_RATED)
-        assertEquals(listOf(HomeRow.FAVOURITES, HomeRow.CONTINUE, HomeRow.RECENT, HomeRow.TOP_RATED, HomeRow.GENRES), layout.rows.map { it.first })
-        assertEquals(listOf(HomeRow.FAVOURITES, HomeRow.CONTINUE, HomeRow.RECENT, HomeRow.TOP_RATED), layout.shown)
+        assertEquals(listOf(HomeRow.LIBRARIES, HomeRow.CONTINUE, HomeRow.FAVOURITES, HomeRow.RECENT, HomeRow.TOP_RATED, HomeRow.GENRES), layout.rows.map { it.first })
+        assertEquals(listOf(HomeRow.LIBRARIES, HomeRow.CONTINUE, HomeRow.FAVOURITES, HomeRow.RECENT, HomeRow.TOP_RATED), layout.shown)
         assertEquals(layout, HomeLayout.decode(layout.encode()))
         // at the ends nothing moves
-        assertEquals(layout, layout.moveUp(HomeRow.FAVOURITES))
+        assertEquals(layout, layout.moveUp(HomeRow.LIBRARIES))
         assertEquals(layout, layout.moveDown(HomeRow.GENRES))
     }
 
@@ -88,9 +88,24 @@ class HomeRowsTest {
         assertEquals(HomeLayout(), HomeLayout.decode("garbage"))
         // a row this build does not know is dropped; rows the text does not name come back at their place, shown
         val read = HomeLayout.decode("TOP_RATED-,SPOTLIGHT+,CONTINUE+")
-        assertEquals(listOf(HomeRow.TOP_RATED, HomeRow.CONTINUE, HomeRow.FAVOURITES, HomeRow.RECENT, HomeRow.GENRES), read.rows.map { it.first })
-        assertEquals(listOf(HomeRow.CONTINUE, HomeRow.FAVOURITES, HomeRow.RECENT, HomeRow.GENRES), read.shown)
+        assertEquals(listOf(HomeRow.TOP_RATED, HomeRow.CONTINUE, HomeRow.LIBRARIES, HomeRow.FAVOURITES, HomeRow.RECENT, HomeRow.GENRES), read.rows.map { it.first })
+        assertEquals(listOf(HomeRow.CONTINUE, HomeRow.LIBRARIES, HomeRow.FAVOURITES, HomeRow.RECENT, HomeRow.GENRES), read.shown)
+        // as the build before "My media" kept it: the new row comes after "Continue watching", as in Infuse, shown
+        val before = HomeLayout.decode("FAVOURITES+,CONTINUE+,RECENT-,GENRES+,TOP_RATED+")
+        assertEquals(listOf(HomeRow.FAVOURITES, HomeRow.CONTINUE, HomeRow.LIBRARIES, HomeRow.RECENT, HomeRow.GENRES, HomeRow.TOP_RATED), before.rows.map { it.first })
+        assertEquals(true, before.rows.first { it.first == HomeRow.LIBRARIES }.second)
         // a row named twice counts once
         assertEquals(1, HomeLayout.decode("GENRES-,GENRES+").rows.count { it.first == HomeRow.GENRES })
+    }
+
+    @Test
+    fun myMediaOffersTheLibrariesThatHoldSomethingInTheServersOrder() {
+        val items = listOf(item("a"), item("b"), item("s"))
+        val films = MediaLibrary("v1", "Filme", "movies", setOf("a", "b"))
+        val series = MediaLibrary("v2", "Serien", "tvshows", emptySet()) // as Movies answered on 2026-11-14
+        val holidays = MediaLibrary("v3", "Urlaub", "homevideos", setOf("s", "gone"))
+        val music = MediaLibrary("v4", "Musik", "music", setOf("song")) // nothing the app lists
+        assertEquals(listOf(films, holidays), items.libraryTiles(listOf(films, series, holidays, music)))
+        assertEquals(emptyList<MediaLibrary>(), emptyList<MediaItem>().libraryTiles(listOf(films)))
     }
 }

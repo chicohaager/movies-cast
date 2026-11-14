@@ -82,6 +82,7 @@
     <string name="sound">Dźwięk</string>
     <string name="home_screen">Ekran główny</string>
     <string name="home_genres">Gatunki</string>
+    <string name="home_libraries">Moje media</string>
     <string name="home_top_rated">Najwyżej oceniane</string>
     <string name="home_move_up">Przesuń w górę</string>
     <string name="home_move_down">Przesuń w dół</string>

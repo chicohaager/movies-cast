@@ -145,6 +145,25 @@ class MoviesClient(http: OkHttpClient, private val device: Device) {
             addQueryParameter("Fields", LIBRARY_FIELDS)
         }
 
+    /**
+     * The libraries a home page offers as tiles, as Jellyfin's Android TV app lists them in "My media" (its
+     * UserViewsRepository leaves out books and plain folders); each with the ids of its films and series, asked with
+     * `ParentId` (Movies keeps it: "Serien" 0 items, "Filme" 8, measured 2026-11-14).
+     */
+    suspend fun libraries(s: Session): List<MediaLibrary> {
+        val url = url(s.baseUrl, "/Users/${seg(s.userId)}/Views") {}
+        return decode<ViewsDto>(call(url, s.token, "GET", null)).items
+            .filter { it.id.isNotEmpty() && it.collectionType.lowercase() !in UNOFFERED_LIBRARIES }
+            .map { view ->
+                val members = items(s, "/Users/${seg(s.userId)}/Items") {
+                    addQueryParameter("Recursive", "true")
+                    addQueryParameter("IncludeItemTypes", "Movie,Series")
+                    addQueryParameter("ParentId", view.id)
+                }
+                MediaLibrary(view.id, view.name, view.collectionType.lowercase(), members.map { it.id }.toSet())
+            }
+    }
+
     /** The episodes of a series, in order. */
     suspend fun episodes(s: Session, seriesId: String): List<MediaItem> =
         items(s, "/Shows/${seg(seriesId)}/Episodes") {
@@ -365,6 +384,7 @@ class MoviesClient(http: OkHttpClient, private val device: Device) {
 
     companion object {
         const val PAGE_SIZE = 200
+        private val UNOFFERED_LIBRARIES = setOf("books", "folders")
         private const val LIBRARY_FIELDS = "Overview,MediaSources,Genres,DateCreated,RecursiveItemCount,ChildCount"
         private val JSON = "application/json".toMediaType()
 

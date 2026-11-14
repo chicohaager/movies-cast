@@ -84,6 +84,7 @@
     <string name="sound">Sound</string>
     <string name="home_screen">Home screen</string>
     <string name="home_genres">Genres</string>
+    <string name="home_libraries">My media</string>
     <string name="home_top_rated">Best rated</string>
     <string name="home_move_up">Move up</string>
     <string name="home_move_down">Move down</string>

@@ -82,6 +82,7 @@
     <string name="sound">Som</string>
     <string name="home_screen">Tela inicial</string>
     <string name="home_genres">Gêneros</string>
+    <string name="home_libraries">Minha mídia</string>
     <string name="home_top_rated">Mais bem avaliados</string>
     <string name="home_move_up">Mover para cima</string>
     <string name="home_move_down">Mover para baixo</string>

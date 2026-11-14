@@ -82,6 +82,7 @@
     <string name="sound">Звук</string>
     <string name="home_screen">Главный экран</string>
     <string name="home_genres">Жанры</string>
+    <string name="home_libraries">Мои медиафайлы</string>
     <string name="home_top_rated">С высоким рейтингом</string>
     <string name="home_move_up">Выше</string>
     <string name="home_move_down">Ниже</string>

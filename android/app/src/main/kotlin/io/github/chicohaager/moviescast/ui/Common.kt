@@ -1,6 +1,11 @@
 package io.github.chicohaager.moviescast.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.gestures.animateScrollBy
@@ -117,14 +122,26 @@ class RemoteField(val readOnly: Boolean, val modifier: Modifier)
  * walk past the field. On a TV the field therefore stays read-only (no keyboard) until OK is
  * pressed on it. On every device up and down leave the field, as a one-line field has no line
  * to move to. Phones and tablets keep the usual behaviour: touching the field opens the keyboard.
+ *
+ * While the field is being edited it keeps itself in view as the keyboard takes its room: the keyboard comes after
+ * the focus, and the page did not scroll again, so the password field lay behind the keyboard while it was typed
+ * into (Android TV emulator, 2026-11-14: 3 of 4 fresh logins, the field missing from the screen's dump).
  */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun rememberRemoteField(): RemoteField {
     val tv = (LocalConfiguration.current.uiMode and Configuration.UI_MODE_TYPE_MASK) == Configuration.UI_MODE_TYPE_TELEVISION
     var editing by remember { mutableStateOf(false) }
     val focus = LocalFocusManager.current
     val keyboard = LocalSoftwareKeyboardController.current
+    val inView = remember { BringIntoViewRequester() }
+    // the keyboard's room, read anew each frame while it slides in: the last call sees the page at its final size
+    val keyboardRoom = WindowInsets.ime.getBottom(LocalDensity.current)
+    LaunchedEffect(editing, keyboardRoom) {
+        if (editing && keyboardRoom > 0) inView.bringIntoView()
+    }
     val modifier = Modifier
+        .bringIntoViewRequester(inView)
         .onFocusChanged { if (!it.hasFocus) editing = false }
         .onPreviewKeyEvent { event ->
             val down = event.type == KeyEventType.KeyDown

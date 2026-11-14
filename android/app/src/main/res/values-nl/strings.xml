@@ -82,6 +82,7 @@
     <string name="sound">Geluid</string>
     <string name="home_screen">Startscherm</string>
     <string name="home_genres">Genres</string>
+    <string name="home_libraries">Mijn media</string>
     <string name="home_top_rated">Best beoordeeld</string>
     <string name="home_move_up">Omhoog</string>
     <string name="home_move_down">Omlaag</string>

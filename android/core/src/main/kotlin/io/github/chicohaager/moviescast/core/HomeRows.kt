@@ -5,7 +5,7 @@ package io.github.chicohaager.moviescast.core
  * Jellyfin's apps keep them: an ordered list the viewer sets, each row shown or not (Infuse "Home screen → Edit",
  * jellyfin-androidtv `homesection0…9`). A row with nothing in it is left out.
  */
-enum class HomeRow { CONTINUE, FAVOURITES, RECENT, GENRES, TOP_RATED }
+enum class HomeRow { CONTINUE, LIBRARIES, FAVOURITES, RECENT, GENRES, TOP_RATED }
 
 /** The rows in their order, each with whether it shows. */
 data class HomeLayout(val rows: List<Pair<HomeRow, Boolean>> = DEFAULT) {
@@ -90,4 +90,14 @@ fun List<MediaItem>.genreTiles(): List<GenreTile> {
         pick?.let { used.add(it.id) }
         GenreTile(genre, pick)
     }
+}
+
+/**
+ * The tiles of "My media", as Infuse's row of shortcut tiles (Bibliothek, Filme, TV-Serien, Andere) and Jellyfin's
+ * "My media": the server's libraries in its order that hold something the app lists; a library with nothing of
+ * [items] in it is left out (Movies keeps an empty "Serien"). The tile of the whole library comes before them in the UI.
+ */
+fun List<MediaItem>.libraryTiles(libraries: List<MediaLibrary>): List<MediaLibrary> {
+    val ids = mapTo(HashSet()) { it.id }
+    return libraries.filter { library -> library.members.any { it in ids } }
 }

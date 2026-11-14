@@ -3,9 +3,13 @@ package io.github.chicohaager.moviescast.core
 /** The order of the library, as on movies-cast's phone page: by name, or the newest, latest or best first. */
 enum class LibrarySort { NAME, ADDED, YEAR, SCORE }
 
-/** Which items of the library show: all, or one of the kinds below; [genre] counts with [Kind.GENRE] only. */
-data class LibraryFilter(val kind: Kind = Kind.ALL, val genre: String = "") {
-    enum class Kind { ALL, UNWATCHED, STARTED, FAVOURITES, GENRE }
+/**
+ * Which items of the library show: all, or one of the kinds below; [genre] counts with [Kind.GENRE] only, [library]
+ * with [Kind.LIBRARY] only: one of the server's libraries (a tile under "My media"), or, null, the whole library as the
+ * tile before them opens it, as Infuse's "Bibliothek": everything, without the home rows above it.
+ */
+data class LibraryFilter(val kind: Kind = Kind.ALL, val genre: String = "", val library: MediaLibrary? = null) {
+    enum class Kind { ALL, UNWATCHED, STARTED, FAVOURITES, GENRE, LIBRARY }
 }
 
 /**
@@ -26,6 +30,7 @@ fun List<MediaItem>.arranged(query: String, sort: LibrarySort, filter: LibraryFi
                 LibraryFilter.Kind.STARTED -> item.resumeSeconds > 0
                 LibraryFilter.Kind.FAVOURITES -> item.favorite
                 LibraryFilter.Kind.GENRE -> filter.genre in item.genres
+                LibraryFilter.Kind.LIBRARY -> filter.library?.members?.contains(item.id) ?: true
             }
     }
     // sortedBy... is stable, so equal values keep the server's order by name.

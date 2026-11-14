@@ -86,6 +86,18 @@ import io.github.chicohaager.moviescast.core.favourites
 import io.github.chicohaager.moviescast.core.genreTiles
 import io.github.chicohaager.moviescast.core.recentlyAdded
 import io.github.chicohaager.moviescast.core.topRated
+import io.github.chicohaager.moviescast.core.libraryTiles
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.Stroke
 import io.github.chicohaager.moviescast.MoviesCastApp
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.lazy.grid.LazyGridScope
@@ -251,6 +263,32 @@ fun LibraryScreen(
                     for (row in state.home.shown) {
                         when (row) {
                             HomeRow.CONTINUE -> posterRow(row, state.resume, onOpen, showProgress = true)
+                            HomeRow.LIBRARIES -> {
+                                // Infuse's row of shortcut tiles: the whole library first, then the server's own
+                                // libraries; there only when the library has something (a row with nothing is left out).
+                                if (state.library.isNotEmpty()) {
+                                    val libraries = state.library.libraryTiles(state.libraries)
+                                    item(span = { GridItemSpan(maxLineSpan) }) { Heading(homeRowName(row), Modifier.testTag("row_${row.name}")) }
+                                    item(span = { GridItemSpan(maxLineSpan) }) {
+                                        // room at the sides for a tile in focus: it grows by 8 % of 200 dp (the first one was cut at the page's
+                                        // edge, Android TV emulator, 2026-11-14)
+                                        LazyRow(horizontalArrangement = Arrangement.spacedBy(18.dp), contentPadding = PaddingValues(horizontal = 10.dp, vertical = 8.dp), modifier = Modifier.holdsFocusSideways().testTag("library_row")) {
+                                            item(key = "all") {
+                                                LibraryCard(stringResource(R.string.library_all), LibraryLook.ALL, Modifier.testTag("library_all")) {
+                                                    focusFound = true
+                                                    onFilter(LibraryFilter(LibraryFilter.Kind.LIBRARY))
+                                                }
+                                            }
+                                            items(libraries, key = { it.id }) { library ->
+                                                LibraryCard(library.name, LibraryLook.of(library.kind), Modifier.testTag("library_${library.id}")) {
+                                                    focusFound = true
+                                                    onFilter(LibraryFilter(LibraryFilter.Kind.LIBRARY, library = library))
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                             HomeRow.FAVOURITES -> posterRow(row, state.library.favourites(), onOpen)
                             HomeRow.RECENT -> posterRow(row, state.library.recentlyAdded(), onOpen)
                             HomeRow.TOP_RATED -> posterRow(row, state.library.topRated(), onOpen)
@@ -310,8 +348,11 @@ private fun SortAndFilter(state: UiState, onSort: (LibrarySort) -> Unit, onFilte
         LibraryFilter.Kind.FAVOURITES to R.string.filter_favourites,
     )
     val genres = remember(state.library) { state.library.genres() }
-    val filterName = if (state.filter.kind == LibraryFilter.Kind.GENRE) stringResource(R.string.filter_genre, state.filter.genre)
-    else stringResource(kinds.first { it.first == state.filter.kind }.second)
+    val filterName = when (state.filter.kind) {
+        LibraryFilter.Kind.GENRE -> stringResource(R.string.filter_genre, state.filter.genre)
+        LibraryFilter.Kind.LIBRARY -> state.filter.library?.name ?: stringResource(R.string.library_all)
+        else -> stringResource(kinds.first { it.first == state.filter.kind }.second)
+    }
     Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
         Choice("sort", stringResource(R.string.sort_label), stringResource(sorts.first { it.first == state.sort }.second)) { close ->
             for ((sort, name) in sorts) {
@@ -406,6 +447,129 @@ private fun GenreCard(tile: GenreTile, onClick: () -> Unit) {
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.padding(8.dp),
         )
+    }
+}
+
+/** The colour and symbol of a tile under "My media", by the library's kind, as Infuse colours its shortcut tiles. */
+internal enum class LibraryLook(val from: Color, val to: Color) {
+    ALL(Color(0xFFFF9500), Color(0xFFFF5E3A)),
+    FILMS(Color(0xFF1D6FF2), Color(0xFF1AC8FC)),
+    SERIES(Color(0xFFFF2D6F), Color(0xFFE040FB)),
+    OTHER(Color(0xFF2DBE4E), Color(0xFF7ED321));
+
+    companion object {
+        /** Jellyfin's CollectionType: `movies`, `tvshows`; anything else (home videos, mixed) is "other". */
+        fun of(kind: String): LibraryLook = when (kind) {
+            "movies" -> FILMS
+            "tvshows" -> SERIES
+            else -> OTHER
+        }
+    }
+}
+
+/**
+ * A tile under "My media" as Infuse draws its shortcut tiles: a coloured card with a white symbol, the name under it.
+ * The symbols are drawn here (no icon set in the app). OK on it shows that library alone, Back leads home again.
+ */
+@Composable
+private fun LibraryCard(name: String, look: LibraryLook, modifier: Modifier, onClick: () -> Unit) {
+    var focused by remember { mutableStateOf(false) }
+    val scale by animateFloatAsState(if (focused) 1.08f else 1f, label = "library")
+    Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.width(200.dp)) {
+        Box(
+            modifier
+                .fillMaxWidth()
+                .aspectRatio(16f / 9f)
+                .onFocusChanged { focused = it.isFocused }
+                .graphicsLayer { scaleX = scale; scaleY = scale }
+                .border(3.dp, if (focused) SolidColor(Color.White) else SolidColor(Color.Transparent), RoundedCornerShape(18.dp))
+                .padding(3.dp)
+                .clip(RoundedCornerShape(15.dp))
+                .background(Brush.linearGradient(listOf(look.from, look.to)))
+                .clickable(onClick = onClick)
+                .semantics { contentDescription = name },
+            contentAlignment = Alignment.Center,
+        ) {
+            Canvas(Modifier.fillMaxHeight(0.5f).aspectRatio(1.3f)) { librarySymbol(look) }
+        }
+        Text(
+            name,
+            style = MaterialTheme.typography.titleMedium,
+            // the card carries the name for a screen reader; read once
+            modifier = Modifier.padding(top = 10.dp).clearAndSetSemantics {},
+            color = if (focused) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+    }
+}
+
+/** The white symbol of a tile: a play frame (all), a film camera (films), a TV set (series), a video file (other). */
+private fun DrawScope.librarySymbol(look: LibraryLook) {
+    val w = size.width
+    val h = size.height
+    val line = h * 0.07f
+    val ink = Color.White
+    val stroke = Stroke(width = line, cap = StrokeCap.Round, join = StrokeJoin.Round)
+    fun play(cx: Float, cy: Float, r: Float) = drawPath(
+        Path().apply {
+            moveTo(cx - r * 0.6f, cy - r)
+            lineTo(cx + r, cy)
+            lineTo(cx - r * 0.6f, cy + r)
+            close()
+        },
+        ink,
+    )
+    when (look) {
+        LibraryLook.ALL -> {
+            drawRoundRect(ink, Offset(w * 0.22f, h * 0.18f), Size(w * 0.56f, h * 0.64f), CornerRadius(h * 0.12f), style = stroke)
+            play(w * 0.5f, h * 0.5f, h * 0.14f)
+            for (x in listOf(0.04f, 0.12f, 0.88f, 0.96f)) {
+                val tall = if (x == 0.12f || x == 0.88f) 0.5f else 0.34f
+                drawLine(ink, Offset(w * x, h * (0.5f - tall / 2)), Offset(w * x, h * (0.5f + tall / 2)), line, StrokeCap.Round)
+            }
+        }
+        LibraryLook.FILMS -> {
+            drawCircle(ink, h * 0.15f, Offset(w * 0.3f, h * 0.24f), style = stroke)
+            drawCircle(ink, h * 0.15f, Offset(w * 0.56f, h * 0.24f), style = stroke)
+            drawRoundRect(ink, Offset(w * 0.14f, h * 0.44f), Size(w * 0.56f, h * 0.42f), CornerRadius(h * 0.06f), style = stroke)
+            drawPath(
+                Path().apply {
+                    moveTo(w * 0.7f, h * 0.58f)
+                    lineTo(w * 0.9f, h * 0.48f)
+                    lineTo(w * 0.9f, h * 0.82f)
+                    lineTo(w * 0.7f, h * 0.72f)
+                    close()
+                },
+                ink,
+                style = stroke,
+            )
+        }
+        LibraryLook.SERIES -> {
+            drawLine(ink, Offset(w * 0.38f, h * 0.06f), Offset(w * 0.5f, h * 0.2f), line, StrokeCap.Round)
+            drawLine(ink, Offset(w * 0.62f, h * 0.06f), Offset(w * 0.5f, h * 0.2f), line, StrokeCap.Round)
+            drawRoundRect(ink, Offset(w * 0.14f, h * 0.22f), Size(w * 0.72f, h * 0.6f), CornerRadius(h * 0.1f), style = stroke)
+            drawRoundRect(ink, Offset(w * 0.24f, h * 0.33f), Size(w * 0.38f, h * 0.38f), CornerRadius(h * 0.05f), style = stroke)
+            drawCircle(ink, line * 0.8f, Offset(w * 0.74f, h * 0.4f))
+            drawCircle(ink, line * 0.8f, Offset(w * 0.74f, h * 0.56f))
+            drawLine(ink, Offset(w * 0.3f, h * 0.82f), Offset(w * 0.3f, h * 0.92f), line, StrokeCap.Round)
+            drawLine(ink, Offset(w * 0.7f, h * 0.82f), Offset(w * 0.7f, h * 0.92f), line, StrokeCap.Round)
+        }
+        LibraryLook.OTHER -> {
+            drawPath(
+                Path().apply {
+                    moveTo(w * 0.3f, h * 0.08f)
+                    lineTo(w * 0.58f, h * 0.08f)
+                    lineTo(w * 0.72f, h * 0.24f)
+                    lineTo(w * 0.72f, h * 0.92f)
+                    lineTo(w * 0.3f, h * 0.92f)
+                    close()
+                },
+                ink,
+                style = stroke,
+            )
+            play(w * 0.52f, h * 0.55f, h * 0.13f)
+        }
     }
 }
 
