@@ -33,6 +33,7 @@
     <string name="episodes">Folgen</string>
     <string name="episode_label">S%1$d F%2$d · %3$s</string>
     <string name="detail_minutes">%1$d Min.</string>
+    <string name="detail_hours_minutes">%1$d Std. %2$d Min.</string>
     <string name="detail_audio">Ton</string>
     <string name="detail_subtitles">Untertitel</string>
     <string name="detail_file">Datei</string>

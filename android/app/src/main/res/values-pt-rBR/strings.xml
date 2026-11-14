@@ -33,6 +33,7 @@
     <string name="episodes">Episódios</string>
     <string name="episode_label">T%1$d E%2$d · %3$s</string>
     <string name="detail_minutes">%1$d min</string>
+    <string name="detail_hours_minutes">%1$d h %2$d min</string>
     <string name="detail_audio">Som</string>
     <string name="detail_subtitles">Legendas</string>
     <string name="detail_file">Arquivo</string>

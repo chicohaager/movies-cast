@@ -33,6 +33,7 @@
     <string name="episodes">エピソード</string>
     <string name="episode_label">S%1$d E%2$d · %3$s</string>
     <string name="detail_minutes">%1$d 分</string>
+    <string name="detail_hours_minutes">%1$d時間%2$d分</string>
     <string name="detail_audio">音声</string>
     <string name="detail_subtitles">字幕</string>
     <string name="detail_file">ファイル</string>

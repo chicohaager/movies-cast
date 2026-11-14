@@ -33,6 +33,7 @@
     <string name="episodes">Odcinki</string>
     <string name="episode_label">S%1$d O%2$d · %3$s</string>
     <string name="detail_minutes">%1$d min</string>
+    <string name="detail_hours_minutes">%1$d godz. %2$d min</string>
     <string name="detail_audio">Dźwięk</string>
     <string name="detail_subtitles">Napisy</string>
     <string name="detail_file">Plik</string>

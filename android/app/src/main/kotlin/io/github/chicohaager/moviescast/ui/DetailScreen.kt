@@ -226,14 +226,24 @@ private fun Facts(
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
         Title(item, logo)
+        val tech = state.tech?.takeIf { item.playable }
+        // As Infuse: running time, year, age rating, then what the file holds as badges; the genres on a line below.
         val line = listOfNotNull(
             item.seriesName.takeIf { it.isNotEmpty() },
+            runtime(item.runtimeSeconds),
             item.year.takeIf { it > 0 }?.toString(),
-            (item.runtimeSeconds / 60).takeIf { it > 0 }?.let { stringResource(R.string.detail_minutes, it.toInt()) },
             item.rating.takeIf { it.isNotEmpty() },
-            item.genres.take(3).joinToString(", ").takeIf { it.isNotEmpty() },
         ).joinToString(" · ")
-        if (line.isNotEmpty()) Text(line, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium)
+        val badges = listOfNotNull(tech?.resolution, tech?.hdrLabel, tech?.audioLabel)
+        if (line.isNotEmpty() || badges.isNotEmpty()) {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(6.dp), itemVerticalAlignment = Alignment.CenterVertically) {
+                if (line.isNotEmpty()) Text(line, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium)
+                for (badge in badges) Badge(badge)
+            }
+        }
+        item.genres.take(3).joinToString(", ").takeIf { it.isNotEmpty() }?.let {
+            Text(it, color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium)
+        }
 
         if (item.playable) {
             // With a remote control the first OK should play: the main button takes the focus
@@ -261,18 +271,31 @@ private fun Facts(
             Text(if (item.favorite) "♥  " + stringResource(R.string.favourite_remove) else "♡  " + stringResource(R.string.favourite_add))
         }
 
-        if (item.overview.isNotEmpty()) Text(item.overview, style = MaterialTheme.typography.bodyLarge)
+        // Text and facts take the focus in turn, so ↓ on a remote reaches them and the page scrolls along; before, the
+        // last button was the end of the page for a remote (Android TV emulator, 2026-11-14).
+        if (item.overview.isNotEmpty()) Text(item.overview, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.readable().testTag("overview"))
 
         if (item.playable) {
+            val width = tech?.width?.takeIf { it > 0 } ?: item.width
+            val height = tech?.height?.takeIf { it > 0 } ?: item.height
             val file = listOfNotNull(
                 item.container.takeIf { it.isNotEmpty() }?.uppercase(),
                 item.videoCodec.takeIf { it.isNotEmpty() }?.uppercase(),
-                if (item.width > 0 && item.height > 0) "${item.width}×${item.height}" else null,
+                if (width > 0 && height > 0) "$width×$height" else null,
                 item.sizeBytes.takeIf { it > 0 }?.let { fileSize(it) },
+                tech?.bitrateLabel,
+                tech?.frameRateLabel,
             ).joinToString(" · ")
-            Fact(stringResource(R.string.detail_file), file)
-            Fact(stringResource(R.string.detail_audio), item.audio.joinToString("\n") { trackLine(it) })
-            Fact(stringResource(R.string.detail_subtitles), item.subtitles.joinToString(", ") { it.title.ifEmpty { it.codec } })
+            val sound = item.audio.joinToString("\n") { trackLine(it) }
+            val subtitles = item.subtitles.joinToString(", ") { it.title.ifEmpty { it.codec } }
+            // nothing to read: nothing for the remote to stop on
+            if (file.isNotEmpty() || sound.isNotEmpty() || subtitles.isNotEmpty()) {
+                Column(Modifier.readable().testTag("file_facts"), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+                    Fact(stringResource(R.string.detail_file), file)
+                    Fact(stringResource(R.string.detail_audio), sound)
+                    Fact(stringResource(R.string.detail_subtitles), subtitles)
+                }
+            }
         }
 
         if (state.episodes.isNotEmpty()) {
@@ -299,6 +322,29 @@ private fun Facts(
             }
         }
     }
+}
+
+/** "1 h 41 min", or "45 min" under an hour; null when unknown. */
+@Composable
+private fun runtime(seconds: Long): String? {
+    val minutes = (seconds + 30) / 60
+    return when {
+        minutes <= 0 -> null
+        minutes < 60 -> stringResource(R.string.detail_minutes, minutes.toInt())
+        else -> stringResource(R.string.detail_hours_minutes, (minutes / 60).toInt(), (minutes % 60).toInt())
+    }
+}
+
+/** A fact of the file as a small framed label: "4K", "Dolby Vision", "TrueHD 7.1". */
+@Composable
+private fun Badge(text: String) {
+    Text(
+        text,
+        style = MaterialTheme.typography.labelMedium,
+        fontWeight = FontWeight.Bold,
+        modifier = Modifier.border(1.dp, MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f), RoundedCornerShape(5.dp))
+            .padding(horizontal = 6.dp, vertical = 1.dp).testTag("badge"),
+    )
 }
 
 /** 2.3 GB, 740 MB. */

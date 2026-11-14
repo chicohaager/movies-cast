@@ -33,6 +33,7 @@
     <string name="episodes">Серии</string>
     <string name="episode_label">С%1$d Э%2$d · %3$s</string>
     <string name="detail_minutes">%1$d мин</string>
+    <string name="detail_hours_minutes">%1$d ч %2$d мин</string>
     <string name="detail_audio">Звук</string>
     <string name="detail_subtitles">Субтитры</string>
     <string name="detail_file">Файл</string>

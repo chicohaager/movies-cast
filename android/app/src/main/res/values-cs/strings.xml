@@ -33,6 +33,7 @@
     <string name="episodes">Epizody</string>
     <string name="episode_label">S%1$d E%2$d · %3$s</string>
     <string name="detail_minutes">%1$d min</string>
+    <string name="detail_hours_minutes">%1$d h %2$d min</string>
     <string name="detail_audio">Zvuk</string>
     <string name="detail_subtitles">Titulky</string>
     <string name="detail_file">Soubor</string>

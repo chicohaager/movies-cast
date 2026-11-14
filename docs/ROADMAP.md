@@ -53,7 +53,7 @@ State 2026-11-13: 0.2.0, the first build for testers (signed APK, [android/TESTE
 | A12 | Google Cast from the app, downloads | open | |
 | A13 | icons in place of text signs (⋮ ‹ ▶), screen reader pass | open | 3 `contentDescription` in the screens |
 | A14 | a look of its own: logo, icon, banner, colours, font | done 2026-11-13 | deep-sea blue and sun orange (proposal A of three, the owners' pick), Space Grotesk, logo everywhere (app, TV starter, webOS, web icons, ZimaOS tile); Fire TV Stick 4K and Android 16 emulator: 19 screen tests OK each. The phone and TV pages have the same colours since 2026-11-13 |
-| A15 | look and feel on a par with Infuse | started 2026-11-14: 1, 2 and 3 done | the owner's yardstick since 2026-11-14 (Infuse Pro on the Apple TV against Movies); the gaps, in order, are in "A15: the app beside Infuse" below |
+| A15 | look and feel on a par with Infuse | started 2026-11-14: 1 to 4 done | the owner's yardstick since 2026-11-14 (Infuse Pro on the Apple TV against Movies); the gaps, in order, are in "A15: the app beside Infuse" below |
 
 
 ### A15: the app beside Infuse (2026-11-14)
@@ -66,10 +66,10 @@ Android TV emulator (API 30, 1920×1080), logged in to the same Movies. What Mov
 
 | # | Infuse | the app | data at hand | effort |
 |---|---|---|---|---|
-| 1 | home page of rows: continue watching, favourites, recently added, genres as picture tiles, best rated; the rows and their order set by the viewer | one row "Continue watching", then a grid of the whole library | yes: `DateCreated`, `Genres`, favourites and `CommunityRating` are in the library the app loads already | **done 2026-11-14** (android/README.md) |
+| 1 | home page of rows: continue watching, "Favoriten" (shortcut tiles: library, films, TV series, other), recently added, genres as picture tiles, best rated; the rows and their order set by the viewer | one row "Continue watching", then a grid of the whole library | yes: `DateCreated`, `Genres`, favourites and `CommunityRating` are in the library the app loads already | **done 2026-11-14** (android/README.md) |
 | 2 | film page over the film's backdrop across the whole screen, the title as the film's logo | the poster on the left, the title as text, the starry sky behind | yes: Movies sends a backdrop and a logo | **done 2026-11-14** (android/README.md) |
 | 3 | focus: the item in focus grows and lifts with a shadow | the library has an orange frame; on the film page the button in focus only turns a little lighter (uiautomator: "Add to favourites" focused, the screenshot hard to tell) | — | **done 2026-11-14**: every button grows, is lifted and framed in orange |
-| 4 | one line of facts: runtime, year, age rating, 4K, HDR, TrueHD 7.1; file, size, bitrate and frame rate at the foot | year · minutes · R · genres; "File" and "Sound" under the overview, below the last button: with the remote the page does not scroll there (focusable: back and the four buttons only) | partly: resolution and sound from `MediaStreams`; HDR not, `VideoRangeType` is empty in Movies | small |
+| 4 | one line of facts: runtime, year, age rating, 4K, HDR, TrueHD 7.1; file, size, bitrate and frame rate at the foot | year · minutes · R · genres; "File" and "Sound" under the overview, below the last button: with the remote the page does not scroll there (focusable: back and the four buttons only) | partly: resolution and sound from `MediaStreams`; HDR not, `VideoRangeType` is empty in Movies | **done 2026-11-14**: what Movies does not name is read from the file's header (android/README.md) |
 | 5 | ratings with their sources (IMDb, TMDB, Rotten Tomatoes) | none shown; `CommunityRating` is read (Models.kt) and used for sorting only | one value: `CommunityRating` | small |
 | 6 | cast and crew with photos, trailer, "more like this" | none | no: Movies sends no `People` and no `RemoteTrailers`; Infuse fetches its own metadata (its setting "Metadaten & Artwork") | large: an own metadata source |
 | 7 | settings as a full page of groups (shares, library, playback, audio, language …) | a menu ⋮ with five entries | — | medium |

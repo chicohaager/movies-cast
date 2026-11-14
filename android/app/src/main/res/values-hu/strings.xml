@@ -33,6 +33,7 @@
     <string name="episodes">Epizódok</string>
     <string name="episode_label">%1$d. évad %2$d. rész · %3$s</string>
     <string name="detail_minutes">%1$d perc</string>
+    <string name="detail_hours_minutes">%1$d ó %2$d p</string>
     <string name="detail_audio">Hang</string>
     <string name="detail_subtitles">Feliratok</string>
     <string name="detail_file">Fájl</string>

@@ -4,6 +4,7 @@ import android.os.Build
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsFocused
 import androidx.compose.ui.test.assertTextContains
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
@@ -86,7 +87,26 @@ class AppUiTest {
     @Volatile
     private var logoMissing = false
     private val pictures get() = if (filmPictures) ""","BackdropImageTags":["bk1"],"ImageTags":{"Logo":"lg1","Primary":"pr1"}""" else ""
-    private val film get() = """{"Id":"f1","Name":"Invented Film","Type":"Movie","ProductionYear":2001,"RunTimeTicks":54000000000,"Overview":"A film that does not exist.","Genres":["Drama"],"DateCreated":"2026-01-01T10:00:00Z","UserData":{"Played":$filmPlayed,"IsFavorite":$filmFavorite}$pictures}"""
+    /** The film names its codecs only, as Movies does for an MKV (2026-11-14); the rest is in its file's header. */
+    @Volatile
+    private var filmFile = false
+    private val file get() = if (filmFile) ""","MediaSources":[{"Id":"f1","Container":"mkv","Size":26560,"MediaStreams":[{"Type":"Video","Codec":"h264","Index":0},{"Type":"Audio","Codec":"ac3","Index":1}]}]""" else ""
+    private val film get() = """{"Id":"f1","Name":"Invented Film","Type":"Movie","ProductionYear":2001,"RunTimeTicks":54000000000,"Overview":"A film that does not exist.","Genres":["Drama"],"DateCreated":"2026-01-01T10:00:00Z","UserData":{"Played":$filmPlayed,"IsFavorite":$filmFavorite}$pictures$file}"""
+
+    /** The test's MKV (made with ffmpeg: 1 s test pattern 640×360 marked HDR10, a tone as AC3 5.1), with byte ranges. */
+    private fun sample(request: RecordedRequest): MockResponse {
+        val bytes = InstrumentationRegistry.getInstrumentation().context.assets.open("probe-sample.mkv").use { it.readBytes() }
+        val range = Regex("""bytes=(\d+)-(\d*)""").find(request.headers["Range"].orEmpty())
+        if (range == null) {
+            return MockResponse.Builder().code(200).addHeader("Content-Type", "video/x-matroska").body(okio.Buffer().write(bytes)).build()
+        }
+        val from = range.groupValues[1].toInt()
+        if (from >= bytes.size) return MockResponse.Builder().code(416).build()
+        val to = range.groupValues[2].toIntOrNull()?.coerceAtMost(bytes.size - 1) ?: (bytes.size - 1)
+        return MockResponse.Builder().code(206).addHeader("Content-Type", "video/x-matroska")
+            .addHeader("Content-Range", "bytes $from-$to/${bytes.size}")
+            .body(okio.Buffer().write(bytes, from, to - from + 1)).build()
+    }
 
     /** A small PNG as the server's picture. */
     private fun png(width: Int, height: Int): MockResponse {
@@ -143,6 +163,7 @@ class AppUiTest {
                     path == "/movies/Users/u1/Items" -> json(200, """{"Items":[$film,$series],"TotalRecordCount":2}""")
                     path == "/movies/Users/u1/Items/f1" -> json(200, film)
                     path == "/movies/Items/f1/Images/Backdrop/0" -> png(160, 90)
+                    path == "/movies/Videos/f1/stream" -> sample(request)
                     path == "/movies/Items/f1/Images/Logo" -> if (logoMissing) json(404, "{}") else png(80, 30)
                     path == "/movies/Users/u1/Items/s1" -> json(200, series)
                     path == "/movies/Shows/s1/Episodes" -> json(
@@ -243,6 +264,24 @@ class AppUiTest {
     }
 
     @Test
+    fun aRowKeepsTheFocusAtItsEnd() {
+        // a remote's behaviour: on a phone (touch mode) a clickable tile takes no focus at all
+        val tv = (app.resources.configuration.uiMode and android.content.res.Configuration.UI_MODE_TYPE_MASK) ==
+            android.content.res.Configuration.UI_MODE_TYPE_TELEVISION
+        org.junit.Assume.assumeTrue("a TV only", tv)
+        app.store.homeRows = "CONTINUE+,FAVOURITES-,RECENT+,GENRES-,TOP_RATED-"
+        login("right")
+        compose.waitUntilAtLeastOneExists(hasTestTag("row_RECENT"), 10_000)
+        // "recently added": the series, then the film; the film is the row's last tile
+        val last = compose.onAllNodesWithTag("tile")[1]
+        last.assertTextContains("Invented Film")
+        last.performSemanticsAction(SemanticsActions.RequestFocus)
+        last.performKeyInput { pressKey(Key.DirectionRight) }
+        compose.waitForIdle()
+        last.assertIsFocused()
+    }
+
+    @Test
     fun theHomeScreenPageHidesAndMovesRowsAndKeepsThem() {
         app.store.homeRows = ""
         login("right")
@@ -265,6 +304,43 @@ class AppUiTest {
         compose.onNodeWithTag("back").performClick()
         compose.waitUntilAtLeastOneExists(hasTestTag("row_RECENT"), 10_000)
         assertEquals("CONTINUE+,FAVOURITES+,RECENT+,GENRES+,TOP_RATED+", app.store.homeRows)
+    }
+
+    @Test
+    fun theFactsLineReadsWhatTheServerDoesNotNameFromTheFilesHeader() {
+        filmFile = true
+        login("right")
+        compose.waitUntilAtLeastOneExists(hasTestTag("tile"), 10_000)
+        compose.onAllNodesWithTag("tile").onFirst().performClick()
+        compose.waitUntilAtLeastOneExists(hasTestTag("play"), 10_000)
+        // 5400 s from the server; picture, range and sound from the file
+        compose.onNodeWithText(app.getString(R.string.detail_hours_minutes, 1, 30), substring = true).assertExists()
+        compose.waitUntilAtLeastOneExists(hasText("Dolby Digital 5.1"), 15_000)
+        compose.onNodeWithText("SD").assertExists()
+        compose.onNodeWithText("HDR").assertExists()
+        compose.onNodeWithText("640×360", substring = true).assertExists()
+        // Media3's Matroska extractor names no frame rate (the test's MKV, and the MKVs on Movies, 2026-11-14): none shown
+        assertEquals(0, compose.onAllNodesWithText("fps", substring = true).fetchSemanticsNodes().size)
+        val seen = synchronized(paths) { paths.toList() }
+        assertTrue(seen.toString(), seen.contains("GET /movies/Videos/f1/stream"))
+        // the file is read, nothing about playing it is asked or told
+        assertTrue(seen.toString(), seen.none { it.contains("PlaybackInfo") || it.contains("/Sessions/Playing") })
+    }
+
+    @Test
+    fun theRemoteReachesTheOverviewAndTheFileFactsBelowTheButtons() {
+        filmFile = true
+        login("right")
+        compose.waitUntilAtLeastOneExists(hasTestTag("tile"), 10_000)
+        compose.onAllNodesWithTag("tile").onFirst().performClick()
+        compose.waitUntilAtLeastOneExists(hasTestTag("favourite"), 10_000)
+        compose.onNodeWithTag("favourite").performSemanticsAction(SemanticsActions.RequestFocus)
+        compose.onNodeWithTag("favourite").performKeyInput { pressKey(Key.DirectionDown) }
+        compose.waitForIdle()
+        compose.onNodeWithTag("overview").assertIsFocused()
+        compose.onNodeWithTag("overview").performKeyInput { pressKey(Key.DirectionDown) }
+        compose.waitForIdle()
+        compose.onNodeWithTag("file_facts").assertIsFocused().assertIsDisplayed()
     }
 
     @Test

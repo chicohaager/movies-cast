@@ -45,7 +45,7 @@ and plays with the device's own decoders only.
 
 | Module | What |
 |---|---|
-| `core` | plain Kotlin: the client for the Jellyfin-compatible API (`MoviesClient`, 24 tests against a local fake server, 5 against one with a self-signed certificate) and what the library screen shows (`LibraryView.kt`, 8 tests) and its rows (`HomeRows.kt`, 7 tests), the search for servers (`ServerSearch.kt`, 8 tests), the list of logins kept (`SavedLogins.kt`, 14 tests), which certificate counts for which server (`ScopedTrust.kt`, 15 tests), which sound format may be passed on (`Passthrough.kt`, 6 tests) |
+| `core` | plain Kotlin: the client for the Jellyfin-compatible API (`MoviesClient`, 24 tests against a local fake server, 5 against one with a self-signed certificate) and what the library screen shows (`LibraryView.kt`, 8 tests) and its rows (`HomeRows.kt`, 7 tests), the film's facts (`TechFacts.kt`, 4 tests), the search for servers (`ServerSearch.kt`, 8 tests), the list of logins kept (`SavedLogins.kt`, 14 tests), which certificate counts for which server (`ScopedTrust.kt`, 15 tests), which sound format may be passed on (`Passthrough.kt`, 6 tests) |
 | `app` | the Android app: login, library with search and "continue watching", film page with seasons and "mark as watched", player with a queue, the list of servers and accounts, "Sound", About; 22 tests (Dolby Vision base layer, shape of the small window, language list, the diagnostics text, the queue, the privacy text, the audio sink) and 19 on a device (`src/androidTest`) |
 | `art` | the masters of logo, launcher icon and TV banner (`icon-*.svg`, `banner.html`); `render.sh` writes the app's PNGs and, with `svg2vd.py`, the icon's vector layers (`check-android.sh` fails when they differ from the masters); `make-logo.py` builds the 512 logo for webOS, the web pages, the TV starter app and the ZimaOS tile |
 | `config` | what the licences page needs besides the Gradle dependencies: FFmpeg and the copied Media3 module as libraries, the LGPL's text as FFmpeg ships it |
@@ -136,10 +136,37 @@ over into the list at the first start.
 An answer that comes after the change of login does not touch the new one: a request that fails
 with 401 logs out only the login it was made with.
 
+## Film page: the line of facts, the file's header
+
+Since 2026-11-14 (ROADMAP A15, gap 4): under the title a line of running time ("1 h 40 min"), year and age rating,
+and badges for the picture (4K, 1080p, 720p, SD by its width), its range (HDR, HLG, Dolby Vision) and the first
+sound track ("TrueHD 7.1"); the genres on a line of their own; at the foot the file with size, bit rate and frame rate
+(`core/TechFacts.kt`, 4 tests). Movies names little for an MKV: the codecs only, no size of the picture, no channels,
+no range (`movies-probe.py`, 2026-11-14; an MP4 came with size, channels and bit rate). So what the server does not
+name is read from the file's own header, as Infuse does: `FileProbe.kt` runs Media3's `MetadataRetriever`
+(`media3-inspector` 1.11.1) on `/Videos/{id}/stream?static=true` without decoding or playing, once per film while the
+app runs. The server's value wins where it has one. On the owner's library (8 films): 12 KB to 6.7 MB read in 42 to
+249 ms, e.g. the MKV "The Rocky Horror Picture Show" 820 KB, 236 ms: 4K, Dolby Vision, TrueHD 7.1. Media3's Matroska
+extractor names no frame rate, so an MKV shows none. One file failed: its own header pointed at a place far beyond its
+end (HTTP 416 on that range; the file on the NAS is shorter than its header says): the page then shows what the server
+names. The resume points, last-played dates and play counts of all 8 films were the same before and after.
+
+With a remote ↓ now reaches the overview and the file facts below the buttons (each takes the focus with a faint sky
+blue frame; before, the last button was the end of the page). A row of the home page keeps the focus at its ends
+(→ at the end of "Favourites" jumped to the top bar) and gives it back to the item that had it; `focusRestorer` must
+stand after `focusGroup`, in front of it it let the focus out all the same. Back while the keyboard is open only
+closes it: the key reached the library's Back handler and cleared the search being typed (phone emulator).
+
+Device tests: `theFactsLineReadsWhatTheServerDoesNotNameFromTheFilesHeader` (a 26 KB MKV made with ffmpeg as test
+asset: 640×360 marked HDR10, AC3 5.1, served with byte ranges), `theRemoteReachesTheOverviewAndTheFileFactsBelowTheButtons`,
+`aRowKeepsTheFocusAtItsEnd` (a TV only); 27 tests on each emulator.
+
 ## Home page: rows
 
 Since 2026-11-14 (ROADMAP A15, gap 1): above the whole library stand rows, as Infuse's home screen and as Jellyfin's
-apps keep them (an ordered list the viewer sets; jellyfin-androidtv `homesection0…9`): continue watching, favourites,
+apps keep them (an ordered list the viewer sets; jellyfin-androidtv `homesection0…9`): continue watching, favourites
+(the films marked as favourite; Infuse's "Favoriten" row is something else, shortcut tiles to library, films, TV
+series and other, owner's correction 2026-11-14),
 recently added (by the moment, not the text: Movies writes local time with its offset), genres as picture tiles (the
 backdrop of the best rated film of the genre, a film used once while another is at hand), best rated
 (`CommunityRating`); at most 20 items a row, a row with nothing in it left out (`core/HomeRows.kt`, 7 tests). "Home

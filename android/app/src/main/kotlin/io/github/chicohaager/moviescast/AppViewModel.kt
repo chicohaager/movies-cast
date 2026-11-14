@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import io.github.chicohaager.moviescast.core.HomeLayout
+import io.github.chicohaager.moviescast.core.TechFacts
 import io.github.chicohaager.moviescast.core.LibraryFilter
 import io.github.chicohaager.moviescast.core.LibrarySort
 import io.github.chicohaager.moviescast.core.FoundServer
@@ -84,6 +85,8 @@ data class UiState(
     /** The rows above the library, as the person set them ("Home screen" in the menu). */
     val home: HomeLayout = HomeLayout(),
     val detail: MediaItem? = null,
+    /** What [detail]'s file holds (server first, its header for the rest); null until known. */
+    val tech: TechFacts? = null,
     val episodes: List<MediaItem> = emptyList(),
     /** For an episode: the episodes of its series that come after it; they play one after the other. */
     val following: List<MediaItem> = emptyList(),
@@ -227,7 +230,7 @@ class AppViewModel(private val app: MoviesCastApp) : ViewModel() {
 
     fun open(item: MediaItem) {
         val session = app.session ?: return
-        _state.update { it.copy(stack = it.stack + Screen.Detail(item.id), detail = item, episodes = emptyList(), following = emptyList(), error = null) }
+        _state.update { it.copy(stack = it.stack + Screen.Detail(item.id), detail = item, episodes = emptyList(), following = emptyList(), tech = null, error = null) }
         viewModelScope.launch {
             try {
                 loadDetail(session, item.id)
@@ -241,8 +244,25 @@ class AppViewModel(private val app: MoviesCastApp) : ViewModel() {
         val full = client.item(session, id)
         val episodes = if (full.type == "Series") client.episodes(session, id) else emptyList()
         val following = if (full.type == "Episode" && full.seriesId.isNotEmpty()) client.episodes(session, full.seriesId).after(id) else emptyList()
-        _state.update { if ((it.screen as? Screen.Detail)?.id == id) it.copy(detail = full, episodes = episodes, following = following) else it }
+        val server = TechFacts.of(full)
+        val known = probed[id]?.let { server.mergedWith(it) } ?: server
+        _state.update { if ((it.screen as? Screen.Detail)?.id == id) it.copy(detail = full, episodes = episodes, following = following, tech = known) else it }
+        if (full.playable && server.incomplete && id !in probed && probing.add(id)) {
+            // once per film while the app runs (a refresh during the read does not start a second): the file's header
+            // for what the server does not name
+            val read = try {
+                FileProbe.read(app, app.mediaHttp, client.streamUrl(session, id))
+            } finally {
+                probing.remove(id)
+            } ?: return
+            probed[id] = read
+            _state.update { if ((it.screen as? Screen.Detail)?.id == id) it.copy(tech = server.mergedWith(read)) else it }
+        }
     }
+
+    /** What the files' headers held, by item id, for this run of the app. */
+    private val probed = HashMap<String, TechFacts>()
+    private val probing = HashSet<String>()
 
     /** Opens a page on top of the current one: About, the licences, one licence. */
     fun show(screen: Screen) = _state.update { it.copy(stack = it.stack + screen, error = null) }

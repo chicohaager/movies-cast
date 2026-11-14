@@ -78,6 +78,11 @@ data class MediaItem(
     /** The item whose logo (the title as a picture) stands on the film's page: its own, else its series'. */
     val logoItemId: String = "",
     val logoTag: String = "",
+    /** The picture's dynamic range as the server names it (`VideoRangeType`, else `VideoRange`), "" when it does not. */
+    val videoRange: String = "",
+    val frameRate: Float = 0f,
+    /** The file's bits per second as the server names it, 0 when it does not. */
+    val bitrate: Long = 0,
 ) {
     /** A series is a folder of episodes; everything else is a file. */
     val playable: Boolean get() = type != "Series"
@@ -139,6 +144,10 @@ internal data class StreamDto(
     @SerialName("Width") val width: Int = 0,
     @SerialName("Height") val height: Int = 0,
     @SerialName("Channels") val channels: Int = 0,
+    @SerialName("VideoRangeType") val videoRangeType: String = "",
+    @SerialName("VideoRange") val videoRange: String = "",
+    @SerialName("RealFrameRate") val realFrameRate: Float = 0f,
+    @SerialName("AverageFrameRate") val averageFrameRate: Float = 0f,
     @SerialName("IsExternal") val external: Boolean = false,
     @SerialName("Path") val path: String = "",
 )
@@ -158,6 +167,7 @@ internal data class SourceDto(
     @SerialName("Id") val id: String = "",
     @SerialName("Container") val container: String = "",
     @SerialName("Size") val size: Long = 0,
+    @SerialName("Bitrate") val bitrate: Long = 0,
     @SerialName("MediaStreams") val streams: List<StreamDto> = emptyList(),
 )
 
@@ -245,6 +255,9 @@ internal data class ItemDto(
             backdropTag = backdrop,
             logoItemId = logoFrom,
             logoTag = logo,
+            videoRange = video?.videoRangeType?.ifEmpty { video.videoRange }.orEmpty(),
+            frameRate = video?.let { if (it.realFrameRate > 0f) it.realFrameRate else it.averageFrameRate } ?: 0f,
+            bitrate = source?.bitrate ?: 0,
         )
     }
 }

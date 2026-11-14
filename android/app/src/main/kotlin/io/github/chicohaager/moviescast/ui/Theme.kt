@@ -4,6 +4,8 @@ import android.content.res.Configuration
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.focusable
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.animation.core.animateFloatAsState
@@ -311,4 +313,17 @@ fun OnBackdrop(content: @Composable () -> Unit) {
     MaterialTheme(colorScheme = Dark, typography = MaterialTheme.typography, shapes = MaterialTheme.shapes) {
         CompositionLocalProvider(LocalContentColor provides Dark.onBackground) { content() }
     }
+}
+
+/**
+ * A piece of text a remote can stop on (a film's overview, its file facts): it takes the focus, so ↓ reaches it and
+ * the page scrolls to it, and shows a faint frame in the orbit's sky blue while it has it. A phone does not focus it.
+ */
+@Composable
+fun Modifier.readable(): Modifier {
+    var focused by remember { mutableStateOf(false) }
+    return onFocusChanged { focused = it.isFocused }
+        .border(2.dp, if (focused) Brand.Sky.copy(alpha = 0.8f) else Color.Transparent, RoundedCornerShape(10.dp))
+        .padding(6.dp)
+        .focusable()
 }

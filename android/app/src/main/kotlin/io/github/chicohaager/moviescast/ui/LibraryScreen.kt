@@ -19,11 +19,22 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
+import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.isImeVisible
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.focus.focusProperties
+import androidx.compose.ui.focus.focusRestorer
+import androidx.compose.foundation.focusGroup
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -83,7 +94,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import coil3.compose.AsyncImage
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun LibraryScreen(
     state: UiState,
@@ -97,9 +108,24 @@ fun LibraryScreen(
     onAccounts: () -> Unit,
     onSound: () -> Unit = {},
     onHome: () -> Unit = {},
+    onShowAll: () -> Unit = {},
     onAbout: () -> Unit,
 ) {
     val searchField = rememberRemoteField()
+    // Back on a searched or filtered library (a genre picked on the home page) shows the whole library and its rows
+    // again, as Infuse leaves a genre; before, it left the app (Android TV emulator, 2026-11-14). While the keyboard is
+    // open Back only closes it: on the phone emulator the key reached this handler and cleared the search being typed.
+    val keyboardOpen = WindowInsets.isImeVisible
+    val keyboard = LocalSoftwareKeyboardController.current
+    val focusManager = LocalFocusManager.current
+    BackHandler(enabled = !state.plain || keyboardOpen) {
+        if (keyboardOpen) {
+            keyboard?.hide()
+            focusManager.clearFocus()
+        } else {
+            onShowAll()
+        }
+    }
     val grid = rememberLazyGridState()
     // OK on a genre tile filters the library and the tile is gone: the focus goes to the first film found, not to
     // the top bar where the focus search put it (Android TV emulator, 2026-11-14).
@@ -233,7 +259,7 @@ fun LibraryScreen(
                                 if (tiles.isNotEmpty()) {
                                     item(span = { GridItemSpan(maxLineSpan) }) { Heading(homeRowName(row), Modifier.testTag("row_${row.name}")) }
                                     item(span = { GridItemSpan(maxLineSpan) }) {
-                                        LazyRow(horizontalArrangement = Arrangement.spacedBy(14.dp), contentPadding = PaddingValues(vertical = 8.dp)) {
+                                        LazyRow(horizontalArrangement = Arrangement.spacedBy(14.dp), contentPadding = PaddingValues(vertical = 8.dp), modifier = Modifier.holdsFocusSideways()) {
                                             items(tiles, key = { it.genre }) { tile ->
                                                 GenreCard(tile) {
                                                     focusFound = true
@@ -317,12 +343,26 @@ private fun Choice(tag: String, label: String, value: String, items: @Composable
     }
 }
 
+/**
+ * A row on a TV as Android TV's Leanback rows and Infuse keep it: ← and → at its ends stay in the row (before, → at
+ * the end of "Favourites" jumped up to the top bar, Android TV emulator, 2026-11-14), and coming back with ↑ or ↓
+ * lands on the item that had the focus last.
+ */
+@OptIn(ExperimentalComposeUiApi::class)
+private fun Modifier.holdsFocusSideways(): Modifier = focusProperties {
+        onExit = {
+            if (requestedFocusDirection == FocusDirection.Left || requestedFocusDirection == FocusDirection.Right) cancelFocusChange()
+        }
+    }
+    .focusGroup()
+    .focusRestorer()
+
 /** A row of posters under its heading; nothing when [items] is empty. */
 private fun LazyGridScope.posterRow(row: HomeRow, items: List<MediaItem>, onOpen: (MediaItem) -> Unit, showProgress: Boolean = false) {
     if (items.isEmpty()) return
     item(span = { GridItemSpan(maxLineSpan) }) { Heading(homeRowName(row), Modifier.testTag("row_${row.name}")) }
     item(span = { GridItemSpan(maxLineSpan) }) {
-        LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp), contentPadding = PaddingValues(vertical = 8.dp)) {
+        LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp), contentPadding = PaddingValues(vertical = 8.dp), modifier = Modifier.holdsFocusSideways()) {
             items(items, key = { it.id }) { item -> Tile(item, Modifier.width(132.dp), onOpen, showProgress = showProgress) }
         }
     }

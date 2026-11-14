@@ -33,6 +33,7 @@
     <string name="episodes">剧集</string>
     <string name="episode_label">第%1$d季 第%2$d集 · %3$s</string>
     <string name="detail_minutes">%1$d 分钟</string>
+    <string name="detail_hours_minutes">%1$d小时%2$d分钟</string>
     <string name="detail_audio">音频</string>
     <string name="detail_subtitles">字幕</string>
     <string name="detail_file">文件</string>

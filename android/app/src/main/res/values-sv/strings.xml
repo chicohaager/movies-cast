@@ -33,6 +33,7 @@
     <string name="episodes">Avsnitt</string>
     <string name="episode_label">S%1$d A%2$d · %3$s</string>
     <string name="detail_minutes">%1$d min</string>
+    <string name="detail_hours_minutes">%1$d tim %2$d min</string>
     <string name="detail_audio">Ljud</string>
     <string name="detail_subtitles">Undertexter</string>
     <string name="detail_file">Fil</string>

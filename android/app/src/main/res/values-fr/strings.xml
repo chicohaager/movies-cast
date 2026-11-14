@@ -33,6 +33,7 @@
     <string name="episodes">Épisodes</string>
     <string name="episode_label">S%1$d É%2$d · %3$s</string>
     <string name="detail_minutes">%1$d min</string>
+    <string name="detail_hours_minutes">%1$d h %2$d min</string>
     <string name="detail_audio">Son</string>
     <string name="detail_subtitles">Sous-titres</string>
     <string name="detail_file">Fichier</string>

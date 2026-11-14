@@ -33,6 +33,7 @@
     <string name="episodes">에피소드</string>
     <string name="episode_label">S%1$d E%2$d · %3$s</string>
     <string name="detail_minutes">%1$d분</string>
+    <string name="detail_hours_minutes">%1$d시간 %2$d분</string>
     <string name="detail_audio">오디오</string>
     <string name="detail_subtitles">자막</string>
     <string name="detail_file">파일</string>

@@ -58,14 +58,11 @@ class MainActivity : AppCompatActivity() {
             MoviesCastTheme {
                 val state by model.state.collectAsStateWithLifecycle()
                 BackHandler(enabled = state.stack.size > 1) { model.back() }
-                // Back on a searched or filtered library (a genre picked on the home page) shows the whole library and
-                // its rows again, as Infuse leaves a genre; before, it left the app (Android TV emulator, 2026-11-14).
-                BackHandler(enabled = state.screen == Screen.Library && !state.plain) { model.showAll() }
                 // the login page and the list of logins can be the first page (nothing to go back to) or lie on top of another
                 val goBack: (() -> Unit)? = if (state.stack.size > 1) ({ model.back() }) else null
                 when (val screen = state.screen) {
                     Screen.Login -> LoginScreen(state, model.lastServer, model.lastUser, ::login, ::findServers, ::openAppSettings, goBack) { model.show(Screen.About) }
-                    Screen.Library -> LibraryScreen(state, model::search, model::sort, model::filter, model::open, ::refresh, model::logout, ::openAppSettings, { model.show(Screen.Accounts) }, onSound = { model.show(Screen.Sound) }, onHome = { model.show(Screen.Home) }) { model.show(Screen.About) }
+                    Screen.Library -> LibraryScreen(state, model::search, model::sort, model::filter, model::open, ::refresh, model::logout, ::openAppSettings, { model.show(Screen.Accounts) }, onSound = { model.show(Screen.Sound) }, onHome = { model.show(Screen.Home) }, onShowAll = model::showAll) { model.show(Screen.About) }
                     Screen.Accounts -> AccountsScreen(state, goBack, ::switchTo, model::forget) { model.show(Screen.Login) }
                     is Screen.Detail -> DetailScreen(state, { model.back() }, model::open, ::play, model::setPlayed, model::setFavorite)
                     Screen.About -> AboutScreen({ model.back() }, { model.show(Screen.Licences) }, { model.show(Screen.Privacy) }, ::openWeb, ::diagnostics, ::share)
