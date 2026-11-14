@@ -6,7 +6,12 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.material3.Button
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -217,9 +222,28 @@ fun Wordmark(name: String, modifier: Modifier = Modifier, markSize: Dp = 44.dp, 
     }
 }
 
+/** How much a button in focus grows: as the library's tiles, so the remote's place is seen from the sofa. */
+private const val FOCUS_SCALE = 1.08f
+
 /**
- * The main button of a page (play, log in): filled with the planet's gradient. On a TV the button in focus gets a
- * white ring, as Material's own focus shade is hard to see from the sofa.
+ * Grows the element in focus and lifts it with a shadow, as Infuse and the Leanback cards of Android TV do: a change of
+ * colour alone was hard to tell from the sofa (film page, Android TV emulator, 2026-11-14).
+ */
+@Composable
+private fun Modifier.lifted(focused: Boolean, shape: Shape): Modifier {
+    val scale by animateFloatAsState(if (focused) FOCUS_SCALE else 1f, label = "focus")
+    return graphicsLayer {
+        scaleX = scale
+        scaleY = scale
+        shadowElevation = if (focused) 12.dp.toPx() else 0f
+        this.shape = shape
+        clip = false
+    }
+}
+
+/**
+ * The main button of a page (play, log in): filled with the planet's gradient. In focus it grows and gets a white
+ * ring, as Material's own focus shade is hard to see from the sofa.
  */
 @Composable
 fun GlowButton(onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Boolean = true, content: @Composable RowScope.() -> Unit) {
@@ -236,8 +260,47 @@ fun GlowButton(onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Bool
         ),
         modifier = modifier
             .onFocusChanged { focused = it.isFocused }
+            .lifted(focused, CircleShape)
             .then(ring)
             .background(if (enabled) Brand.Planet else SolidColor(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)), CircleShape),
         content = content,
     )
+}
+
+/**
+ * Every other button of the app (in place of Material's OutlinedButton). In focus it grows, is lifted with a shadow,
+ * fills and gets a frame in the planet's orange, like the library's tiles; Material's own focus shade on an outlined
+ * button only turned it a little lighter, hard to tell from the sofa (film page, Android TV emulator, 2026-11-14).
+ */
+@Composable
+fun SoftButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    shape: Shape = CircleShape,
+    content: @Composable RowScope.() -> Unit,
+) {
+    var focused by remember { mutableStateOf(false) }
+    OutlinedButton(
+        onClick = onClick,
+        enabled = enabled,
+        shape = shape,
+        border = if (focused) BorderStroke(2.5.dp, Brand.Planet) else ButtonDefaults.outlinedButtonBorder(enabled),
+        colors = ButtonDefaults.outlinedButtonColors(
+            containerColor = if (focused) MaterialTheme.colorScheme.surfaceContainerHighest else Color.Transparent,
+        ),
+        modifier = modifier.onFocusChanged { focused = it.isFocused }.lifted(focused, shape),
+        content = content,
+    )
+}
+
+/**
+ * The night colours for a page that lies on a film's backdrop: the picture is dark under its veil, so the writing
+ * must be light even on a phone in light mode.
+ */
+@Composable
+fun OnBackdrop(content: @Composable () -> Unit) {
+    MaterialTheme(colorScheme = Dark, typography = MaterialTheme.typography, shapes = MaterialTheme.shapes) {
+        CompositionLocalProvider(LocalContentColor provides Dark.onBackground) { content() }
+    }
 }

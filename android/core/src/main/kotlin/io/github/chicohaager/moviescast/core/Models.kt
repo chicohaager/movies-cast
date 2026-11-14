@@ -72,6 +72,12 @@ data class MediaItem(
     /** When the server took the item in, as it writes it (ISO 8601, so the text sorts like the time). */
     val added: String = "",
     val favorite: Boolean = false,
+    /** The item whose first backdrop shows behind the film's page: its own, else its series' (empty: none). */
+    val backdropItemId: String = "",
+    val backdropTag: String = "",
+    /** The item whose logo (the title as a picture) stands on the film's page: its own, else its series'. */
+    val logoItemId: String = "",
+    val logoTag: String = "",
 ) {
     /** A series is a folder of episodes; everything else is a file. */
     val playable: Boolean get() = type != "Series"
@@ -178,6 +184,11 @@ internal data class ItemDto(
     @SerialName("RecursiveItemCount") val recursiveCount: Int = 0,
     @SerialName("ChildCount") val childCount: Int = 0,
     @SerialName("DateCreated") val dateCreated: String = "",
+    @SerialName("BackdropImageTags") val backdropTags: List<String> = emptyList(),
+    @SerialName("ParentBackdropItemId") val parentBackdropItemId: String = "",
+    @SerialName("ParentBackdropImageTags") val parentBackdropTags: List<String> = emptyList(),
+    @SerialName("ParentLogoItemId") val parentLogoItemId: String = "",
+    @SerialName("ParentLogoImageTag") val parentLogoTag: String = "",
 ) {
     fun toItem(): MediaItem {
         val source = sources.firstOrNull()
@@ -185,6 +196,18 @@ internal data class ItemDto(
         // asked with Fields=MediaStreams, at the top level; take the fuller list.
         val all = listOf(source?.streams.orEmpty(), streams).maxBy { it.size }
         val video = all.firstOrNull { it.type == "Video" }
+        // As Jellyfin's Android TV app: the item's own picture first, else its parent's (an episode shows its series').
+        val (backdropFrom, backdrop) = when {
+            backdropTags.isNotEmpty() -> id to backdropTags.first()
+            parentBackdropItemId.isNotEmpty() && parentBackdropTags.isNotEmpty() -> parentBackdropItemId to parentBackdropTags.first()
+            else -> "" to ""
+        }
+        val ownLogo = imageTags["Logo"].orEmpty()
+        val (logoFrom, logo) = when {
+            ownLogo.isNotEmpty() -> id to ownLogo
+            parentLogoItemId.isNotEmpty() && parentLogoTag.isNotEmpty() -> parentLogoItemId to parentLogoTag
+            else -> "" to ""
+        }
         fun tracks(kind: String) = all.filter { it.type == kind }.map {
             // Only the extension of the path is kept: where the file lies on the server is nobody's business here.
             val format = if (it.external) it.path.substringAfterLast('.', it.codec).substringAfterLast('/').lowercase() else ""
@@ -218,6 +241,10 @@ internal data class ItemDto(
             sourceId = source?.id?.ifEmpty { id } ?: id,
             added = dateCreated,
             favorite = userData.favorite,
+            backdropItemId = backdropFrom,
+            backdropTag = backdrop,
+            logoItemId = logoFrom,
+            logoTag = logo,
         )
     }
 }

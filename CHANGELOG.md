@@ -5,6 +5,8 @@ What changed in each version; the "why" with its measurements is in
 
 ## Unreleased
 
+- Android app: a film's page lies on its backdrop with the film's logo as title, as in Infuse (an episode takes its series' pictures; without a backdrop the poster page stays); every button grows, is lifted and gets an orange frame in focus, readable from the sofa; on a TV the film's page no longer pushes the logo out at the top when the main button takes the focus.
+- `deploy/tools/android-screen.py type <label> <file>`: types a value (a password too, from a file) into the text field with that label, opens the keyboard on a TV with OK, replaces what the field held and reads it back; tested against a fake adb, and `./check.sh` runs that test and the one of `movies-probe.py`.
 - Phone page and TV page in the logo's colours: a deep-sea blue night with stars and an orange glow (dark mode, the TV page), a pale morning sky (light mode), orange gradient buttons, sky-blue progress bars, a see-through header. The red Stop button in dark mode had white text at 2.8 to 1; it has a dark text now (axe now checks the dark library, film dialog and player, and a check of its own measures text on gradient buttons, which axe cannot). README screenshots taken again.
 - Android app: needs Android 7 or newer (minSdk 24). On Android 6 0.2.0 died at its start, as the trust manager of the login (ScopedTrust) uses a class Android has from 7 on; `check-android.sh` now fails on an APK that allows less.
 - Android app: the privacy policy and a licence's text scroll with a remote's ↑/↓ (on a TV they did not move, as they hold nothing to focus).

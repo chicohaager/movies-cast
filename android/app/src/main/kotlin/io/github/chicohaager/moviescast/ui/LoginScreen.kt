@@ -22,7 +22,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -101,7 +100,7 @@ fun LoginScreen(
                 readOnly = serverField.readOnly,
                 modifier = Modifier.fillMaxWidth().then(serverField.modifier).testTag("server"),
             )
-            OutlinedButton(
+            SoftButton(
                 onClick = onFind,
                 enabled = !state.searching && !state.busy,
                 modifier = Modifier.fillMaxWidth().testTag("find"),
@@ -123,7 +122,7 @@ fun LoginScreen(
                 }
                 // A tap puts the address into the field above; account and password stay to be typed.
                 found.forEach { it ->
-                    OutlinedButton(
+                    SoftButton(
                         onClick = { server = it.address },
                         // two lines, the first may wrap: the round ends of a button would cut into them
                         shape = RoundedCornerShape(12.dp),
@@ -163,7 +162,7 @@ fun LoginScreen(
             state.error?.let {
                 Text(errorText(it), color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodyMedium)
                 if (it == UiError.LocalNetwork) {
-                    OutlinedButton(onClick = onOpenSettings, modifier = Modifier.testTag("settings")) {
+                    SoftButton(onClick = onOpenSettings, modifier = Modifier.testTag("settings")) {
                         Text(stringResource(R.string.open_settings))
                     }
                 }

@@ -10,7 +10,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -59,7 +58,7 @@ fun SoundScreen(off: Set<Passthrough.Format>, onBack: () -> Unit, onChange: (Set
             Text(stringResource(R.string.sound_intro), style = MaterialTheme.typography.bodyMedium)
             for (format in Passthrough.Format.entries) {
                 val decoded = format in current
-                OutlinedButton(
+                SoftButton(
                     onClick = {
                         current = if (decoded) current - format else current + format
                         onChange(current)

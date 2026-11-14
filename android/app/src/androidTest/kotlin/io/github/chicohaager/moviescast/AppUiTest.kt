@@ -10,6 +10,7 @@ import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createEmptyComposeRule
 import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
@@ -74,7 +75,23 @@ class AppUiTest {
 
     @Volatile
     private var filmFavorite = false
-    private val film get() = """{"Id":"f1","Name":"Invented Film","Type":"Movie","ProductionYear":2001,"RunTimeTicks":54000000000,"Overview":"A film that does not exist.","Genres":["Drama"],"DateCreated":"2026-01-01T10:00:00Z","UserData":{"Played":$filmPlayed,"IsFavorite":$filmFavorite}}"""
+    /** Backdrop and logo for the film, in the shape Movies sent on 2026-11-14; off for the other tests. */
+    @Volatile
+    private var filmPictures = false
+
+    /** The logo then answers 404, as a server whose logo file went missing. */
+    @Volatile
+    private var logoMissing = false
+    private val pictures get() = if (filmPictures) ""","BackdropImageTags":["bk1"],"ImageTags":{"Logo":"lg1","Primary":"pr1"}""" else ""
+    private val film get() = """{"Id":"f1","Name":"Invented Film","Type":"Movie","ProductionYear":2001,"RunTimeTicks":54000000000,"Overview":"A film that does not exist.","Genres":["Drama"],"DateCreated":"2026-01-01T10:00:00Z","UserData":{"Played":$filmPlayed,"IsFavorite":$filmFavorite}$pictures}"""
+
+    /** A small PNG as the server's picture. */
+    private fun png(width: Int, height: Int): MockResponse {
+        val bitmap = android.graphics.Bitmap.createBitmap(width, height, android.graphics.Bitmap.Config.ARGB_8888)
+        bitmap.eraseColor(android.graphics.Color.rgb(200, 120, 40))
+        val bytes = java.io.ByteArrayOutputStream().also { bitmap.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) }.toByteArray()
+        return MockResponse.Builder().code(200).addHeader("Content-Type", "image/png").body(okio.Buffer().write(bytes)).build()
+    }
     private val otherFilm = """{"Id":"f2","Name":"Second Film","Type":"Movie","ProductionYear":2003,"UserData":{"Played":false}}"""
     private val series = """{"Id":"s1","Name":"Invented Show","Type":"Series","ProductionYear":2002,"Genres":["Comedy"],"DateCreated":"2026-02-01T10:00:00Z","UserData":{"Played":true}}"""
     private fun episode(id: String, name: String, season: Int, number: Int, played: Boolean) =
@@ -119,6 +136,8 @@ class AppUiTest {
                     path == "/movies/Users/u1/Items/Resume" -> json(200, """{"Items":[],"TotalRecordCount":0}""")
                     path == "/movies/Users/u1/Items" -> json(200, """{"Items":[$film,$series],"TotalRecordCount":2}""")
                     path == "/movies/Users/u1/Items/f1" -> json(200, film)
+                    path == "/movies/Items/f1/Images/Backdrop/0" -> png(160, 90)
+                    path == "/movies/Items/f1/Images/Logo" -> if (logoMissing) json(404, "{}") else png(80, 30)
                     path == "/movies/Users/u1/Items/s1" -> json(200, series)
                     path == "/movies/Shows/s1/Episodes" -> json(
                         200,
@@ -186,6 +205,38 @@ class AppUiTest {
         val seen = synchronized(paths) { paths.toList() }
         assertTrue(seen.toString(), seen.contains("POST /movies/Users/AuthenticateByName"))
         assertTrue(seen.toString(), seen.contains("GET /movies/Users/u1/Items/f1"))
+        // without a backdrop the page stays as it was: poster and title in text
+        assertEquals(0, compose.onAllNodesWithTag("backdrop").fetchSemanticsNodes().size)
+    }
+
+    @Test
+    fun aFilmWithABackdropShowsItBehindItsPageWithTheLogoAsTitle() {
+        filmPictures = true
+        login("right")
+        compose.waitUntilAtLeastOneExists(hasTestTag("tile"), 10_000)
+        compose.onAllNodesWithTag("tile").onFirst().performClick()
+        compose.waitUntilAtLeastOneExists(hasTestTag("backdrop"), 10_000)
+        compose.waitUntilAtLeastOneExists(hasTestTag("logo"), 10_000)
+        compose.onNodeWithTag("logo").assertIsDisplayed()
+        compose.onNodeWithContentDescription("Invented Film").assertIsDisplayed()
+        compose.onNodeWithText("A film that does not exist.").assertIsDisplayed()
+        compose.onNodeWithTag("play").assertIsDisplayed()
+        compose.waitUntil(10_000) { synchronized(paths) { paths.contains("GET /movies/Items/f1/Images/Logo") && paths.contains("GET /movies/Items/f1/Images/Backdrop/0") } }
+        compose.onNodeWithTag("back").performClick()
+        compose.waitUntilAtLeastOneExists(hasTestTag("tile"), 10_000)
+    }
+
+    @Test
+    fun aLogoThatDoesNotLoadLeavesTheTitleInText() {
+        filmPictures = true
+        logoMissing = true
+        login("right")
+        compose.waitUntilAtLeastOneExists(hasTestTag("tile"), 10_000)
+        compose.onAllNodesWithTag("tile").onFirst().performClick()
+        compose.waitUntilAtLeastOneExists(hasTestTag("backdrop"), 10_000)
+        compose.waitUntil(10_000) { synchronized(paths) { paths.contains("GET /movies/Items/f1/Images/Logo") } }
+        compose.waitUntilAtLeastOneExists(hasText("Invented Film"), 10_000)
+        assertEquals(0, compose.onAllNodesWithTag("logo").fetchSemanticsNodes().size)
     }
 
     @Test

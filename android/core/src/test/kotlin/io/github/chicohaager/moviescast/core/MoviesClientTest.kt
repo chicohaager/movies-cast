@@ -10,6 +10,7 @@ import okhttp3.OkHttpClient
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Assert.fail
 import org.junit.Before
@@ -203,6 +204,37 @@ class MoviesClientTest {
             """{"ItemId":"item-1","MediaSourceId":"item-1","PlaySessionId":"play-1","PositionTicks":900000000,"IsPaused":true,"PlayMethod":"DirectPlay","CanSeek":true}""",
             seen[1].body!!.utf8(),
         )
+    }
+
+    @Test
+    fun theFilmsPageTakesTheItemsBackdropAndLogoElseTheSeries() = runBlocking {
+        // Shapes as Movies answered on 2026-11-14 (a film with backdrop and logo, one with a backdrop only, one with
+        // neither) and as Jellyfin names an episode's series pictures (Parent…); ids and tags made up.
+        routes = { request ->
+            val body = when (request.url.encodedPath.substringAfterLast('/')) {
+                "film" -> """{"Id":"film","Name":"F","Type":"Movie","BackdropImageTags":["b1","b2"],"ImageTags":{"Logo":"l1","Primary":"p1"}}"""
+                "concert" -> """{"Id":"concert","Name":"C","Type":"Movie","BackdropImageTags":["b3"],"ImageTags":{"Primary":"p2"}}"""
+                "holiday" -> """{"Id":"holiday","Name":"H","Type":"Movie","BackdropImageTags":[],"ImageTags":{}}"""
+                "ep" -> """{"Id":"ep","Name":"E","Type":"Episode","BackdropImageTags":[],"ParentBackdropItemId":"series","ParentBackdropImageTags":["sb"],"ParentLogoItemId":"series","ParentLogoImageTag":"sl"}"""
+                else -> "{}"
+            }
+            json(200, body)
+        }
+        val film = client.item(session, "film")
+        assertEquals("$base/Items/film/Images/Backdrop/0?maxWidth=1920&tag=b1", client.backdropUrl(session, film, 1920))
+        assertEquals("$base/Items/film/Images/Logo?maxWidth=800&tag=l1", client.logoUrl(session, film, 800))
+        val concert = client.item(session, "concert")
+        assertEquals("$base/Items/concert/Images/Backdrop/0?maxWidth=1920&tag=b3", client.backdropUrl(session, concert, 1920))
+        assertNull(client.logoUrl(session, concert, 800))
+        val holiday = client.item(session, "holiday")
+        assertNull(client.backdropUrl(session, holiday, 1920))
+        assertNull(client.logoUrl(session, holiday, 800))
+        val episode = client.item(session, "ep")
+        assertEquals("$base/Items/series/Images/Backdrop/0?maxWidth=1920&tag=sb", client.backdropUrl(session, episode, 1920))
+        assertEquals("$base/Items/series/Images/Logo?maxWidth=800&tag=sl", client.logoUrl(session, episode, 800))
+        for (url in listOfNotNull(client.backdropUrl(session, film, 1920), client.logoUrl(session, episode, 800))) {
+            assertFalse(url.contains("tok-secret-123"))
+        }
     }
 
     @Test

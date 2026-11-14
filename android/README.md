@@ -136,6 +136,29 @@ over into the list at the first start.
 An answer that comes after the change of login does not touch the new one: a request that fails
 with 401 logs out only the login it was made with.
 
+## The film's page over its backdrop, focus
+
+Since 2026-11-14 (ROADMAP A15, gaps 2 and 3, Infuse as the yardstick): a film with a backdrop shows it across the
+whole page (on a phone as a band at the top) under a veil of the night sky, and its logo in place of the title in
+text; an episode takes its series' pictures (`ParentBackdropItemId`, `ParentLogoItemId`, as Jellyfin's Android TV
+app does). A film without a backdrop keeps the poster page; a logo that does not load leaves the title in text.
+Movies (2026-11-14, on the owner's NAS) sent a backdrop for 6 and a logo for 5 of its 8 films; `Images/Backdrop/0` and
+`Images/Logo` answered 200 with JPEG and PNG (`movies-probe.py`).
+
+Every button but the main one is `SoftButton` (ui/Theme.kt): in focus it grows by 8 %, is lifted with a shadow,
+fills and gets a frame in the planet's orange; the main button grows too. Material's outlined button had turned only
+a little lighter in focus.
+
+Compose 1.12.1 moves the element in focus to 30 % of the page's height on a device with `android.software.leanback`
+(`PivotBringIntoViewSpec`, read in foundation's bytecode); on the film's page that pushed the logo half out at the
+top as soon as the main button took the focus. The film's page scrolls only as far as needed.
+
+Measured in the Android TV emulator (API 30) and the phone emulator (Android 16, light mode) against Movies:
+"The Rocky Horror Picture Show" (backdrop and logo), "HAEVN – Live in Carrè Amsterdam" (backdrop, no logo),
+"Portugal September 2022" (neither, the poster page); the focus walked by the remote over the four buttons. Device
+tests: `aFilmWithABackdropShowsItBehindItsPageWithTheLogoAsTitle`, `aLogoThatDoesNotLoadLeavesTheTitleInText`
+(22 tests on each emulator).
+
 ## HTTPS with a certificate of the owner's own
 
 A server with a self-signed certificate (or one of an authority of the owner's own) is reached

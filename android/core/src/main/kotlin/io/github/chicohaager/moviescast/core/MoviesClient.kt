@@ -206,6 +206,22 @@ class MoviesClient(http: OkHttpClient, private val device: Device) {
         call(s.baseUrl, s.token, if (favorite) "POST" else "DELETE", "/Users/${seg(s.userId)}/FavoriteItems/${seg(id)}", if (favorite) "" else null)
     }
 
+    /** The backdrop behind an item's page, or null when neither it nor its series has one. The tag keys the image cache. */
+    fun backdropUrl(s: Session, item: MediaItem, maxWidth: Int): String? =
+        if (item.backdropItemId.isEmpty()) null
+        else url(s.baseUrl, "/Items/${seg(item.backdropItemId)}/Images/Backdrop/0") {
+            addQueryParameter("maxWidth", maxWidth.toString())
+            addQueryParameter("tag", item.backdropTag)
+        }.toString()
+
+    /** The item's logo (its title as a picture), or null when neither it nor its series has one. */
+    fun logoUrl(s: Session, item: MediaItem, maxWidth: Int): String? =
+        if (item.logoItemId.isEmpty()) null
+        else url(s.baseUrl, "/Items/${seg(item.logoItemId)}/Images/Logo") {
+            addQueryParameter("maxWidth", maxWidth.toString())
+            addQueryParameter("tag", item.logoTag)
+        }.toString()
+
     fun posterUrl(s: Session, id: String, maxWidth: Int): String =
         url(s.baseUrl, "/Items/${seg(id)}/Images/Primary") { addQueryParameter("maxWidth", maxWidth.toString()) }.toString()
 

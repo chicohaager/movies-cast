@@ -12,7 +12,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -60,7 +59,7 @@ fun AccountsScreen(
             }
             state.logins.forEachIndexed { index, login ->
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    OutlinedButton(
+                    SoftButton(
                         onClick = { onChoose(index) },
                         // two lines, the first may wrap: the round ends of a button would cut into them
                         shape = RoundedCornerShape(12.dp),

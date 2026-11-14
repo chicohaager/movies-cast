@@ -28,7 +28,6 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
@@ -176,7 +175,7 @@ fun LibraryScreen(
                             Text(errorText(error), color = MaterialTheme.colorScheme.error)
                             Button(onClick = onRefresh) { Text(stringResource(R.string.retry)) }
                             if (error == UiError.LocalNetwork) {
-                                OutlinedButton(onClick = onOpenSettings) { Text(stringResource(R.string.open_settings)) }
+                                SoftButton(onClick = onOpenSettings) { Text(stringResource(R.string.open_settings)) }
                             }
                         }
                     }
