@@ -5,7 +5,8 @@ measured on; "not measured" says so.
 
 ## Why it exists (measured 2026-10-28, the test NAS, Movies 0.3.0, LG OLED55B97LA)
 
-- Movies imitates a Jellyfin server under `/movies` (`System/Info/Public` → `"ProductName":"Jellyfin Server"`),
+- Movies imitates a Jellyfin server under `/movies` (`System/Info/Public` → `"ProductName":"Jellyfin Server"`;
+  on 2026-11-14 Movies on the owner's NAS answered `"ProductName":"ZimaOS Movies"`, `"Version":"10.11.0"`),
   but serves no `/movies/web/` (404). The official Jellyfin app for LG webOS is a shell that loads
   `<server>/web/…` (`jellyfin-webos/frontend/js/index.js:264,331`), so it cannot use Movies.
 - The LG is a DLNA MediaRenderer and plays HEVC + AC3/E-AC3 MKV directly (Movies log: one `GET 206`, no HLS).

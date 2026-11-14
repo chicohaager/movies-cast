@@ -58,7 +58,7 @@ func (c *Client) Ping(ctx context.Context) error {
 
 // Info is what /System/Info/Public tells without a login.
 type Info struct {
-	Product string // "Jellyfin Server" (Movies 0.3.0 and Jellyfin say so), "Emby Server"
+	Product string // "ZimaOS Movies" (Movies, 2026-11-14; "Jellyfin Server" with Movies 0.3.0 on 2026-10-28), "Jellyfin Server", "Emby Server"
 	Version string
 }
 

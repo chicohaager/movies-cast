@@ -105,7 +105,7 @@ the TV and a presentation video are not.
 | 14 | paging of the library | one request for the whole library, no `Limit`/`StartIndex` (`movies.go:199-215`) | small | how it feels with 2000 films is not measured |
 | 15 | queue and autoplay of the next film | no `Queue`/`autoplay`/`Next` in the code | medium | matters most once 12 exists |
 | 16 | subtitles over DLNA | subtitles only in the TV app; Samsung's extension parked (7 below) | medium | ways: `sec:CaptionInfoEx` (Samsung), an SRT `res`, or burned in by Movies' transcode on request like "No sound?" |
-| 17 | Chromecast as a target, AirPlay later | no `Chromecast`/`AirPlay` in the code | large | would reach Google TV, Shield and Fire TV without an own app; the Shield needs Kodi today |
+| 17 | Chromecast as a target, AirPlay later | no `Chromecast`/`AirPlay` in the code | large | would reach Google TV, Shield and Fire TV without an own app; the Shield needs Kodi today; Apple TV needs no AirPlay for Movies: Infuse Pro plays it as a Jellyfin share (owner's report, 2026-11-14) |
 | 18 | audio track on Android TV | `audioTracks` missing in Android WebView (README); on a tester's Shield E-AC3 had sound and AAC was silent | open | until then: "Android TV app experimental" |
 | 19 | music and photos | no `Music`/`Photo` in the code | medium | only if Movies serves them |
 
