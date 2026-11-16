@@ -300,7 +300,19 @@ and earlier have no such permission (emulator API 36: login without a question).
 
 Dolby Vision profile 7 (UHD Blu-ray rips): Media3 has no fallback for it, so a device without a
 decoder for `video/dolby-vision` showed no picture. `BaseLayerVideoRenderer` hands such a track to
-the HEVC decoder as plain HEVC (the HDR10 base layer); the enhancement layer is ignored.
+the HEVC decoder as plain HEVC (the HDR10 base layer). Before each access unit goes to the decoder the Dolby
+Vision RPU and enhancement layer (NAL unit types 62 and 63) are taken out of it, as the Jellyfin server does
+for a client that plays HDR10 but not Dolby Vision with an enhancement layer (`EncodingHelper.cs`,
+`hevc_metadata=remove_dovi=1`) and Kodi's BitstreamConverter when Dolby Vision is not allowed: on the Google TV
+Streamer the HEVC decoder given both layers played the sound with no picture (2026-11-16), without them the
+picture came (owner at the TV; `DolbyVisionBaseLayer.stripLayers`, 3 unit tests, 2 of them red
+with the stripping taken out).
+
+The sound track that plays first is chosen as Kodi chooses it (`StreamUtils.cpp`, `CompareAudioPreference`;
+`core/AudioPick.kt`, 5 tests, each of 3 sabotages red): the device's language, then the track the file
+marks as default, then quality (surround before stereo or mono, then the codec as Kodi ranks it, then the
+channels). Media3 had put the German AC3 mono track of "Der kleine Horrorladen" before its German DTS-HD 5.1
+track, both of which it saw as default. Once chosen, a choice in the player's menu stays the viewer's.
 
 No decoder at all for the picture (AV1 or HEVC on an old device), or the decoder fails: the player
 asks the server once to convert (`PlaybackInfo` with a profile that offers H.264/AAC over HLS only)
@@ -577,3 +589,48 @@ SDK 30), 32-bit only (`armeabi-v7a`), reached by `adb connect` over the network.
   `ffmpegLavc60.3.100-dca`, `audio output pcm channels=6 rate=48000`, first frame 1633 ms, and the owner
   heard the sound at the TV. With the default unset the screen test finds all four on "Decode in the
   app" (19 of 19 on the stick; red with the old default, "expected:<[AC3, EAC3, DTS, TRUEHD]> but was:<[]>"). Resume points saved before and put back after (all 8 match).
+
+Google TV Streamer (2026-11-16), the second real TV device: Google `kirkwood`, Android 14 (SDK 34), build
+`UTTK.260317.003`, Mediatek MT8696; behind it a Samsung TV from 2011 (`dumpsys display`: 1920×1080 at most,
+`supportedHdrTypes=[]`), so nothing below shows HDR or Dolby Vision on the screen.
+- adb over Ethernet: "Wireless debugging" turns itself off at once while the streamer is on its cable.
+  TvSettings writes `ADB_WIFI_ENABLED=1`, and the system's `AdbDebuggingManager` sets it back to 0 when
+  `getCurrentWifiApInfo()` finds no Wi-Fi network (AOSP `main`). The way in: cable off, Wi-Fi on, pair
+  (`adb pair <ip>:<port> <code>`), `settings put global adb_enabled 1` (with it adbd keeps running when Wi-Fi
+  goes), `adb tcpip 5555`, cable back in: `adb connect <streamer>:5555` answered over `eth0`. With
+  `adb_enabled` at 0, port 5555 was gone as soon as the cable was back. `adb tcpip` sets
+  `service.adb.tcp.port` (adb `daemon/restart_service.cpp`), which a reboot does not keep.
+- Decoders (`dumpsys media.player`): AV1 `c2.mtk.av1.decoder`, HEVC, VP9, Dolby Vision (`dvhe.dtr/stn/sth`,
+  `dvav`, `dvav1`), AC3 and E-AC3 `c2.dolby.*`; none for DTS or TrueHD. HDMI outputs
+  (`dumpsys media.audio_policy`): AC3, E-AC3, E-AC3-JOC, AC4, MAT; no DTS.
+- `check-android.sh --device`: first 29 of 30, `aFieldBeingTypedIntoOnATvStaysAboveTheKeyboard` red in 3 of 3
+  runs: after Back closed the keyboard the page was still scrolling back, the tap went to where the user name
+  field had been and the focus stayed on the address (screenshots). The test now taps when the field stands
+  still and taps again when no focus came; then 3 of 3 OK, and 30 of 30. With the app's fix taken out
+  (`rememberRemoteField` never brings the field into view) the test stays green on the streamer (3 of 3: the
+  password field is not covered there) and is red on the Android TV emulator in 2 of 3 runs, green in 3 of 3
+  with the fix.
+- Played from Movies, each about 20 s, the app's default "Decode in the app" (resume points saved before and put
+  back after, all 8 match):
+  - Dolby Vision profile 7 with TrueHD 7.1: "dvhe.07.06: no decoder, playing the HEVC base layer",
+    `c2.mtk.hevc.decoder`, `ffmpegLavc60.3.100-truehd`, `audio output pcm channels=8`, first frame 4330 ms.
+  - HEVC 3840×2160 with DTS-HD 5.1: "Automatic" chose the German AC3 mono track (`c2.dolby.ac3.decoder`,
+    first frame 1375 ms), not the German DTS-HD 5.1 track that the file marks as default (Movies:
+    `IsDefault` true). Chosen by hand in the player: `ffmpegLavc60.3.100-dca`, `audio output pcm channels=6`.
+    At the TV that mono track was garbled and the picture stuttered: `c2.dolby.ac3.decoder` said 1 channel
+    and gave 2 (`numOutBytes: 2 channels, 1536 samples/chan`), 43 `UnexpectedDiscontinuityException` in 30 s.
+    Not worked around (a mono track is of no interest, owner); the track choice above no longer picks it.
+  - AV1 3840×1606 with AAC: `c2.mtk.av1.decoder`, first frame 979 ms.
+  - Dolby Vision profile 8 with E-AC3 5.1: `c2.mtk.hevc.decoder`, `c2.dolby.eac3.decoder`, pcm 6 channels,
+    first frame 1300 ms.
+  - H.264 with AAC: `c2.mtk.avc.decoder`, first frame 1754 ms.
+  - "Eternity" (E-AC3): `ERROR_CODE_IO_BAD_HTTP_STATUS`, HTTP 416; Movies names the file 605 028 352 bytes,
+    its header points to byte 13 563 653 344 (the short file of "Film page: the line of facts, the file's header").
+- After the changes (track choice as Kodi, Dolby Vision 7 without RPU and enhancement layer), seen and heard at the
+  TV by the owner: "Der kleine Horrorladen" starts on its German DTS-HD 5.1 track (`chosen 1`,
+  `ffmpegLavc60.3.100-dca`, no discontinuity), smooth with clear sound; a 60 s cut of the Dolby Vision 7 film
+  (made with ffmpeg on the box, deleted after) has its picture; the same cut without the layers had it too.
+- Focus on a TV: every text button (Back, ⋮, reload, language, About, the dialogs' buttons; 16) and every entry of
+  the library's menus (9) is filled and framed in orange in focus (`SoftTextButton`, `SoftMenuItem`), as the
+  outlined buttons; Material's own shade was hard to see on the Streamer (owner). Seen in screenshots on the
+  Streamer.

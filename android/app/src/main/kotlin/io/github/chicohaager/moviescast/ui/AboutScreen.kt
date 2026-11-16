@@ -19,7 +19,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -68,7 +67,7 @@ private fun Page(title: String, onBack: () -> Unit, content: @Composable (Paddin
         topBar = {
             TopAppBar(
                 title = { Text(title, maxLines = 1, overflow = TextOverflow.Ellipsis) },
-                navigationIcon = { TextButton(onClick = onBack, modifier = Modifier.testTag("back")) { Text("‹ " + stringResource(R.string.back)) } },
+                navigationIcon = { SoftTextButton(onClick = onBack, modifier = Modifier.testTag("back")) { Text("‹ " + stringResource(R.string.back)) } },
             )
         },
         content = content,
@@ -150,8 +149,8 @@ fun AboutScreen(
                     modifier = Modifier.heightIn(max = 360.dp).verticalScroll(rememberScrollState()).testTag("report"),
                 )
             },
-            confirmButton = { TextButton(onClick = { report = null; onShare(text) }, modifier = Modifier.testTag("share")) { Text(stringResource(R.string.share)) } },
-            dismissButton = { TextButton(onClick = { report = null }) { Text(stringResource(R.string.player_close)) } },
+            confirmButton = { SoftTextButton(onClick = { report = null; onShare(text) }, modifier = Modifier.testTag("share")) { Text(stringResource(R.string.share)) } },
+            dismissButton = { SoftTextButton(onClick = { report = null }) { Text(stringResource(R.string.player_close)) } },
         )
     }
 }

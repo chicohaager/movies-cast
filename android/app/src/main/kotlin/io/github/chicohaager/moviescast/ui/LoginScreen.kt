@@ -24,7 +24,6 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -76,7 +75,7 @@ fun LoginScreen(
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
             onAccounts?.let {
-                TextButton(onClick = it, modifier = Modifier.testTag("accounts")) { Text("‹ " + stringResource(R.string.accounts)) }
+                SoftTextButton(onClick = it, modifier = Modifier.testTag("accounts")) { Text("‹ " + stringResource(R.string.accounts)) }
             }
             Wordmark(stringResource(R.string.app_name), markSize = 64.dp, textSize = 30)
             Text(stringResource(R.string.login_title), style = MaterialTheme.typography.headlineMedium)
@@ -177,7 +176,7 @@ fun LoginScreen(
             // Who cannot log in needs "Share diagnostics" most, so About is reachable from here too.
             Row(Modifier.align(Alignment.CenterHorizontally), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 LanguageButton()
-                TextButton(onClick = onAbout, modifier = Modifier.testTag("about")) { Text(stringResource(R.string.about)) }
+                SoftTextButton(onClick = onAbout, modifier = Modifier.testTag("about")) { Text(stringResource(R.string.about)) }
             }
         }
     }

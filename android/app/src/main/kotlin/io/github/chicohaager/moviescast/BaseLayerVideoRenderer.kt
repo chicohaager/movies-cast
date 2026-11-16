@@ -10,6 +10,7 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.DecoderReuseEvaluation
 import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.FormatHolder
+import androidx.media3.decoder.DecoderInputBuffer
 import androidx.media3.exoplayer.Renderer
 import androidx.media3.exoplayer.RendererCapabilities
 import androidx.media3.exoplayer.audio.AudioSink
@@ -35,6 +36,44 @@ object DolbyVisionBaseLayer {
             sampleMimeType == "video/dolby-vision" &&
             codecs != null && PROFILE_7.matches(codecs) &&
             colorTransferIsPq != false
+
+    /**
+     * Removes the Dolby Vision RPU (NAL unit type 62) and enhancement layer (63) from one access unit in Annex B form
+     * (start codes, as Media3's Matroska and MP4 extractors hand HEVC to the decoder), in place; returns the new length.
+     * What is left is the HEVC base layer alone, as the Jellyfin server sends it to a client that plays HDR10 but not
+     * Dolby Vision with an enhancement layer (`EncodingHelper.cs`: `hevc_metadata=remove_dovi=1`, "Remove Dolby
+     * Vision EL and RPU") and as Kodi's BitstreamConverter does when Dolby Vision is not allowed. Given to the HEVC
+     * decoder with them, the Google TV Streamer played the sound and showed no picture (2026-11-16).
+     */
+    fun stripLayers(data: ByteArray, offset: Int, length: Int): Int {
+        val end = offset + length
+        fun startAt(i: Int) = i + 2 < end && data[i] == 0.toByte() && data[i + 1] == 0.toByte() && data[i + 2] == 1.toByte()
+        // the starts of all start codes (3 bytes, or 4 with the zero before them)
+        val units = ArrayList<IntArray>()
+        var i = offset
+        while (i + 2 < end) {
+            if (startAt(i)) {
+                val codeStart = if (i > offset && data[i - 1] == 0.toByte()) i - 1 else i
+                units.add(intArrayOf(codeStart, i + 3))
+                i += 3
+            } else {
+                i++
+            }
+        }
+        if (units.isEmpty()) return length
+        var write = offset
+        // anything before the first start code stays as it is
+        if (units[0][0] > offset) write = units[0][0]
+        for ((n, unit) in units.withIndex()) {
+            val unitEnd = if (n + 1 < units.size) units[n + 1][0] else end
+            val type = if (unit[1] < end) (data[unit[1]].toInt() shr 1) and 0x3F else -1
+            if (type == 62 || type == 63) continue
+            val size = unitEnd - unit[0]
+            if (write != unit[0]) System.arraycopy(data, unit[0], data, write, size)
+            write += size
+        }
+        return write - offset
+    }
 }
 
 /**
@@ -64,10 +103,34 @@ class BaseLayerVideoRenderer(builder: Builder, private val selector: MediaCodecS
             announced = true
             Log.i("MoviesCast", "dolby vision ${format.codecs}: no decoder, playing the HEVC base layer")
         }
+        stripping = true
         return format.buildUpon().setSampleMimeType(MimeTypes.VIDEO_H265).setCodecs(null).build()
     }
 
+    /** As Media3 strips AV1's T.35 metadata here: the access unit is rewritten in place before the decoder gets it. */
+    // MediaCodecRenderer has flipped the buffer (position 0, limit = the access unit's size) and queues `limit()` bytes
+    // after this call; the codec's input buffers are direct, so the unit is copied out, rewritten and put back.
+    override fun onQueueInputBuffer(buffer: DecoderInputBuffer) {
+        super.onQueueInputBuffer(buffer)
+        val data = buffer.data ?: return
+        if (!stripping || data.isReadOnly) return
+        val length = data.limit()
+        if (scratch.size < length) scratch = ByteArray(length)
+        data.position(0)
+        data.get(scratch, 0, length)
+        val kept = DolbyVisionBaseLayer.stripLayers(scratch, 0, length)
+        if (kept != length) {
+            data.position(0)
+            data.put(scratch, 0, kept)
+            data.limit(kept)
+        }
+        data.position(0)
+    }
+
+    private var scratch = ByteArray(0)
+
     private var announced = false
+    private var stripping = false
 }
 
 /**

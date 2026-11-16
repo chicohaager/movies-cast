@@ -41,7 +41,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -49,7 +48,6 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
 import androidx.compose.runtime.Composable
@@ -172,42 +170,42 @@ fun LibraryScreen(
                     }
                 },
                 actions = {
-                    TextButton(onClick = onRefresh, modifier = Modifier.testTag("reload")) { Text(stringResource(R.string.library_refresh)) }
+                    SoftTextButton(onClick = onRefresh, modifier = Modifier.testTag("reload")) { Text(stringResource(R.string.library_refresh)) }
                     // Three words do not fit beside the title in every language (French, measured 2026-11-12).
                     var menu by rememberSaveable { mutableStateOf(false) }
                     var languages by rememberSaveable { mutableStateOf(false) }
                     val menuName = stringResource(R.string.menu)
-                    TextButton(
+                    SoftTextButton(
                         onClick = { menu = true },
                         modifier = Modifier.testTag("menu").semantics { contentDescription = menuName },
                     ) { Text("⋮", style = MaterialTheme.typography.titleLarge) }
                     DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
-                        DropdownMenuItem(
+                        SoftMenuItem(
                             text = { Text(stringResource(R.string.language)) },
                             onClick = { menu = false; languages = true },
                             modifier = Modifier.testTag("language"),
                         )
-                        DropdownMenuItem(
+                        SoftMenuItem(
                             text = { Text(stringResource(R.string.accounts)) },
                             onClick = { menu = false; onAccounts() },
                             modifier = Modifier.testTag("accounts"),
                         )
-                        DropdownMenuItem(
+                        SoftMenuItem(
                             text = { Text(stringResource(R.string.home_screen)) },
                             onClick = { menu = false; onHome() },
                             modifier = Modifier.testTag("home"),
                         )
-                        DropdownMenuItem(
+                        SoftMenuItem(
                             text = { Text(stringResource(R.string.sound)) },
                             onClick = { menu = false; onSound() },
                             modifier = Modifier.testTag("sound"),
                         )
-                        DropdownMenuItem(
+                        SoftMenuItem(
                             text = { Text(stringResource(R.string.about)) },
                             onClick = { menu = false; onAbout() },
                             modifier = Modifier.testTag("about"),
                         )
-                        DropdownMenuItem(
+                        SoftMenuItem(
                             text = { Text(stringResource(R.string.logout)) },
                             onClick = { menu = false; onLogout() },
                             modifier = Modifier.testTag("logout"),
@@ -356,15 +354,15 @@ private fun SortAndFilter(state: UiState, onSort: (LibrarySort) -> Unit, onFilte
     Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
         Choice("sort", stringResource(R.string.sort_label), stringResource(sorts.first { it.first == state.sort }.second)) { close ->
             for ((sort, name) in sorts) {
-                DropdownMenuItem(text = { Text(stringResource(name)) }, onClick = { close(); onSort(sort) }, modifier = Modifier.testTag("sort_${sort.name}"))
+                SoftMenuItem(text = { Text(stringResource(name)) }, onClick = { close(); onSort(sort) }, modifier = Modifier.testTag("sort_${sort.name}"))
             }
         }
         Choice("filter", stringResource(R.string.filter_label), filterName) { close ->
             for ((kind, name) in kinds) {
-                DropdownMenuItem(text = { Text(stringResource(name)) }, onClick = { close(); onFilter(LibraryFilter(kind)) }, modifier = Modifier.testTag("filter_${kind.name}"))
+                SoftMenuItem(text = { Text(stringResource(name)) }, onClick = { close(); onFilter(LibraryFilter(kind)) }, modifier = Modifier.testTag("filter_${kind.name}"))
             }
             for (genre in genres) {
-                DropdownMenuItem(
+                SoftMenuItem(
                     text = { Text(stringResource(R.string.filter_genre, genre)) },
                     onClick = { close(); onFilter(LibraryFilter(LibraryFilter.Kind.GENRE, genre)) },
                     modifier = Modifier.testTag("filter_genre"),
@@ -379,7 +377,7 @@ private fun SortAndFilter(state: UiState, onSort: (LibrarySort) -> Unit, onFilte
 private fun Choice(tag: String, label: String, value: String, items: @Composable (close: () -> Unit) -> Unit) {
     var open by rememberSaveable { mutableStateOf(false) }
     Box {
-        TextButton(onClick = { open = true }, modifier = Modifier.testTag(tag)) { Text("$label: $value ▾", maxLines = 1, overflow = TextOverflow.Ellipsis) }
+        SoftTextButton(onClick = { open = true }, modifier = Modifier.testTag(tag)) { Text("$label: $value ▾", maxLines = 1, overflow = TextOverflow.Ellipsis) }
         DropdownMenu(expanded = open, onDismissRequest = { open = false }) { items { open = false } }
     }
 }

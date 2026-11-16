@@ -34,6 +34,7 @@ import androidx.media3.common.MimeTypes
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
 import androidx.media3.common.Tracks
+import androidx.media3.common.TrackSelectionOverride
 import androidx.media3.common.VideoSize
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.datasource.okhttp.OkHttpDataSource
@@ -44,6 +45,7 @@ import androidx.media3.exoplayer.analytics.AnalyticsListener
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.session.MediaSession
 import androidx.media3.ui.PlayerView
+import io.github.chicohaager.moviescast.core.AudioPick
 import io.github.chicohaager.moviescast.core.PlayState
 import io.github.chicohaager.moviescast.core.Session
 import java.io.IOException
@@ -301,6 +303,35 @@ class PlayerActivity : AppCompatActivity() {
         message.visibility = View.VISIBLE
     }
 
+    /**
+     * Once for each film, before the viewer chooses: the sound track Kodi would play ([AudioPick]), among those the
+     * device can play; a choice in the player's menu afterwards stays the viewer's.
+     */
+    private fun pickSound(tracks: Tracks) {
+        val exo = player ?: return
+        val item = exo.currentMediaItem?.mediaId ?: return
+        if (item == soundPickedFor) return
+        val candidates = tracks.groups.filter { it.type == C.TRACK_TYPE_AUDIO }.flatMap { group ->
+            (0 until group.length).filter { group.isTrackSupported(it) }.map { group to it }
+        }
+        if (candidates.isEmpty()) return
+        soundPickedFor = item
+        val formats = candidates.map { (group, i) -> group.getTrackFormat(i) }
+        val best = AudioPick.best(
+            formats.map { AudioPick.Track(it.language, it.sampleMimeType, it.channelCount, it.selectionFlags and C.SELECTION_FLAG_DEFAULT != 0) },
+            Locale.getDefault().language,
+        )
+        AppLog.i("sound tracks: " + formats.joinToString { "${it.language} ${it.sampleMimeType?.substringAfter('/')} ${it.channelCount}ch${if (it.selectionFlags and C.SELECTION_FLAG_DEFAULT != 0) " default" else ""}" } + "; chosen ${best + 1}")
+        if (best < 0) return
+        val (group, index) = candidates[best]
+        if (group.isTrackSelected(index)) return
+        exo.trackSelectionParameters = exo.trackSelectionParameters.buildUpon()
+            .setOverrideForType(TrackSelectionOverride(group.mediaTrackGroup, index))
+            .build()
+    }
+
+    private var soundPickedFor: String? = null
+
     private inner class Events : Player.Listener {
         override fun onIsPlayingChanged(isPlaying: Boolean) {
             if (isPlaying && !reported) {
@@ -364,6 +395,7 @@ class PlayerActivity : AppCompatActivity() {
                 }
             }
             if (!converting) message.visibility = View.GONE
+            pickSound(tracks)
             val text = tracks.groups.filter { it.type == C.TRACK_TYPE_TEXT }
             if (text.isNotEmpty()) AppLog.i("subtitle tracks ${text.size}: " + text.joinToString { it.getTrackFormat(0).language ?: "?" })
         }

@@ -14,7 +14,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -45,7 +44,7 @@ fun AccountsScreen(
             TopAppBar(
                 title = { Text(stringResource(R.string.accounts), maxLines = 1, overflow = TextOverflow.Ellipsis) },
                 navigationIcon = {
-                    if (onBack != null) TextButton(onClick = onBack, modifier = Modifier.testTag("back")) { Text("‹ " + stringResource(R.string.back)) }
+                    if (onBack != null) SoftTextButton(onClick = onBack, modifier = Modifier.testTag("back")) { Text("‹ " + stringResource(R.string.back)) }
                 },
             )
         },
@@ -70,7 +69,7 @@ fun AccountsScreen(
                             Text(login.baseUrl, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
-                    TextButton(onClick = { onRemove(index) }, modifier = Modifier.testTag("account_remove")) {
+                    SoftTextButton(onClick = { onRemove(index) }, modifier = Modifier.testTag("account_remove")) {
                         Text(stringResource(R.string.account_remove))
                     }
                 }

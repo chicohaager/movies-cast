@@ -249,9 +249,24 @@ class AppUiTest {
 
     /** As android-screen.py types into a field on a TV, with the system's input: a tap, OK, the keyboard. */
     private fun tapAndOk(tag: String) {
-        val bounds = compose.onNodeWithTag(tag).fetchSemanticsNode().boundsInWindow
-        shell("input tap ${bounds.center.x.toInt()} ${bounds.center.y.toInt()}")
-        compose.waitUntil(5_000) { compose.onNodeWithTag(tag).fetchSemanticsNode().config.getOrNull(SemanticsProperties.Focused) == true }
+        fun focused() = compose.onNodeWithTag(tag).fetchSemanticsNode().config.getOrNull(SemanticsProperties.Focused) == true
+        fun where() = compose.onNodeWithTag(tag).fetchSemanticsNode().boundsInWindow
+        // On the Google TV Streamer the page was still scrolling back after the keyboard closed: the tap went to where
+        // the field had been and the focus stayed on the field before (screenshots 2026-11-16, 3 of 3 runs). So the tap
+        // waits until the field stands still (the same place twice, 300 ms apart) and is made again when no focus came.
+        for (attempt in 1..3) {
+            compose.waitForIdle()
+            var bounds = where()
+            for (i in 1..20) {
+                Thread.sleep(300)
+                val now = where()
+                if (now == bounds) break
+                bounds = now
+            }
+            shell("input tap ${bounds.center.x.toInt()} ${bounds.center.y.toInt()}")
+            if (runCatching { compose.waitUntil(3_000) { focused() } }.isSuccess) break
+        }
+        assertTrue("$tag did not get the focus from a tap", focused())
         shell("input keyevent DPAD_CENTER")
         compose.waitUntil(10_000) { keyboardShown() }
     }

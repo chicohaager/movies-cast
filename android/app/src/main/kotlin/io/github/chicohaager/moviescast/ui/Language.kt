@@ -10,7 +10,6 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -65,7 +64,7 @@ object Languages {
 @Composable
 fun LanguageButton(modifier: Modifier = Modifier) {
     var open by rememberSaveable { mutableStateOf(false) }
-    TextButton(onClick = { open = true }, modifier = modifier.testTag("language")) {
+    SoftTextButton(onClick = { open = true }, modifier = modifier.testTag("language")) {
         Text(stringResource(R.string.language))
     }
     if (open) LanguageDialog { open = false }
@@ -100,7 +99,7 @@ fun LanguageDialog(onClose: () -> Unit) {
                 }
             }
         },
-        confirmButton = { TextButton(onClick = onClose) { Text(stringResource(R.string.player_close)) } },
+        confirmButton = { SoftTextButton(onClick = onClose) { Text(stringResource(R.string.player_close)) } },
     )
 }
 

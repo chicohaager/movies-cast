@@ -11,7 +11,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.material3.Button
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.TextButton
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.onSizeChanged
@@ -301,6 +303,54 @@ fun SoftButton(
         ),
         modifier = modifier.onFocusChanged { focused = it.isFocused }.lifted(focused, shape),
         content = content,
+    )
+}
+
+/**
+ * Every text button of the app (in place of Material's TextButton: Back, ⋮, reload, language, About, the dialogs'
+ * buttons). Out of focus it is plain text as before; in focus it fills and gets the orange frame of [SoftButton]:
+ * Material's own focus shade on a text button was hard to see on the Google TV Streamer (owner, 2026-11-16).
+ */
+@Composable
+fun SoftTextButton(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    content: @Composable RowScope.() -> Unit,
+) {
+    var focused by remember { mutableStateOf(false) }
+    TextButton(
+        onClick = onClick,
+        enabled = enabled,
+        shape = CircleShape,
+        border = if (focused) BorderStroke(2.5.dp, Brand.Planet) else null,
+        colors = ButtonDefaults.textButtonColors(
+            containerColor = if (focused) MaterialTheme.colorScheme.surfaceContainerHighest else Color.Transparent,
+        ),
+        modifier = modifier.onFocusChanged { focused = it.isFocused }.lifted(focused, CircleShape),
+        content = content,
+    )
+}
+
+/**
+ * Every entry of a drop-down menu (in place of Material's DropdownMenuItem): in focus it is filled and framed in the
+ * planet's orange as [SoftTextButton]; Material's focus shade was a faint lighter stripe on the Streamer (2026-11-16).
+ */
+@Composable
+fun SoftMenuItem(
+    text: @Composable () -> Unit,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    var focused by remember { mutableStateOf(false) }
+    DropdownMenuItem(
+        text = text,
+        onClick = onClick,
+        modifier = modifier
+            .onFocusChanged { focused = it.isFocused }
+            .padding(horizontal = 4.dp)
+            .background(if (focused) MaterialTheme.colorScheme.surfaceContainerHighest else Color.Transparent, RoundedCornerShape(10.dp))
+            .border(2.5.dp, if (focused) Brand.Planet else SolidColor(Color.Transparent), RoundedCornerShape(10.dp)),
     )
 }
 
