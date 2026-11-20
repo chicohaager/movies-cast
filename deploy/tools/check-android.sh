@@ -187,6 +187,24 @@ for abi in arm64-v8a x86_64; do
     done
   done
 done
+# A release APK carries its native libraries stripped: with debug info they name the build machine's
+# paths and user (0.2.0 and the first 0.3.0 build had /home/<user>/… 131 times in libffmpegJNI.so,
+# as AGP could not find the NDK to strip with). Debug builds keep their symbols on purpose.
+stripped=""
+if [[ "$(basename "$apk")" != *debug* ]]; then
+  unzip -q -o "$apk" "lib/*/*.so" -d "$tmp"
+  for so in "$tmp"/lib/*/*.so; do
+    if readelf -SW "$so" | grep -q '\.debug_info'; then
+      echo "$(basename "$(dirname "$so")")/$(basename "$so") in $apk is not stripped (.debug_info)" >&2
+      exit 1
+    fi
+    if grep -a -q -F "$HOME" "$so"; then
+      echo "$(basename "$(dirname "$so")")/$(basename "$so") in $apk names the build machine's home folder" >&2
+      exit 1
+    fi
+  done
+  stripped=", native libraries stripped and free of the build machine's paths"
+fi
 signed=""
 if [[ "$(basename "$apk")" == app-release.apk ]]; then
   if ! "$(dirname "$zipalign")/apksigner" verify "$apk" >/dev/null 2>&1; then
@@ -195,4 +213,4 @@ if [[ "$(basename "$apk")" == app-release.apk ]]; then
   fi
   signed=", signature valid"
 fi
-echo "android $(basename "$apk"): translations in the APK$signed, FFmpeg and the LGPL, Space Grotesk and the OFL on the licences page, icon layers as drawn in android/art, minSdk ${min_sdk}, libffmpegJNI.so in 4 ABIs, 16 KB alignment in the APK and in the 64-bit libraries ok"
+echo "android $(basename "$apk"): translations in the APK$signed, FFmpeg and the LGPL, Space Grotesk and the OFL on the licences page, icon layers as drawn in android/art, minSdk ${min_sdk}, libffmpegJNI.so in 4 ABIs, 16 KB alignment in the APK and in the 64-bit libraries ok${stripped}"

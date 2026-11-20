@@ -25,6 +25,10 @@ val keystore = Properties().apply { if (keystoreFile.isFile) keystoreFile.inputS
 android {
     namespace = "io.github.chicohaager.moviescast"
     compileSdk = 37
+    // The NDK of the ffmpeg module: AGP strips the native libraries with the NDK named here, and without one
+    // it looks for its own default (28.2), finds none and packs them unstripped, with debug info and the
+    // build machine's paths (0.2.0 and the first 0.3.0 build, 2026-11-20). check-android.sh fails on that.
+    ndkVersion = "26.1.10909125"
     buildToolsVersion = "37.0.0"
 
     defaultConfig {
