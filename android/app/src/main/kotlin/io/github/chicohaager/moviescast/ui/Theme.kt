@@ -25,7 +25,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -39,7 +38,6 @@ import androidx.compose.material3.Shapes
 import androidx.compose.material3.Text
 import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.material3.LocalContentColor
@@ -66,17 +64,22 @@ import io.github.chicohaager.moviescast.R
 import kotlin.random.Random
 
 /**
- * The look: a deep-sea blue night like the sky over the earth, the logo's planet as a warm sun in orange (movies-cast's
- * colour from the start) and its orbit in sky blue. The masters of logo and banner are in android/art; their colours are these.
+ * The colours: Raumklang's (owner's Sonos app, web/src/styles.css): a calm near-black, warm off-white writing and a soft
+ * gold as the one accent. The logo keeps its orange planet (android/art); the wordmark, buttons and focus frames are gold.
  */
 object Brand {
-    val Light = Color(0xFFFFD27A)
-    val Orange = Color(0xFFFB923C)
-    val Ember = Color(0xFFEA580C)
-    val Sky = Color(0xFF38BDF8)
-    val Night = Color(0xFF060D1F)
-    /** The planet of the logo, for the wordmark, focus frames and the main buttons. */
-    val Planet = Brush.linearGradient(listOf(Light, Orange, Ember))
+    /** Raumklang --accent. */
+    val Gold = Color(0xFFDCBF8F)
+    val GoldLight = Color(0xFFEBD6AE)
+    val GoldDeep = Color(0xFFC4A26E)
+    /** Raumklang --accent-ink: writing on gold. */
+    val GoldInk = Color(0xFF1B150B)
+    /** Raumklang --muted: the quiet second colour (progress, a readable text's frame). */
+    val Mist = Color(0xFFA7A49D)
+    /** Raumklang --bg. */
+    val Night = Color(0xFF0C0D0F)
+    /** The gold for the wordmark, focus frames and the main buttons. */
+    val Accent = Brush.linearGradient(listOf(GoldLight, Gold, GoldDeep))
 }
 
 /** Space Grotesk (SIL OFL 1.1, res/font): headings and the wordmark; Cyrillic and CJK fall back to the system font. */
@@ -85,54 +88,32 @@ private fun grotesk(weight: Int) = Font(R.font.space_grotesk, FontWeight(weight)
 
 val SpaceGrotesk = FontFamily(grotesk(400), grotesk(500), grotesk(600), grotesk(700))
 
+// Raumklang's tokens; the cards there are white at 4.5 / 7.5 / 11 % over --bg, here laid flat.
 private val Dark = darkColorScheme(
-    primary = Color(0xFFFDBA74),
-    onPrimary = Color(0xFF3A1A04),
-    primaryContainer = Color(0xFF7C2D12),
-    onPrimaryContainer = Color(0xFFFFEDD5),
-    secondary = Color(0xFF7DD3FC),
-    onSecondary = Color(0xFF062033),
-    tertiary = Brand.Light,
+    primary = Brand.Gold,
+    onPrimary = Brand.GoldInk,
+    primaryContainer = Color(0xFF3A3122),
+    onPrimaryContainer = Color(0xFFF3E6CC),
+    secondary = Brand.Mist,
+    onSecondary = Color(0xFF1B1A18),
+    tertiary = Brand.GoldLight,
     // The screens lie on the sky of [SpaceBackground]: the scaffolds and bars are see-through.
     background = Color.Transparent,
-    onBackground = Color(0xFFEAF2FF),
+    onBackground = Color(0xFFF3F1EC),
     surface = Color.Transparent,
-    onSurface = Color(0xFFEAF2FF),
-    surfaceVariant = Color(0xFF16264A),
-    onSurfaceVariant = Color(0xFFA9B8D6),
-    surfaceContainerLowest = Color(0xFF03060F),
-    surfaceContainerLow = Color(0xFF0A1430),
-    surfaceContainer = Color(0xFF0F1B3B),
-    surfaceContainerHigh = Color(0xFF152345),
-    surfaceContainerHighest = Color(0xFF1B2B52),
-    outline = Color(0xFF3B5584),
-    outlineVariant = Color(0xFF26406E),
-    inverseSurface = Color(0xFFEAF2FF),
-    inverseOnSurface = Color(0xFF0F1B3B),
-    error = Color(0xFFFCA5A5),
-)
-
-private val Light = lightColorScheme(
-    primary = Color(0xFFC2410C),
-    onPrimary = Color.White,
-    primaryContainer = Color(0xFFFFEDD5),
-    onPrimaryContainer = Color(0xFF7C2D12),
-    secondary = Color(0xFF0369A1),
-    onSecondary = Color.White,
-    tertiary = Color(0xFFB45309),
-    background = Color.Transparent,
-    onBackground = Color(0xFF0F1A33),
-    surface = Color.Transparent,
-    onSurface = Color(0xFF0F1A33),
-    surfaceVariant = Color(0xFFE6EDF8),
-    onSurfaceVariant = Color(0xFF475569),
-    surfaceContainerLowest = Color.White,
-    surfaceContainerLow = Color(0xFFFAFCFF),
-    surfaceContainer = Color(0xFFF1F5FB),
-    surfaceContainerHigh = Color(0xFFEAF0F8),
-    surfaceContainerHighest = Color(0xFFE2E9F4),
-    outline = Color(0xFF94A3B8),
-    outlineVariant = Color(0xFFD5DEEB),
+    onSurface = Color(0xFFF3F1EC),
+    surfaceVariant = Color(0xFF272829),
+    onSurfaceVariant = Brand.Mist,
+    surfaceContainerLowest = Color(0xFF08090A),
+    surfaceContainerLow = Color(0xFF121315),
+    surfaceContainer = Color(0xFF17181A),
+    surfaceContainerHigh = Color(0xFF1E1F21),
+    surfaceContainerHighest = Color(0xFF272829),
+    outline = Color(0xFF6E6C67),
+    outlineVariant = Color(0xFF2E2F31),
+    inverseSurface = Color(0xFFF3F1EC),
+    inverseOnSurface = Color(0xFF17181A),
+    error = Color(0xFFEF8A78),
 )
 
 private fun typography(): Typography {
@@ -157,18 +138,20 @@ private val shapes = Shapes(
     large = RoundedCornerShape(24.dp),
 )
 
-/** Android TV's design guidelines ask for a dark interface; a TV therefore always gets the night sky. */
+/** Android TV's design guidelines ask for a dark interface. */
 @Composable
 fun isTv(): Boolean = (LocalConfiguration.current.uiMode and Configuration.UI_MODE_TYPE_MASK) == Configuration.UI_MODE_TYPE_TELEVISION
 
-/** The app's own colours; the wallpaper colours of Android 12+ are not used, so the brand stays. */
+/**
+ * The app's own colours, always dark as Raumklang (owner, 2026-11-20); the wallpaper colours of Android 12+ and the
+ * phone's light mode are not used.
+ */
 @Composable
 fun MoviesCastTheme(content: @Composable () -> Unit) {
-    val dark = isSystemInDarkTheme() || isTv()
-    val scheme: ColorScheme = if (dark) Dark else Light
+    val scheme: ColorScheme = Dark
     MaterialTheme(colorScheme = scheme, typography = remember { typography() }, shapes = shapes) {
         Box(Modifier.fillMaxSize()) {
-            SpaceBackground(dark)
+            SpaceBackground()
             // Pages without a Scaffold (the login page) would otherwise write in the default black.
             CompositionLocalProvider(LocalContentColor provides scheme.onBackground) { content() }
         }
@@ -179,12 +162,12 @@ fun MoviesCastTheme(content: @Composable () -> Unit) {
 private class Star(val x: Float, val y: Float, val radius: Float, val alpha: Float)
 
 /**
- * The sky behind every page: a deep-sea blue night with an orange glow bottom right and a sky-blue one top left, and
- * about 140 stars, always in the same places (a fixed seed), drawn once per size; nothing moves, so it costs
- * nothing while a film list scrolls. By day (a phone in light mode) a pale morning sky with faint stars.
+ * The sky behind every page: Raumklang's near-black with a faint gold glow bottom right and a warm grey one top left,
+ * and about 140 stars, always in the same places (a fixed seed), drawn once per size; nothing moves, so it costs
+ * nothing while a film list scrolls.
  */
 @Composable
-fun SpaceBackground(dark: Boolean) {
+fun SpaceBackground() {
     val stars = remember {
         val random = Random(1977)
         List(140) { Star(random.nextFloat(), random.nextFloat(), 0.5f + random.nextFloat() * random.nextFloat() * 1.4f, 0.25f + random.nextFloat() * 0.75f) }
@@ -193,22 +176,14 @@ fun SpaceBackground(dark: Boolean) {
         val w = size.width
         val h = size.height
         val long = maxOf(w, h)
-        if (dark) {
-            drawRect(Brush.verticalGradient(listOf(Color(0xFF0C1A38), Brand.Night, Color(0xFF03060F))))
-            drawRect(Brush.radialGradient(listOf(Color(0x38F97316), Color.Transparent), center = Offset(w * 0.95f, h * 1.02f), radius = long * 0.6f))
-            drawRect(Brush.radialGradient(listOf(Color(0x3838BDF8), Color.Transparent), center = Offset(w * 0.02f, 0f), radius = long * 0.5f))
-        } else {
-            drawRect(Brush.verticalGradient(listOf(Color(0xFFF2F7FF), Color(0xFFFFFFFF), Color(0xFFFFF4EA))))
-            drawRect(Brush.radialGradient(listOf(Color(0x26F97316), Color.Transparent), center = Offset(w * 0.95f, h * 1.02f), radius = long * 0.6f))
-            drawRect(Brush.radialGradient(listOf(Color(0x1A38BDF8), Color.Transparent), center = Offset(w * 0.02f, 0f), radius = long * 0.5f))
-        }
-        val starColor = if (dark) Color.White else Color(0xFF0369A1)
-        val scale = if (dark) 1f else 0.35f
-        for (s in stars) drawCircle(starColor.copy(alpha = s.alpha * scale), radius = s.radius * density, center = Offset(s.x * w, s.y * h))
+        drawRect(Brush.verticalGradient(listOf(Color(0xFF141518), Brand.Night, Color(0xFF08090A))))
+        drawRect(Brush.radialGradient(listOf(Brand.Gold.copy(alpha = 0.16f), Color.Transparent), center = Offset(w * 0.95f, h * 1.02f), radius = long * 0.6f))
+        drawRect(Brush.radialGradient(listOf(Brand.Mist.copy(alpha = 0.10f), Color.Transparent), center = Offset(w * 0.02f, 0f), radius = long * 0.5f))
+        for (s in stars) drawCircle(Color.White.copy(alpha = s.alpha), radius = s.radius * density, center = Offset(s.x * w, s.y * h))
     }
 }
 
-/** The logo: the planet with its orbit, and "Movies" over "CAST" in the planet's orange. Read out as the app's name. */
+/** The logo: the planet with its orbit, and "Movies" over "CAST" in gold. Read out as the app's name. */
 @Composable
 fun Wordmark(name: String, modifier: Modifier = Modifier, markSize: Dp = 44.dp, textSize: Int = 20) {
     Row(
@@ -223,7 +198,7 @@ fun Wordmark(name: String, modifier: Modifier = Modifier, markSize: Dp = 44.dp, 
         }
         Column(verticalArrangement = Arrangement.spacedBy((-textSize * 0.18f).dp)) {
             Text("Movies", style = TextStyle(fontFamily = SpaceGrotesk, fontWeight = FontWeight.Bold, fontSize = textSize.sp, letterSpacing = (-0.3).sp, color = MaterialTheme.colorScheme.onBackground))
-            Text("CAST", style = TextStyle(fontFamily = SpaceGrotesk, fontWeight = FontWeight.Medium, fontSize = textSize.sp, letterSpacing = (textSize * 0.16f).sp, brush = Brand.Planet))
+            Text("CAST", style = TextStyle(fontFamily = SpaceGrotesk, fontWeight = FontWeight.Medium, fontSize = textSize.sp, letterSpacing = (textSize * 0.16f).sp, brush = Brand.Accent))
         }
     }
 }
@@ -254,7 +229,7 @@ private fun Modifier.lifted(focused: Boolean, shape: Shape): Modifier {
 }
 
 /**
- * The main button of a page (play, log in): filled with the planet's gradient. In focus it grows and gets a white
+ * The main button of a page (play, log in): filled with the gold gradient. In focus it grows and gets a white
  * ring, as Material's own focus shade is hard to see from the sofa.
  */
 @Composable
@@ -266,7 +241,7 @@ fun GlowButton(onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Bool
         enabled = enabled,
         colors = ButtonDefaults.buttonColors(
             containerColor = Color.Transparent,
-            contentColor = Color(0xFF2A1203),
+            contentColor = Brand.GoldInk,
             disabledContainerColor = Color.Transparent,
             disabledContentColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.45f),
         ),
@@ -274,14 +249,14 @@ fun GlowButton(onClick: () -> Unit, modifier: Modifier = Modifier, enabled: Bool
             .onFocusChanged { focused = it.isFocused }
             .lifted(focused, CircleShape)
             .then(ring)
-            .background(if (enabled) Brand.Planet else SolidColor(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)), CircleShape),
+            .background(if (enabled) Brand.Accent else SolidColor(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)), CircleShape),
         content = content,
     )
 }
 
 /**
  * Every other button of the app (in place of Material's OutlinedButton). In focus it grows, is lifted with a shadow,
- * fills and gets a frame in the planet's orange, like the library's tiles; Material's own focus shade on an outlined
+ * fills and gets a gold frame, like the library's tiles; Material's own focus shade on an outlined
  * button only turned it a little lighter, hard to tell from the sofa (film page, Android TV emulator, 2026-11-14).
  */
 @Composable
@@ -297,7 +272,7 @@ fun SoftButton(
         onClick = onClick,
         enabled = enabled,
         shape = shape,
-        border = if (focused) BorderStroke(2.5.dp, Brand.Planet) else ButtonDefaults.outlinedButtonBorder(enabled),
+        border = if (focused) BorderStroke(2.5.dp, Brand.Accent) else ButtonDefaults.outlinedButtonBorder(enabled),
         colors = ButtonDefaults.outlinedButtonColors(
             containerColor = if (focused) MaterialTheme.colorScheme.surfaceContainerHighest else Color.Transparent,
         ),
@@ -308,7 +283,7 @@ fun SoftButton(
 
 /**
  * Every text button of the app (in place of Material's TextButton: Back, ⋮, reload, language, About, the dialogs'
- * buttons). Out of focus it is plain text as before; in focus it fills and gets the orange frame of [SoftButton]:
+ * buttons). Out of focus it is plain text as before; in focus it fills and gets the gold frame of [SoftButton]:
  * Material's own focus shade on a text button was hard to see on the Google TV Streamer (owner, 2026-11-16).
  */
 @Composable
@@ -323,7 +298,7 @@ fun SoftTextButton(
         onClick = onClick,
         enabled = enabled,
         shape = CircleShape,
-        border = if (focused) BorderStroke(2.5.dp, Brand.Planet) else null,
+        border = if (focused) BorderStroke(2.5.dp, Brand.Accent) else null,
         colors = ButtonDefaults.textButtonColors(
             containerColor = if (focused) MaterialTheme.colorScheme.surfaceContainerHighest else Color.Transparent,
         ),
@@ -333,8 +308,8 @@ fun SoftTextButton(
 }
 
 /**
- * Every entry of a drop-down menu (in place of Material's DropdownMenuItem): in focus it is filled and framed in the
- * planet's orange as [SoftTextButton]; Material's focus shade was a faint lighter stripe on the Streamer (2026-11-16).
+ * Every entry of a drop-down menu (in place of Material's DropdownMenuItem): in focus it is filled and framed in
+ * gold as [SoftTextButton]; Material's focus shade was a faint lighter stripe on the Streamer (2026-11-16).
  */
 @Composable
 fun SoftMenuItem(
@@ -350,13 +325,13 @@ fun SoftMenuItem(
             .onFocusChanged { focused = it.isFocused }
             .padding(horizontal = 4.dp)
             .background(if (focused) MaterialTheme.colorScheme.surfaceContainerHighest else Color.Transparent, RoundedCornerShape(10.dp))
-            .border(2.5.dp, if (focused) Brand.Planet else SolidColor(Color.Transparent), RoundedCornerShape(10.dp)),
+            .border(2.5.dp, if (focused) Brand.Accent else SolidColor(Color.Transparent), RoundedCornerShape(10.dp)),
     )
 }
 
 /**
  * The night colours for a page that lies on a film's backdrop: the picture is dark under its veil, so the writing
- * must be light even on a phone in light mode.
+ * must be light (the whole app is dark since 2026-11-20; kept so a backdrop page stays dark whatever the theme).
  */
 @Composable
 fun OnBackdrop(content: @Composable () -> Unit) {
@@ -367,13 +342,13 @@ fun OnBackdrop(content: @Composable () -> Unit) {
 
 /**
  * A piece of text a remote can stop on (a film's overview, its file facts): it takes the focus, so ↓ reaches it and
- * the page scrolls to it, and shows a faint frame in the orbit's sky blue while it has it. A phone does not focus it.
+ * the page scrolls to it, and shows a faint frame in Raumklang's warm grey while it has it. A phone does not focus it.
  */
 @Composable
 fun Modifier.readable(): Modifier {
     var focused by remember { mutableStateOf(false) }
     return onFocusChanged { focused = it.isFocused }
-        .border(2.dp, if (focused) Brand.Sky.copy(alpha = 0.8f) else Color.Transparent, RoundedCornerShape(10.dp))
+        .border(2.dp, if (focused) Brand.Mist.copy(alpha = 0.8f) else Color.Transparent, RoundedCornerShape(10.dp))
         .padding(6.dp)
         .focusable()
 }

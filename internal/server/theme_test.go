@@ -10,105 +10,78 @@ import (
 	"testing"
 )
 
-// The colour mode is chosen on the phone (System, Light, Dark): theme.js sets
-// data-theme on <html> before style.css paints, and style.css has the dark
-// colours twice — for the system mode and for a chosen "dark" — with the same
-// values, and lets a chosen "light" win over a dark system.
-func TestThemeChosenOnThePhone(t *testing.T) {
+// The phone page and the TV page are always dark in Raumklang's colours
+// (owner, 2026-11-20): no colour-mode picker, no theme.js, no light block, and
+// both pages and the manifest carry the same near-black and gold.
+func TestPageIsAlwaysDark(t *testing.T) {
 	r := newRig(t)
-	code, js := r.get("/theme.js")
-	if code != 200 || !strings.Contains(js, `"moviescast.theme"`) || !strings.Contains(js, "data-theme") {
-		t.Fatalf("/theme.js: %d %.120s", code, js)
+	if code, _ := r.get("/theme.js"); code != http.StatusNotFound {
+		t.Errorf("/theme.js: %d (want 404, the picker is gone)", code)
 	}
-	checkNone(t, "theme.js", js, map[string]string{`=>`: "arrow function", `\blet\s|\bconst\s`: "let/const"})
-
-	html, err := webFS.ReadFile("web/index.html")
-	if err != nil {
-		t.Fatal(err)
-	}
-	page := string(html)
-	jsAt, cssAt := strings.Index(page, `src="theme.js"`), strings.Index(page, `href="style.css"`)
-	if jsAt < 0 || cssAt < 0 || jsAt > cssAt {
-		t.Errorf("index.html must load theme.js before style.css (theme.js at %d, style.css at %d)", jsAt, cssAt)
-	}
-	if !strings.Contains(page, `id="theme"`) {
-		t.Error(`index.html has no picker id="theme"`)
-	}
-
-	b, err := webFS.ReadFile("web/style.css")
-	if err != nil {
-		t.Fatal(err)
-	}
-	css := string(b)
-	block := func(re string) string {
-		m := regexp.MustCompile(re).FindStringSubmatch(css)
-		if m == nil {
-			t.Fatalf("style.css lacks %s", re)
+	read := func(name string) string {
+		b, err := webFS.ReadFile("web/" + name)
+		if err != nil {
+			t.Fatal(err)
 		}
-		return strings.Join(strings.Fields(m[1]), " ")
+		return string(b)
 	}
-	system := block(`(?s)@media \(prefers-color-scheme: dark\) \{\s*:root:not\(\[data-theme="light"\]\) \{(.*?)\}`)
-	chosen := block(`(?s)\n:root\[data-theme="dark"\] \{(.*?)\}`)
-	if system != chosen {
-		t.Errorf("dark colours differ:\nsystem %s\nchosen %s", system, chosen)
+	page := read("index.html")
+	for _, gone := range []string{`id="theme"`, `theme.js`, `data-i18n="theme.`} {
+		if strings.Contains(page, gone) {
+			t.Errorf("index.html still has %s", gone)
+		}
 	}
-	if !strings.Contains(chosen, "--bg:") || !strings.Contains(chosen, "color-scheme: dark") {
-		t.Errorf("dark block incomplete: %s", chosen)
+	if !strings.Contains(page, `<meta name="theme-color" content="#0c0d0f">`) {
+		t.Error("index.html: theme-color is not Raumklang's #0c0d0f")
+	}
+	css, tv := read("style.css"), read("tv/tv.css")
+	for _, gone := range []string{"data-theme", "prefers-color-scheme", "color-scheme: light"} {
+		if strings.Contains(css, gone) {
+			t.Errorf("style.css still has %q", gone)
+		}
+	}
+	root := regexp.MustCompile(`(?s)^:root \{(.*?)\n\}`).FindStringSubmatch(strings.TrimLeft(css, "\n"))
+	if root == nil {
+		t.Fatal("style.css does not start with a :root block")
+	}
+	for name, want := range map[string]string{"style.css": root[1], "tv/tv.css": tv} {
+		for _, token := range []string{"--bg: #0c0d0f", "--text: #f3f1ec", "--accent: #dcbf8f"} {
+			if !strings.Contains(want, token) {
+				t.Errorf("%s lacks %s", name, token)
+			}
+		}
+	}
+	if !strings.Contains(root[1], "color-scheme: dark") {
+		t.Error("style.css :root lacks color-scheme: dark")
+	}
+	if m := read("manifest.json"); !strings.Contains(m, `"theme_color": "#0c0d0f"`) || !strings.Contains(m, `"background_color": "#0c0d0f"`) {
+		t.Errorf("manifest.json colours: %.200s", m)
+	}
+	for _, f := range []string{"de.json", "en.json", "zh_CN.json"} {
+		if strings.Contains(read("i18n/"+f), `"theme.`) {
+			t.Errorf("i18n/%s still has theme.* texts", f)
+		}
 	}
 }
 
-// The mode belongs to the account, not to the address: the phone reaches the
-// NAS by its LAN address and by its Tailscale address, and each is its own
-// localStorage (seen 2026-10-29). /api/me says the stored mode, POST
-// /api/theme sets it, and it survives a restart in themes.json (0600).
-func TestThemeFollowsTheAccount(t *testing.T) {
+// The colour mode is no longer a setting of the account: POST /api/theme is
+// gone, and a themes.json left by an earlier version is not read into /api/me.
+func TestThemeSettingIsGone(t *testing.T) {
 	r, f := newRigWithState(t)
-	r.login()
-	if code, me := r.getJSON("/api/me"); code != 200 || me["theme"] != nil {
-		t.Fatalf("fresh account: %d %v (want no theme)", code, me)
+	if err := os.WriteFile(filepath.Join(filepath.Dir(f), "themes.json"), []byte(`{"USERID0000":"light"}`), 0o600); err != nil {
+		t.Fatal(err)
 	}
-	if code, out := r.post("/api/theme", map[string]string{"theme": "blue"}); code != 400 {
-		t.Fatalf("theme blue: %d %v", code, out)
-	}
-	if code, out := r.post("/api/theme", map[string]string{"theme": "dark"}); code != 200 {
-		t.Fatalf("theme dark: %d %v", code, out)
-	}
-
-	// Another device of the same account, after a restart.
 	other := r.restart(f)
 	other.login()
-	if code, me := other.getJSON("/api/me"); code != 200 || me["theme"] != "dark" {
-		t.Fatalf("other device after restart: %d %v", code, me)
+	if code, out := other.post("/api/theme", map[string]string{"theme": "dark"}); code != http.StatusNotFound && code != http.StatusMethodNotAllowed {
+		t.Fatalf("POST /api/theme: %d %v (want 404/405)", code, out)
 	}
-	st, err := os.Stat(filepath.Join(filepath.Dir(f), "themes.json"))
-	if err != nil || st.Mode().Perm() != 0o600 {
-		t.Fatalf("themes.json: %v %v", st, err)
-	}
-	// Another account keeps its own mode.
-	anna := r.restart(f)
-	jar, _ := cookiejar.New(nil) // restart shares the jar, and cookies are per host, not per port
-	anna.client = &http.Client{Jar: jar}
-	if code, out := anna.post("/api/login", map[string]string{"user": "Anna", "password": "richtig"}); code != 200 {
-		t.Fatalf("login Anna: %d %v", code, out)
-	}
-	if _, me := anna.getJSON("/api/me"); me["name"] != "Anna" || me["theme"] != nil {
-		t.Fatalf("Anna sees %v (want her own, unset mode)", me)
-	}
-	// "" is a choice too (follow the system), not a missing one.
-	if code, _ := other.post("/api/theme", map[string]string{"theme": ""}); code != 200 {
-		t.Fatalf("theme system: %d", code)
-	}
-	if _, me := other.getJSON("/api/me"); me["theme"] != "" {
-		t.Fatalf("after System: %v", me)
-	}
-	// Without a login nothing is stored.
-	anon := newRig(t)
-	if code, _ := anon.post("/api/theme", map[string]string{"theme": "dark"}); code != 401 {
-		t.Fatalf("anonymous: %d", code)
+	if code, me := other.getJSON("/api/me"); code != 200 || me["theme"] != nil {
+		t.Fatalf("/api/me: %d %v (want no theme)", code, me)
 	}
 }
 
-// The language follows the account like the colour mode: /api/me says it,
+// The language follows the account: /api/me says it,
 // POST /api/lang sets one of the shipped languages, langs.json keeps it.
 func TestLangFollowsTheAccount(t *testing.T) {
 	r, f := newRigWithState(t)

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Raumklang background, as Brand.Night in Theme.kt. -->
+    <color name="night">#0C0D0F</color>
+</resources>

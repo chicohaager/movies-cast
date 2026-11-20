@@ -104,7 +104,7 @@ type Server struct {
 	// convert holds TV|audio|codec keys whose sound is converted (convert.go).
 	convert map[string]bool
 	// account: settings of the phone page per Movies user ID, by name
-	// ("theme", "lang"; accountPrefs in store.go).
+	// ("lang"; accountPrefs in store.go).
 	account map[string]map[string]string
 	prefs   tvPrefs // names, hidden TVs, TVs added by address (tvs.go)
 	// strings is /strings.js, built once from web/i18n/*.json (strings.go).
@@ -256,7 +256,6 @@ func (s *Server) Handler() http.Handler {
 	mux.HandleFunc("GET /api/source", s.source)
 	mux.HandleFunc("POST /api/logout", s.withSession(s.logout))
 	mux.HandleFunc("GET /api/me", s.withSession(s.me))
-	mux.HandleFunc("POST /api/theme", s.withSession(s.setAccountPref("theme")))
 	mux.HandleFunc("POST /api/lang", s.withSession(s.setAccountPref("lang")))
 	mux.HandleFunc("GET /api/movies", s.withSession(s.listMovies))
 	mux.HandleFunc("GET /api/poster/{id}", s.withSession(s.poster))
@@ -665,8 +664,8 @@ func (s *Server) dropSessionLocked(sid string) {
 	}
 }
 
-// me names the account and the settings chosen for it so far ("theme": ""
-// means the system's mode; a setting never chosen is left out).
+// me names the account and the settings chosen for it so far (a setting never
+// chosen is left out).
 func (s *Server) me(w http.ResponseWriter, _ *http.Request, _ string, sess *session) {
 	out := map[string]string{"name": sess.ms.UserName}
 	s.mu.Lock()

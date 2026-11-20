@@ -62,9 +62,9 @@ test("phone page: login, library, film dialog pass axe (WCAG 2.1 AA)", async ({ 
   await check(page, "cards open");
 });
 
-// The dark mode is the night sky of the logo (blue cards, orange gradient buttons): checked on the login page,
-// the library and the film dialog, not on the login page alone.
-test("dark mode passes the contrast rules too", async ({ page }) => {
+// The page is always dark (Raumklang's near-black and gold, 2026-11-20); the test above sees it with the phone in
+// light mode, this one with the phone in dark mode: the login page, the library and the film dialog.
+test("a phone in dark mode passes the contrast rules too", async ({ page }) => {
   await page.emulateMedia({ colorScheme: "dark" });
   await page.goto("/");
   await expect(page.locator("#login-view, #logout").locator("visible=true").first()).toBeVisible();

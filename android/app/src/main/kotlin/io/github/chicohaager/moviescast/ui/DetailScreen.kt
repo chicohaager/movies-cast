@@ -134,7 +134,7 @@ private fun DetailPage(
 
 /**
  * The film's page over its backdrop, as Infuse shows it (the owner's yardstick, ROADMAP A15): the picture fills the
- * screen, a veil of the night sky from the left and from below keeps the writing readable, the title is the film's
+ * screen, a dark veil from the left and from below keeps the writing readable, the title is the film's
  * logo when the server has one. On a phone the picture is a band at the top that runs into the night below.
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -360,13 +360,13 @@ private fun trackLine(track: Track): String {
     }
 }
 
-/** The poster on the film's page, with a halo in the planet's orange behind it. */
+/** The poster on the film's page, with a gold halo behind it. */
 @Composable
 private fun GlowingPoster(item: MediaItem, modifier: Modifier) {
     Box(modifier, contentAlignment = Alignment.Center) {
         Box(
             Modifier.matchParentSize().padding(4.dp)
-                .background(Brush.radialGradient(listOf(Brand.Orange.copy(alpha = 0.35f), Brand.Sky.copy(alpha = 0.12f), Color.Transparent)), RoundedCornerShape(24.dp)),
+                .background(Brush.radialGradient(listOf(Brand.Gold.copy(alpha = 0.30f), Brand.Mist.copy(alpha = 0.10f), Color.Transparent)), RoundedCornerShape(24.dp)),
         )
         Poster(
             item,
