@@ -52,7 +52,7 @@ State 2026-11-13: 0.2.0, the first build for testers (signed APK, [android/TESTE
 | A11 | player: chapters, skip intro, preview pictures while seeking | open | |
 | A12 | Google Cast from the app, downloads | open | |
 | A13 | icons in place of text signs (⋮ ‹ ▶), screen reader pass | open | 3 `contentDescription` in the screens |
-| A14 | a look of its own: logo, icon, banner, colours, font | done 2026-11-13 | deep-sea blue and sun orange (proposal A of three, the owners' pick), Space Grotesk, logo everywhere (app, TV starter, webOS, web icons, ZimaOS tile); Fire TV Stick 4K and Android 16 emulator: 19 screen tests OK each. The phone and TV pages have the same colours since 2026-11-13. Since 2026-11-20 all three are always dark in Raumklang's colours (near-black and gold, the owner's Sonos app); the logo keeps its orange |
+| A14 | a look of its own: logo, icon, banner, colours, font | done 2026-11-13 | deep-sea blue and sun orange (proposal A of three, the owners' pick), Space Grotesk, logo everywhere (app, TV starter, webOS, web icons, ZimaOS tile); Fire TV Stick 4K and Android 16 emulator: 19 screen tests OK each. The phone and TV pages have the same colours since 2026-11-13 |
 | A15 | look and feel on a par with Infuse | started 2026-11-14: 1 to 4 done | the owner's yardstick since 2026-11-14 (Infuse Pro on the Apple TV against Movies); the gaps, in order, are in "A15: the app beside Infuse" below |
 
 
@@ -73,7 +73,7 @@ Android TV emulator (API 30, 1920×1080), logged in to the same Movies. What Mov
 | 5 | ratings with their sources (IMDb, TMDB, Rotten Tomatoes) | none shown; `CommunityRating` is read (Models.kt) and used for sorting only | one value: `CommunityRating` | small |
 | 6 | cast and crew with photos, trailer, "more like this" | none | no: Movies sends no `People` and no `RemoteTrailers`; Infuse fetches its own metadata (its setting "Metadaten & Artwork") | large: an own metadata source |
 | 7 | settings as a full page of groups (shares, library, playback, audio, language …) | a menu ⋮ with five entries | — | medium |
-| 8 | a light look (the Apple TV in light mode) | always dark since 2026-11-20 (owner: Raumklang's colours, no light mode) | — | decided: no |
+| 8 | a light look (the Apple TV in light mode) | the dark starry sky only | — | owner's call |
 
 Seen on the way, not explained: the film page in Infuse offered "00:00:08 fortsetzen" for that film (photo 12:36),
 the app "Continue at 9:22" from Movies (12:45 the same day).

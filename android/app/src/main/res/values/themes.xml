@@ -1,11 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Always dark, as the app (Theme.kt); the window shows Raumklang's near-black until Compose draws. -->
-    <style name="Theme.MoviesCast" parent="Theme.AppCompat.NoActionBar">
+    <style name="Theme.MoviesCast" parent="Theme.AppCompat.Light.NoActionBar">
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
-        <item name="android:windowLightStatusBar">false</item>
-        <item name="android:windowBackground">@color/night</item>
+        <item name="android:windowLightStatusBar">true</item>
     </style>
 
     <style name="Theme.MoviesCast.Player" parent="Theme.AppCompat.NoActionBar">

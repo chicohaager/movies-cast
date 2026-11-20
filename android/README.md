@@ -187,7 +187,7 @@ everything without the rows; Back leads home. A layout kept by an earlier build 
 If the server cannot list its libraries the rest of the page stays and the row has the whole-library tile only (logged).
 
 Measured against Movies in the Android TV emulator (API 30, remote keys only) and the phone emulator (Android 16,
-light mode; the app is always dark since 2026-11-20). Device tests: `myMediaHasATileForTheWholeLibraryAndOneForEachLibraryWithSomethingInIt`,
+light mode). Device tests: `myMediaHasATileForTheWholeLibraryAndOneForEachLibraryWithSomethingInIt`,
 `theHomePageShowsItsRowsAndAGenreTileFiltersTheLibrary`,
 `theHomeScreenPageHidesAndMovesRowsAndKeepsThem`; the other tests run with only "continue watching" shown, as before
 the rows (29 tests on each emulator since "My media").
@@ -201,7 +201,7 @@ password field lay behind the keyboard while it was typed into (missing from the
 ## The film's page over its backdrop, focus
 
 Since 2026-11-14 (ROADMAP A15, gaps 2 and 3, Infuse as the yardstick): a film with a backdrop shows it across the
-whole page (on a phone as a band at the top) under a dark veil, and its logo in place of the title in
+whole page (on a phone as a band at the top) under a veil of the night sky, and its logo in place of the title in
 text; an episode takes its series' pictures (`ParentBackdropItemId`, `ParentLogoItemId`, as Jellyfin's Android TV
 app does). A film without a backdrop keeps the poster page; a logo that does not load leaves the title in text.
 Movies (2026-11-14, on the owner's NAS) sent a backdrop for 6 and a logo for 5 of its 8 films; `Images/Backdrop/0` and

@@ -79,7 +79,7 @@ func (f *fakeMovies) handler(t *testing.T) http.Handler {
 				w.WriteHeader(http.StatusUnauthorized)
 				return
 			}
-			if in["Username"] == "Anna" { // a second account (TestLangFollowsTheAccount)
+			if in["Username"] == "Anna" { // a second account (TestThemeFollowsTheAccount)
 				_, _ = io.WriteString(w, `{"AccessToken":"tok-geheim","User":{"Id":"USERID0001","Name":"Anna"}}`)
 				return
 			}

@@ -1,5 +1,5 @@
-// The phone page in a browser against the dev server: login, the dark colours
-// (Raumklang, 2026-11-20), language per account (0.23), the player (0.20). Each "device" is its
+// The phone page in a browser against the dev server: login, colour mode and
+// language per account (0.22, 0.23), the player (0.20). Each "device" is its
 // own browser context — its own localStorage, like the LAN and the Tailscale
 // address of the NAS. Accounts of the fake Movies: Demo and Anna, password
 // "richtig".
@@ -32,16 +32,34 @@ function seconds(text) {
   return h * 3600 + m * 60 + s;
 }
 
-test("the page is always dark in Raumklang's colours, also on a phone in light mode", async ({ browser }) => {
+test("colour mode follows the account, Log out forgets it on the device", async ({ browser }) => {
   const a = await device(browser);
-  await a.page.emulateMedia({ colorScheme: "light" });
   await login(a.page, "Demo");
-  await expect(a.page.locator("body")).toHaveCSS("background-color", "rgb(12, 13, 15)"); // --bg #0c0d0f
-  await expect(a.page.locator("body")).toHaveCSS("color", "rgb(243, 241, 236)"); // --text #f3f1ec
-  await expect(a.page.locator("#theme")).toHaveCount(0);
-  await expect(a.page.locator("html")).not.toHaveAttribute("data-theme", /./);
-  expect(await a.page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue("--accent").trim())).toBe("#dcbf8f");
+  const stored = a.page.waitForResponse((r) => r.url().endsWith("/api/theme") && r.status() === 200);
+  await a.page.locator("#theme").selectOption("dark");
+  await stored;
+  await expect(a.page.locator("html")).toHaveAttribute("data-theme", "dark");
+
+  const b = await device(browser); // another address: an empty localStorage
+  await login(b.page, "Demo");
+  await expect(b.page.locator("html")).toHaveAttribute("data-theme", "dark");
+  await expect(b.page.locator("body")).toHaveCSS("background-color", "rgb(6, 13, 31)"); // dark --bg, #060d1f
+  await expect(b.page.locator("#theme")).toHaveValue("dark");
+
+  await b.page.locator("#logout").click();
+  await expect(b.page.locator("html")).not.toHaveAttribute("data-theme", /./);
+  expect(await b.page.evaluate(() => localStorage.getItem("moviescast.theme"))).toBeNull();
+
+  await login(b.page, "Anna"); // the next person on the same phone
+  await expect(b.page.locator("html")).not.toHaveAttribute("data-theme", /./);
+  expect(await b.page.evaluate(async () => (await (await fetch("/api/me")).json()).theme)).toBeUndefined();
+
+  // Back to the system mode for Demo, so the other tests start clean.
+  const reset = a.page.waitForResponse((r) => r.url().endsWith("/api/theme") && r.status() === 200);
+  await a.page.locator("#theme").selectOption("");
+  await reset;
   await a.ctx.close();
+  await b.ctx.close();
 });
 
 test("language follows the account, the device language is never stored", async ({ browser }) => {

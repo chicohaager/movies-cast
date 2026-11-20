@@ -11,7 +11,6 @@ import android.os.Bundle
 import android.provider.Settings
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
-import androidx.activity.SystemBarStyle
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
@@ -53,8 +52,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        // The app is always dark (Theme.kt): light system-bar icons even when the phone is in light mode.
-        enableEdgeToEdge(SystemBarStyle.dark(android.graphics.Color.TRANSPARENT), SystemBarStyle.dark(android.graphics.Color.TRANSPARENT))
+        enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         setContent {
             MoviesCastTheme {

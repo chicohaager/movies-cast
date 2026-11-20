@@ -424,7 +424,7 @@ private fun GenreCard(tile: GenreTile, onClick: () -> Unit) {
         Modifier.width(240.dp).aspectRatio(16f / 9f)
             .onFocusChanged { focused = it.isFocused }
             .graphicsLayer { scaleX = scale; scaleY = scale }
-            .border(3.dp, if (focused) Brand.Accent else SolidColor(Color.Transparent), RoundedCornerShape(16.dp))
+            .border(3.dp, if (focused) Brand.Planet else SolidColor(Color.Transparent), RoundedCornerShape(16.dp))
             .padding(3.dp)
             .clip(RoundedCornerShape(13.dp))
             .background(Brush.linearGradient(listOf(MaterialTheme.colorScheme.surfaceContainerHigh, MaterialTheme.colorScheme.surfaceVariant)))
@@ -448,15 +448,12 @@ private fun GenreCard(tile: GenreTile, onClick: () -> Unit) {
     }
 }
 
-/**
- * The colour and symbol of a tile under "My media", by the library's kind, as Infuse colours its shortcut tiles; the
- * colours are pairs from Raumklang's palette for things without a cover (web/src/tint.ts hashColor).
- */
+/** The colour and symbol of a tile under "My media", by the library's kind, as Infuse colours its shortcut tiles. */
 internal enum class LibraryLook(val from: Color, val to: Color) {
-    ALL(Color(0xFFDCBF8F), Color(0xFFC08552)),
-    FILMS(Color(0xFF4F8FBF), Color(0xFF6B7FD1)),
-    SERIES(Color(0xFFC25B6B), Color(0xFFB8678F)),
-    OTHER(Color(0xFF4FA37F), Color(0xFF8E6BBF));
+    ALL(Color(0xFFFF9500), Color(0xFFFF5E3A)),
+    FILMS(Color(0xFF1D6FF2), Color(0xFF1AC8FC)),
+    SERIES(Color(0xFFFF2D6F), Color(0xFFE040FB)),
+    OTHER(Color(0xFF2DBE4E), Color(0xFF7ED321));
 
     companion object {
         /** Jellyfin's CollectionType: `movies`, `tvshows`; anything else (home videos, mixed) is "other". */
@@ -574,11 +571,11 @@ private fun DrawScope.librarySymbol(look: LibraryLook) {
     }
 }
 
-/** A section title with a short gold bar before it. */
+/** A section title with a short bar in the planet's orange before it. */
 @Composable
 private fun Heading(text: String, modifier: Modifier = Modifier) {
     Row(verticalAlignment = Alignment.CenterVertically, modifier = modifier.padding(top = 12.dp)) {
-        Box(Modifier.width(4.dp).height(22.dp).background(Brand.Accent, RoundedCornerShape(50)))
+        Box(Modifier.width(4.dp).height(22.dp).background(Brand.Planet, RoundedCornerShape(50)))
         Text(text, style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(start = 10.dp))
     }
 }
@@ -586,13 +583,13 @@ private fun Heading(text: String, modifier: Modifier = Modifier) {
 @Composable
 private fun Tile(item: MediaItem, modifier: Modifier, onOpen: (MediaItem) -> Unit, showProgress: Boolean) {
     var focused by remember { mutableStateOf(false) }
-    // A remote control has no pointer: the tile in focus grows a little and gets a glowing gold frame.
+    // A remote control has no pointer: the tile in focus grows a little and gets a glowing frame in the planet's orange.
     val scale by animateFloatAsState(if (focused) 1.06f else 1f, label = "tile")
     Column(
         modifier
             .onFocusChanged { focused = it.isFocused }
             .graphicsLayer { scaleX = scale; scaleY = scale }
-            .border(3.dp, if (focused) Brand.Accent else SolidColor(Color.Transparent), RoundedCornerShape(16.dp))
+            .border(3.dp, if (focused) Brand.Planet else SolidColor(Color.Transparent), RoundedCornerShape(16.dp))
             .padding(3.dp)
             .clip(RoundedCornerShape(13.dp))
             .clickable { onOpen(item) }
@@ -605,10 +602,10 @@ private fun Tile(item: MediaItem, modifier: Modifier, onOpen: (MediaItem) -> Uni
                 val watched = stringResource(R.string.watched)
                 Text(
                     "✓",
-                    color = Brand.GoldInk,
+                    color = Color.White,
                     style = MaterialTheme.typography.labelLarge,
                     modifier = Modifier.align(Alignment.TopEnd).padding(6.dp)
-                        .background(Brand.Accent, RoundedCornerShape(50))
+                        .background(Brand.Planet, RoundedCornerShape(50))
                         .padding(horizontal = 7.dp, vertical = 2.dp)
                         .semantics { contentDescription = watched }
                         .testTag("watched"),
@@ -617,7 +614,7 @@ private fun Tile(item: MediaItem, modifier: Modifier, onOpen: (MediaItem) -> Uni
             if (showProgress && item.runtimeSeconds > 0) {
                 LinearProgressIndicator(
                     progress = { (item.resumeSeconds.toFloat() / item.runtimeSeconds).coerceIn(0f, 1f) },
-                    color = Brand.Gold,
+                    color = Brand.Sky,
                     trackColor = Color.White.copy(alpha = 0.18f),
                     drawStopIndicator = {},
                     gapSize = 0.dp,

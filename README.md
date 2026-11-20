@@ -130,10 +130,13 @@ is the fake TV of the tests).
 <img src="docs/screenshots/phone-library.webp" width="190" alt="TV picker and Continue watching">
 <img src="docs/screenshots/phone-film.webp" width="190" alt="Film dialog: continue or play from the start">
 <img src="docs/screenshots/phone-player.webp" width="190" alt="Player: pause, ±30 s, seek, stop">
+</p>
+<p>
+<img src="docs/screenshots/phone-player-dark.webp" width="190" alt="The same in dark mode">
 <img src="docs/screenshots/phone-status.webp" width="190" alt="Status card">
 </p>
 
-Log in · library with "Continue watching" · film · player · status.
+Log in · library with "Continue watching" · film · player · dark mode · status.
 
 <p>
 <img src="docs/screenshots/tv-pair.webp" width="390" alt="TV page: pair with a code">

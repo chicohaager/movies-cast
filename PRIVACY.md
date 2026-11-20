@@ -46,7 +46,7 @@ and no film title; addresses are removed from every line in addition (`LogBook.s
 
 Runs in your home network and talks to the Movies, Jellyfin or Emby server you configure and to the
 TVs and Cast devices it finds there. What it keeps across restarts (the logins of browsers, the
-sound formats a TV proved to play, the chosen language) are files on your box next to `STATE_FILE`
+sound formats a TV proved to play, the chosen theme) are files on your box next to `STATE_FILE`
 (see [docs/TECHNICAL.md](docs/TECHNICAL.md)).
 
 The code names one address outside your network (`api.github.com`), for the update notice, which

@@ -220,12 +220,14 @@ func writeFileAtomic(f string, b []byte) error {
 // each next to the sessions: kept in the browser alone, the LAN and the
 // Tailscale address of the NAS each had their own (2026-10-29).
 //
+//	theme  themes.json  "light", "dark" or "" (follow the system)
 //	lang   langs.json   a language of web/i18n
 var accountPrefs = map[string]struct {
 	file  string
 	valid func(string) bool
 }{
-	"lang": {"langs.json", knownLang},
+	"theme": {"themes.json", func(v string) bool { return v == "" || v == "light" || v == "dark" }},
+	"lang":  {"langs.json", knownLang},
 }
 
 var langCode = regexp.MustCompile(`^[a-z]{2}(_[A-Z]{2})?$`)

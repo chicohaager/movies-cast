@@ -116,7 +116,7 @@ go vet ./... && go test -race ./...
 # (log in as Demo or Anna, password "richtig"; Ctrl-C stops it):
 MC_DEV_SERVER=127.0.0.1:18097 go test -count=1 ./internal/server/ -run TestDevServer -timeout 0 -v
 # browser tests of the phone page (Playwright starts and stops the dev server on port 18098):
-# login, the dark colours, language per account across two "devices", the player
+# login, colour mode and language per account across two "devices", the player
 cd e2e && npm ci && npx playwright install chromium && npx playwright test
 SSHPASS_FILE=/path/to/pw deploy/zimaos/build-on-host.sh <user>@<nas> 0.22.0
 # builds only a committed tree; -version then prints 0.22.0+<commit>
@@ -181,19 +181,18 @@ with the server; the TV gets no Movies token.
   (pair → library → detail → play → +30 s → audio → pause → Back) ran on the TV.
 - **Languages:** the 18 of the ZimaOS UI, English the default (`internal/server/web/i18n/<lang>.json`, served
   as `/strings.js` to both pages). `?lang=xx` (remembered), else the remembered one, else the device language,
-  else English; a picker on the phone. On the phone the choice is stored with the account
+  else English; a picker on the phone. On the phone the choice is stored with the account like the colour mode
   (`langs.json`, `POST /api/lang`, only languages under `web/i18n`): a language from the link or the picker is
   stored, otherwise the account's language is loaded; the device language is never stored, and "Log out"
   forgets the device's copy and `?lang=`. Server errors carry a `key` for every language;
   `TestEveryFailMessageHasEnglish` and `TestStringsComplete` keep them complete. Review status:
   [docs/TRANSLATIONS.md](TRANSLATIONS.md) — no native speaker has read them yet.
-- **Colours:** since 2026-11-20 the phone page, the TV page (`web/tv/tv.css`) and the Android app are always dark
-  in the colours of Raumklang, the owner's Sonos app: near-black `#0c0d0f`, writing `#f3f1ec`, grey `#a7a49d`,
-  one gold accent `#dcbf8f` with dark writing `#1b150b` on it; the starry background stays, its glows are gold
-  and grey. The logo keeps its orange planet. The colour-mode picker (System/Light/Dark, 0.21/0.22) is gone with
-  `web/theme.js` and `POST /api/theme`; a `themes.json` an earlier version left next to `STATE_FILE` is not read
-  any more. `TestPageIsAlwaysDark` and `TestThemeSettingIsGone` keep it so; the e2e test checks the page
-  with the phone in light mode.
+- **Colour mode (phone):** System, Light or Dark in the footer, stored with the Movies account in `themes.json`
+  next to `STATE_FILE` (`GET /api/me` → `theme`, `POST /api/theme`), so the LAN and the Tailscale address show
+  the same. `localStorage` keeps a copy only so `web/theme.js` can set `data-theme` before `style.css` paints; an
+  account without a choice takes the one this device shows, and "Log out" clears the copy (a shared phone).
+  `TestThemeChosenOnThePhone` keeps both dark blocks equal, `TestThemeFollowsTheAccount` the per-account store.
+  The TV page is always dark (`web/tv/tv.css`).
 - **Phone home screen:** `manifest.json` with 192/512 px icons and an `apple-touch-icon` (rendered from the logo by
   `deploy/webos/logo/render.py`; `TestManifestIconsExist`).
 - **Chrome 53:** no async/await, `?.`, `??`, object spread, padStart, CSS grid, flex `gap`,
