@@ -31,8 +31,8 @@ android {
         applicationId = "io.github.chicohaager.moviescast"
         minSdk = 24
         targetSdk = 37
-        versionCode = 200
-        versionName = "0.2.0"
+        versionCode = 300
+        versionName = "0.3.0"
         // The tests on a device (src/androidTest) run the app with a store of its own, see TestRunner.
         testInstrumentationRunner = "io.github.chicohaager.moviescast.TestRunner"
         buildConfigField("String[]", "LANGUAGES", languages.joinToString(prefix = "{", postfix = "}") { "\"$it\"" })

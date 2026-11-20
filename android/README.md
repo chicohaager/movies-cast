@@ -4,7 +4,7 @@ Plays the films of IceWhale Movies (ZimaOS) or a Jellyfin server on the Android 
 the original file, straight from the server, no conversion on the box and no movies-cast server
 in between. Kotlin, Jetpack Compose, AndroidX Media3 (ExoPlayer).
 
-State 2026-11-13: 0.2.0, the first build for testers ([TESTERS.md](TESTERS.md)), in git, application id
+State 2026-11-20: 0.3.0, the first public build (APK in the releases of [movies-cast-android](https://github.com/chicohaager/movies-cast-android/releases/latest); testers: [TESTERS.md](TESTERS.md)), application id
 `io.github.chicohaager.moviescast` (debug builds: `.debug` appended). Runs from Android 7
 (`minSdk` 24; the trust manager `ScopedTrust` needs Android 7's `X509ExtendedTrustManager`, and on Android 6
 0.2.0 died at its start, emulator API 23, 2026-11-13) on phones, tablets and Android TV (remote control only, own launcher entry and

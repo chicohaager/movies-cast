@@ -3,8 +3,9 @@
 What changed in each version; the "why" with its measurements is in
 [docs/ROADMAP.md](docs/ROADMAP.md) and [docs/TECHNICAL.md](docs/TECHNICAL.md).
 
-## Unreleased
+## 0.28.0 (2026-11-20)
 
+- Android app 0.3.0, the first public APK (`movies-cast-android-0.3.0.apk` at [movies-cast-android](https://github.com/chicohaager/movies-cast-android/releases/latest), signed with the key of 0.2.0, so it installs over it and keeps the logins); for testers: [android/TESTERS.md](android/TESTERS.md).
 - Android app, first tests on a real Google TV Streamer (Android 14): a Dolby Vision profile 7 film on a TV without Dolby Vision has its picture again (the RPU and enhancement layer are taken out before the HEVC decoder gets it, as the Jellyfin server and Kodi do); the sound track that plays first is chosen as Kodi chooses it (the device's language, the file's default, then quality), so a film starts on its 5.1 track instead of a mono one; Back, ⋮ and every other text button and menu entry is framed in orange in focus, readable from the sofa. The device test of the keyboard on a TV waits until the field stands still before it taps (30 of 30 on the Streamer).
 - Android app: "My media" on the home page, as Infuse's shortcut tiles: a tile for the whole library, then one per library of the server ("Filme", "Serien" …, as Jellyfin's apps list them), coloured by kind with a drawn symbol; a library with nothing in it gets no tile. OK shows that library alone, Back leads home. 1 text in 18 languages (Jellyfin's own translations of "My media"). On a TV the text field being typed into now stays above the keyboard (the password field lay behind it in 3 of 4 logins on the Android TV emulator).
 

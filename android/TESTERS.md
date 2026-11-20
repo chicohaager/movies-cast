@@ -1,15 +1,15 @@
-# Movies-Cast for Android: testing 0.2.0
+# Movies-Cast for Android: testing 0.3.0
 
 (Deutsch weiter unten.)
 
 A player for Android phones, tablets and Android TV. It plays the films of IceWhale Movies (ZimaOS)
 or a Jellyfin server on the device itself, in the original file, without a conversion on the box.
-0.2.0 is the first build for testers. It is in no store.
+0.3.0 is the second build for testers (the first public one). It is in no store.
 
 ## Install
 
 1. You need Android 7 or newer, and a ZimaOS box with Movies or a Jellyfin server in your network.
-2. Copy `movies-cast-android-0.2.0.apk` to the device and open it. Android asks once whether the app
+2. Copy `movies-cast-android-0.3.0.apk` to the device and open it. Android asks once whether the app
    that opens it (Files, the browser) may install apps; allow it.
 3. Later versions install over this one, and the logins are kept.
 
@@ -31,6 +31,10 @@ or a Jellyfin server on the device itself, in the original file, without a conve
 - "Servers and accounts" (menu): add a second login, change between them, "Remove" one.
 - On Android TV: everything with the remote control only.
 - Home during playback (Android 8 and newer) keeps the film in a small window.
+- New in 0.3.0: the home page with rows (continue watching, favourites, recently added, genres, best
+  rated) and "My media" tiles per library; "Home screen" in the menu shows, hides and moves the rows.
+- New in 0.3.0: a film's page on its backdrop, with running time, year, age rating and badges for
+  picture, range and sound. A Dolby Vision film on a TV without Dolby Vision should show a picture.
 
 ## Report a problem
 
@@ -44,17 +48,17 @@ or a Jellyfin server on the device itself, in the original file, without a conve
 
 ---
 
-# Movies-Cast für Android: 0.2.0 testen
+# Movies-Cast für Android: 0.3.0 testen
 
 Ein Player für Android-Handys, -Tablets und Android TV. Er spielt die Filme von IceWhale Movies
 (ZimaOS) oder einem Jellyfin-Server auf dem Gerät selbst ab, als Originaldatei und ohne Umwandlung
-auf der Box. 0.2.0 ist die erste Version für Tester. Sie steht in keinem Store.
+auf der Box. 0.3.0 ist die zweite Version für Tester (die erste öffentliche). Sie steht in keinem Store.
 
 ## Installieren
 
 1. Du brauchst Android 7 oder neuer und eine ZimaOS-Box mit Movies oder einen Jellyfin-Server im
    Netz.
-2. Kopiere `movies-cast-android-0.2.0.apk` aufs Gerät und öffne die Datei. Android fragt einmal, ob
+2. Kopiere `movies-cast-android-0.3.0.apk` aufs Gerät und öffne die Datei. Android fragt einmal, ob
    die öffnende App (Dateien, Browser) Apps installieren darf. Erlaube es.
 3. Spätere Versionen installieren sich über diese, und die Anmeldungen bleiben erhalten.
 
@@ -77,6 +81,12 @@ auf der Box. 0.2.0 ist die erste Version für Tester. Sie steht in keinem Store.
   „Entfernen“.
 - Auf Android TV: alles nur mit der Fernbedienung.
 - Home während des Abspielens (ab Android 8) behält den Film in einem kleinen Fenster.
+- Neu in 0.3.0: die Startseite mit Reihen (Weiterschauen, Favoriten, zuletzt hinzugefügt, Genres,
+  am besten bewertet) und Kacheln „Meine Medien“ je Mediathek; „Startseite“ im Menü blendet die
+  Reihen ein und aus und verschiebt sie.
+- Neu in 0.3.0: die Filmseite auf dem Hintergrundbild, mit Laufzeit, Jahr, Altersfreigabe und
+  Abzeichen für Bild, Dynamikumfang und Ton. Ein Dolby-Vision-Film auf einem Fernseher ohne Dolby
+  Vision soll ein Bild zeigen.
 
 ## Fehler melden
 
